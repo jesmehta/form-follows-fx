@@ -11,7 +11,7 @@ function setup() {
 
   x0 = 0;
   y0 = 0;
-  t = 0.05;
+  t = 0.01;
   step = 1;
   img = createImage(width,height);
   img.loadPixels();
@@ -24,6 +24,8 @@ function setup() {
 
 function draw() {
   // background(128);
+  b = int(map(mouseX,0,width,2,30));
+  print(b);
   for (let j = 0; j < height; j = j + step)
   {
     for (let i = 0; i < width; i = i + step)
@@ -41,7 +43,40 @@ function draw() {
     y0 += t;
     x0 = 0;
   }
-  // y0 = 0;     //comment this out to allow change
+  y0 = 0;     //comment this out to allow change
   img.updatePixels();
   image(img,0,0);
+}
+
+function mouseClicked()
+{
+  saveFile();
+}
+
+function saveFile()
+{
+  saveCanvas("contour " + b + " " + timeStamp() +".jpg");
+  print("file saved");
+}
+
+function timeStamp()
+{
+  let m = checkPad(month());
+  let d = checkPad(day());
+  let h = checkPad(hour());
+  let mm = checkPad(minute());
+  let s = checkPad(second());
+
+  let t = year()+m+d+"_"+h+mm+s;
+  return t;
+}
+
+function checkPad(k)
+{
+  let p = str(k);
+  if (k<10)
+  {
+    p = "0" + str(k);
+  }
+  return p;
 }
