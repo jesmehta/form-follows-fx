@@ -1,8 +1,10 @@
 let x0, y0, t, step;
 let img;
-let b;                    //no of bandgaps
-// let pd;                   //pixel Density
-let elev;                 //exponent for sealevel
+let b;                          //no of bandgaps
+// let pd;                      //pixel Density
+let elev;                       //exponent for sealevel
+let slBands, slElev, slIsle;  //sliders
+let pBands, pElev, pIsle;
 
 function setup() {
   frameRate(30);
@@ -20,33 +22,45 @@ function setup() {
   // background(128);
   // stroke(128);
 
+  createP(""); //spacing
+
+  pBands = createP("Bands");
+  slBands = createSlider(2,20,15,1);
+
+  pElev = createP("Elevation exponent");
+  slElev = createSlider(0.1,5,1,0.1);
+
+  pIsle = createP("Island factor");
+  slIsle = createSlider(0.1,3,1,0.1);
+
 
 }
 
 function draw() {
   // background(128);
-  b = int(map(mouseX,0,width,2,15));
-  elev = map(mouseY,0,height,0.1,5);
-  // elev = 1.7;
-  // b = 12;
+  b = slBands.value();
+  elev = slElev.value();
+  let d;
+
   print(b, elev);
   for (let j = 0; j < height; j = j + step)
   {
     for (let i = 0; i < width; i = i + step)
     {
-      let n0 = noise(x0, y0);
-      let n = pow(n0,elev);
+      let n0 = noise(x0, y0);    //generate noise
+      n = pow(n0,elev);          //exponent to elevate
 
-      // e = (1 + e - d) / 2
       let ds = dist(i,j,width/2,height/2);
-      let d = ds/(width*0.5);
-      let isle = (1+n-d)/2;
+      let isleFac = slIsle.value();
+      d = ds/(width*isleFac);
 
-      let f_ = int(map(isle, 0, 1, 0, b));
+      isl = (1+n-d)/2;             //island-ification
 
-      let f = (map(f_,0,b,0,255));
+      fb = int(map(isl, 0, 1, 0, b));  //banding
 
-      img.set(i,j,color(f));
+      f = (map(fb,0,b,0,255));       //map fill
+
+      img.set(i,j,color(f));        //set fill
 
       x0 += t;
     }
@@ -54,13 +68,22 @@ function draw() {
     x0 = 0;
   }
   y0 = 0;     //comment this out to allow change
+
   img.updatePixels();
   image(img,0,0);
+
+  pBands.html("Bands : " + slBands.value());
+  pElev.html("Elevation exponent : " + slElev.value());
+  pIsle.html("Island factor : " + slIsle.value());
+
 }
 
-function mouseClicked()
+function keyPressed()
 {
-  saveFile();
+  if(key == s)
+  {
+    saveFile();
+  }
 }
 
 function saveFile()
