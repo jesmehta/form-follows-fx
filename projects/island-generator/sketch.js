@@ -27,6 +27,8 @@ function draw() {
   // background(128);
   b = int(map(mouseX,0,width,2,15));
   elev = map(mouseY,0,height,0.1,5);
+  // elev = 1.7;
+  // b = 12;
   print(b, elev);
   for (let j = 0; j < height; j = j + step)
   {
@@ -35,10 +37,14 @@ function draw() {
       let n0 = noise(x0, y0);
       let n = pow(n0,elev);
 
-      let f_ = int(map(n, 0, 1, 0, b));
-      let f = (map(f_,b/3,b,0,255));
-      //mapping 2-b instead of 0-b as source domain also creates easy oceans
-      //advanced version - b/3 - b - 1/3 of full elevation is underwater
+      // e = (1 + e - d) / 2
+      let ds = dist(i,j,width/2,height/2);
+      let d = ds/(width*0.5);
+      let isle = (1+n-d)/2;
+
+      let f_ = int(map(isle, 0, 1, 0, b));
+
+      let f = (map(f_,0,b,0,255));
 
       img.set(i,j,color(f));
 
