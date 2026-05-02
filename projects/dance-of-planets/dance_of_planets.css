@@ -1,0 +1,271 @@
+/* Dance of Planets v2.0
+ * © Jesal Mehta, @cabofcuriosity
+ * Based on Dance of Venus v1.45
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Rajdhani:wght@300;400;600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #050508;
+  --surface: #0d0d12;
+  --panel:   #111118;
+  --border:  #1e1e2e;
+  --accent:  #c8a96e;
+  --accent2: #6e8ec8;
+  --text:    #d4d0c8;
+  --muted:   #5a5870;
+  --danger:  #c86e6e;
+  --radius:  4px;
+  --mono:    'Space Mono', monospace;
+  --sans:    'Rajdhani', sans-serif;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+/* ── Layout ── */
+.app {
+  display: grid;
+  grid-template-columns: 260px 1fr 230px;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "header header header"
+    "left   canvas right"
+    "footer footer footer";
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+header {
+  grid-area: header;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  background: var(--surface);
+}
+header h1 {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+header .version { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+header .copy    { margin-left: auto; font-family: var(--mono); font-size: 10px; color: var(--muted); }
+
+/* ── Panels ── */
+.panel {
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  overflow-y: auto;
+}
+.panel.right { border-right: none; border-left: 1px solid var(--border); grid-area: right; }
+.panel.left  { grid-area: left; }
+
+.panel-section { display: flex; flex-direction: column; gap: 9px; }
+.panel-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Canvas area ── */
+.canvas-wrap {
+  grid-area: canvas;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  padding: 20px;
+}
+#canvas-container canvas { display: block; cursor: crosshair; }
+
+/* ── Form controls ── */
+label.field { display: flex; flex-direction: column; gap: 4px; }
+label.field > span {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+
+select {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 6px 8px;
+  border-radius: var(--radius);
+  appearance: none;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+select:hover, select:focus { border-color: var(--accent); }
+select option { background: var(--panel); }
+
+/* ── Slider + number input row ── */
+.ctrl-row { display: flex; align-items: center; gap: 6px; }
+.ctrl-row input[type=range] {
+  flex: 1;
+  height: 3px;
+  accent-color: var(--accent);
+  background: var(--border);
+  border: none;
+  cursor: ew-resize;
+  padding: 0;
+  border-radius: 2px;
+}
+.ctrl-row input[type=number] {
+  width: 62px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 4px 6px;
+  border-radius: var(--radius);
+  outline: none;
+  text-align: right;
+  -moz-appearance: textfield;
+}
+.ctrl-row input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }
+.ctrl-row input[type=number]:focus { border-color: var(--accent); }
+
+/* ── Radio group ── */
+.radio-group { display: flex; flex-direction: column; gap: 7px; }
+.radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text);
+  cursor: pointer;
+}
+.radio-group input[type=radio] { width: 12px; height: 12px; accent-color: var(--accent); cursor: pointer; }
+
+/* ── Pending note ── */
+.pending-note {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+  display: none;
+}
+.pending-note.show { display: block; }
+
+/* ── Buttons ── */
+.btn-group { display: flex; flex-direction: column; gap: 8px; }
+button {
+  width: 100%;
+  padding: 9px 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+button:hover { background: var(--border); border-color: var(--muted); }
+button.primary { background: var(--accent); color: #0a0a0c; border-color: var(--accent); font-weight: 700; }
+button.primary:hover { background: #dbbf84; }
+button.danger  { border-color: var(--danger); color: var(--danger); }
+button.danger:hover  { background: var(--danger); color: #0a0a0c; }
+button.accent2 { border-color: var(--accent2); color: var(--accent2); }
+button.accent2:hover { background: var(--accent2); color: #0a0a0c; }
+
+/* ── Info blocks ── */
+.info-block {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.info-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.info-row .k {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.info-row .v { font-family: var(--mono); font-size: 11px; color: var(--accent); text-align: right; }
+
+/* ── Status bar ── */
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+}
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+.status-dot.running { background: #6ec87a; animation: pulse 1.2s ease-in-out infinite; }
+.status-dot.paused  { background: var(--accent); }
+.status-dot.done    { background: var(--accent2); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* ── Progress bar ── */
+.progress-wrap { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 2px; }
+.progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.08s linear; border-radius: 2px; }
+
+/* ── Misc ── */
+hr { border: none; border-top: 1px solid var(--border); }
+.hint { font-family: var(--mono); font-size: 9px; color: var(--muted); text-align: center; letter-spacing: 0.05em; }
+.filename-display {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--accent);
+  word-break: break-all;
+  line-height: 1.6;
+}
+
+/* ── Footer ── */
+footer {
+  grid-area: footer;
+  padding: 10px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+}
+footer a { color: var(--muted); text-decoration: none; }
+footer a:hover { color: var(--accent); }
