@@ -6,377 +6,156 @@
 <title>Dance of Planets v2.0 — Jesal Mehta</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
 <style>
-  /* ── Reset & Base ── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Rajdhani:wght@300;400;600&display=swap');
-
   :root {
-    --bg:       #050508;
-    --surface:  #0d0d12;
-    --panel:    #111118;
-    --border:   #1e1e2e;
-    --accent:   #c8a96e;
-    --accent2:  #6e8ec8;
-    --text:     #d4d0c8;
-    --muted:    #5a5870;
-    --white:    #f0ece0;
-    --danger:   #c86e6e;
-    --radius:   4px;
-    --mono:     'Space Mono', monospace;
-    --sans:     'Rajdhani', sans-serif;
+    --bg:      #050508;
+    --surface: #0d0d12;
+    --panel:   #111118;
+    --border:  #1e1e2e;
+    --accent:  #c8a96e;
+    --accent2: #6e8ec8;
+    --text:    #d4d0c8;
+    --muted:   #5a5870;
+    --danger:  #c86e6e;
+    --radius:  4px;
+    --mono:    'Space Mono', monospace;
+    --sans:    'Rajdhani', sans-serif;
   }
 
-  html, body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 15px;
-    height: 100%;
-    overflow-x: hidden;
-  }
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Rajdhani:wght@300;400;600&display=swap');
 
-  /* ── Layout ── */
+  html, body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; height: 100%; overflow-x: hidden; }
+
   .app {
     display: grid;
-    grid-template-columns: 260px 1fr 220px;
+    grid-template-columns: 260px 1fr 230px;
     grid-template-rows: auto 1fr auto;
-    grid-template-areas:
-      "header header header"
-      "left   canvas right"
-      "footer footer footer";
+    grid-template-areas: "header header header" "left canvas right" "footer footer footer";
     min-height: 100vh;
-    gap: 0;
   }
 
-  /* ── Header ── */
   header {
-    grid-area: header;
-    padding: 14px 24px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: baseline;
-    gap: 16px;
-    background: var(--surface);
+    grid-area: header; padding: 14px 24px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: baseline; gap: 16px; background: var(--surface);
   }
-  header h1 {
-    font-family: var(--mono);
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--accent);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-  header .version {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-  }
-  header .copy {
-    margin-left: auto;
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 0.04em;
-  }
+  header h1 { font-family: var(--mono); font-size: 15px; font-weight: 700; color: var(--accent); letter-spacing: 0.08em; text-transform: uppercase; }
+  header .version { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  header .copy { margin-left: auto; font-family: var(--mono); font-size: 10px; color: var(--muted); }
 
-  /* ── Panels ── */
   .panel {
-    background: var(--panel);
-    border-right: 1px solid var(--border);
-    padding: 20px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    overflow-y: auto;
+    background: var(--panel); border-right: 1px solid var(--border);
+    padding: 20px 16px; display: flex; flex-direction: column; gap: 18px; overflow-y: auto;
   }
-  .panel.right {
-    border-right: none;
-    border-left: 1px solid var(--border);
-    grid-area: right;
-  }
-  .panel.left { grid-area: left; }
+  .panel.right { border-right: none; border-left: 1px solid var(--border); grid-area: right; }
+  .panel.left  { grid-area: left; }
 
-  .panel-section { display: flex; flex-direction: column; gap: 10px; }
+  .panel-section { display: flex; flex-direction: column; gap: 9px; }
+  .panel-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); padding-bottom: 6px; border-bottom: 1px solid var(--border); }
 
-  .panel-label {
-    font-family: var(--mono);
-    font-size: 9px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--muted);
-    padding-bottom: 6px;
-    border-bottom: 1px solid var(--border);
-  }
+  .canvas-wrap { grid-area: canvas; display: flex; align-items: center; justify-content: center; background: var(--bg); padding: 20px; }
+  #canvas-container canvas { display: block; cursor: crosshair; }
 
-  /* ── Canvas area ── */
-  .canvas-wrap {
-    grid-area: canvas;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bg);
-    padding: 20px;
-  }
-  #canvas-container canvas {
-    display: block;
-    cursor: crosshair;
-  }
+  label.field { display: flex; flex-direction: column; gap: 4px; }
+  label.field > span { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.06em; }
 
-  /* ── Form controls ── */
-  label.field {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-  label.field span {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 0.08em;
-  }
-
-  select, input[type=range] {
-    width: 100%;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 12px;
-    padding: 6px 8px;
-    border-radius: var(--radius);
-    appearance: none;
-    outline: none;
-    cursor: pointer;
-    transition: border-color 0.2s;
+  select {
+    width: 100%; background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); font-family: var(--mono); font-size: 12px;
+    padding: 6px 8px; border-radius: var(--radius); appearance: none; outline: none; cursor: pointer; transition: border-color 0.2s;
   }
   select:hover, select:focus { border-color: var(--accent); }
   select option { background: var(--panel); }
 
-  input[type=range] {
-    padding: 0;
-    height: 3px;
-    accent-color: var(--accent);
-    cursor: ew-resize;
-    margin-top: 4px;
+  .ctrl-row { display: flex; align-items: center; gap: 6px; }
+  .ctrl-row input[type=range] {
+    flex: 1; height: 3px; accent-color: var(--accent);
+    background: var(--border); border: none; cursor: ew-resize; padding: 0; border-radius: 2px;
   }
+  .ctrl-row input[type=number] {
+    width: 62px; background: var(--surface); border: 1px solid var(--border);
+    color: var(--accent); font-family: var(--mono); font-size: 11px;
+    padding: 4px 6px; border-radius: var(--radius); outline: none; text-align: right;
+    -moz-appearance: textfield;
+  }
+  .ctrl-row input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }
+  .ctrl-row input[type=number]:focus { border-color: var(--accent); }
 
-  .slider-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .slider-row input { flex: 1; }
-  .slider-val {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--accent);
-    min-width: 34px;
-    text-align: right;
-  }
-
-  /* ── Radio group ── */
   .radio-group { display: flex; flex-direction: column; gap: 7px; }
-  .radio-group label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text);
-    cursor: pointer;
-  }
-  .radio-group input[type=radio] {
-    width: 12px; height: 12px;
-    accent-color: var(--accent);
-    cursor: pointer;
-  }
+  .radio-group label { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px; color: var(--text); cursor: pointer; }
+  .radio-group input[type=radio] { width: 12px; height: 12px; accent-color: var(--accent); cursor: pointer; }
 
-  /* ── Buttons ── */
+  .pending-note { font-family: var(--mono); font-size: 9px; color: var(--accent); letter-spacing: 0.05em; display: none; }
+  .pending-note.show { display: block; }
+
   .btn-group { display: flex; flex-direction: column; gap: 8px; }
-
   button {
-    width: 100%;
-    padding: 9px 12px;
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text);
-    cursor: pointer;
+    width: 100%; padding: 9px 12px; font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    border-radius: var(--radius); border: 1px solid var(--border);
+    background: var(--surface); color: var(--text); cursor: pointer;
     transition: background 0.15s, border-color 0.15s, color 0.15s;
   }
   button:hover { background: var(--border); border-color: var(--muted); }
-  button.primary {
-    background: var(--accent);
-    color: #0a0a0c;
-    border-color: var(--accent);
-    font-weight: 700;
-  }
-  button.primary:hover { background: #dbbf84; border-color: #dbbf84; }
+  button.primary { background: var(--accent); color: #0a0a0c; border-color: var(--accent); font-weight: 700; }
+  button.primary:hover { background: #dbbf84; }
   button.danger { border-color: var(--danger); color: var(--danger); }
   button.danger:hover { background: var(--danger); color: #0a0a0c; }
   button.accent2 { border-color: var(--accent2); color: var(--accent2); }
   button.accent2:hover { background: var(--accent2); color: #0a0a0c; }
 
-  /* ── Info display ── */
-  .info-block {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 10px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .info-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 8px;
-  }
-  .info-row .k {
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--muted);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-  .info-row .v {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--accent);
-    text-align: right;
-  }
+  .info-block { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+  .info-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .info-row .k { font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  .info-row .v { font-family: var(--mono); font-size: 11px; color: var(--accent); text-align: right; }
 
-  /* ── Planet pill ── */
-  .planet-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    border-radius: 20px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text);
-  }
-  .planet-dot { width: 7px; height: 7px; border-radius: 50%; }
-
-  /* ── Status bar ── */
-  .status-bar {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    border-radius: var(--radius);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-  }
-  .status-dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--muted);
-    flex-shrink: 0;
-  }
+  .status-bar { display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); font-family: var(--mono); font-size: 10px; color: var(--muted); }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
   .status-dot.running { background: #6ec87a; animation: pulse 1.2s ease-in-out infinite; }
   .status-dot.paused  { background: var(--accent); }
   .status-dot.done    { background: var(--accent2); }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-  /* ── Progress bar ── */
-  .progress-wrap {
-    height: 3px;
-    background: var(--border);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-  .progress-fill {
-    height: 100%;
-    background: var(--accent);
-    width: 0%;
-    transition: width 0.1s linear;
-    border-radius: 2px;
-  }
+  .progress-wrap { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 2px; }
+  .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.08s linear; border-radius: 2px; }
 
-  /* ── Divider ── */
   hr { border: none; border-top: 1px solid var(--border); }
+  .hint { font-family: var(--mono); font-size: 9px; color: var(--muted); text-align: center; letter-spacing: 0.05em; }
 
-  /* ── Footer ── */
-  footer {
-    grid-area: footer;
-    padding: 10px 24px;
-    border-top: 1px solid var(--border);
-    background: var(--surface);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-  }
+  footer { grid-area: footer; padding: 10px 24px; border-top: 1px solid var(--border); background: var(--surface); display: flex; align-items: center; justify-content: space-between; font-family: var(--mono); font-size: 10px; color: var(--muted); }
   footer a { color: var(--muted); text-decoration: none; }
   footer a:hover { color: var(--accent); }
-
-  /* ── Tooltip for zoom hint ── */
-  .hint {
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--muted);
-    text-align: center;
-    letter-spacing: 0.05em;
-  }
 </style>
 </head>
 <body>
-
 <div class="app">
 
-  <!-- ── HEADER ── -->
   <header>
     <h1>Dance of Planets</h1>
     <span class="version">v2.0</span>
     <span class="copy">© Jesal Mehta &nbsp;·&nbsp; @cabofcuriosity</span>
   </header>
 
-  <!-- ── LEFT PANEL ── -->
+  <!-- LEFT PANEL -->
   <aside class="panel left">
 
     <div class="panel-section">
       <div class="panel-label">Planet Pair</div>
-
-      <label class="field">
-        <span>Planet 1</span>
-        <select id="sel-p1">
-          <option value="1">Mercury</option>
-          <option value="2">Venus</option>
-          <option value="3" selected>Earth</option>
-          <option value="4">Mars</option>
-          <option value="5">Jupiter</option>
-          <option value="6">Saturn</option>
-          <option value="7">Uranus</option>
-          <option value="8">Neptune</option>
+      <label class="field"><span>Planet 1</span>
+        <select id="sel-p1" class="setting">
+          <option value="1">Mercury</option><option value="2">Venus</option>
+          <option value="3" selected>Earth</option><option value="4">Mars</option>
+          <option value="5">Jupiter</option><option value="6">Saturn</option>
+          <option value="7">Uranus</option><option value="8">Neptune</option>
           <option value="9">Pluto</option>
         </select>
       </label>
-
-      <label class="field">
-        <span>Planet 2</span>
-        <select id="sel-p2">
-          <option value="1">Mercury</option>
-          <option value="2" selected>Venus</option>
-          <option value="3">Earth</option>
-          <option value="4">Mars</option>
-          <option value="5">Jupiter</option>
-          <option value="6">Saturn</option>
-          <option value="7">Uranus</option>
-          <option value="8">Neptune</option>
+      <label class="field"><span>Planet 2</span>
+        <select id="sel-p2" class="setting">
+          <option value="1">Mercury</option><option value="2" selected>Venus</option>
+          <option value="3">Earth</option><option value="4">Mars</option>
+          <option value="5">Jupiter</option><option value="6">Saturn</option>
+          <option value="7">Uranus</option><option value="8">Neptune</option>
           <option value="9">Pluto</option>
         </select>
       </label>
@@ -385,62 +164,66 @@
     <div class="panel-section">
       <div class="panel-label">Draw Mode</div>
       <div class="radio-group">
-        <label><input type="radio" name="mode" value="1" id="mode-line" checked> Inter-planet line</label>
-        <label><input type="radio" name="mode" value="2" id="mode-mid"> Midpoint trail</label>
+        <label><input type="radio" name="mode" value="1" checked class="setting"> Inter-planet line</label>
+        <label><input type="radio" name="mode" value="2" class="setting"> Midpoint trail</label>
       </div>
     </div>
 
     <div class="panel-section">
       <div class="panel-label">Loop Mode</div>
       <div class="radio-group">
-        <label><input type="radio" name="loop" value="once" id="loop-once" checked> Draw once &amp; stop</label>
-        <label><input type="radio" name="loop" value="cont" id="loop-cont"> Continuous + fade</label>
+        <label><input type="radio" name="loop" value="once" checked class="setting"> Draw once &amp; stop</label>
+        <label><input type="radio" name="loop" value="cont" class="setting"> Continuous + fade</label>
       </div>
     </div>
 
     <div class="panel-section">
-      <div class="panel-label">Zoom</div>
-      <label class="field">
-        <span>Scale factor</span>
-        <div class="slider-row">
-          <input type="range" id="sl-scl" min="1" max="100" value="8" step="1">
-          <span class="slider-val" id="val-scl">0.08</span>
-        </div>
-      </label>
-      <div class="hint">↕ scroll wheel on canvas</div>
+      <div class="panel-label">Zoom / Scale (% of canvas radius)</div>
+      <div class="ctrl-row">
+        <input type="range"  id="sl-scl" min="0.5" max="50" value="8" step="0.5" class="setting">
+        <input type="number" id="tx-scl" min="0.5" max="50" value="8" step="0.5" class="setting">
+      </div>
+      <div class="hint">↕ scroll on canvas · applies live without reset</div>
     </div>
 
     <div class="panel-section">
-      <div class="panel-label">Resolution</div>
-      <label class="field">
-        <span>Step size (°/frame)</span>
-        <div class="slider-row">
-          <input type="range" id="sl-stp" min="1" max="100" value="5" step="1">
-          <span class="slider-val" id="val-stp">0.5</span>
-        </div>
-      </label>
+      <div class="panel-label">Step Size (°/frame)</div>
+      <div class="ctrl-row">
+        <input type="range"  id="sl-stp" min="0.1" max="10" value="0.5" step="0.1" class="setting">
+        <input type="number" id="tx-stp" min="0.1" max="10" value="0.5" step="0.1" class="setting">
+      </div>
     </div>
+
+    <div class="panel-section">
+      <div class="panel-label">Fade Alpha (continuous mode)</div>
+      <div class="ctrl-row">
+        <input type="range"  id="sl-fade" min="1" max="40" value="6" step="1" class="setting">
+        <input type="number" id="tx-fade" min="1" max="40" value="6" step="1" class="setting">
+      </div>
+      <div class="hint">lower = slower fade · more buildup per cycle</div>
+    </div>
+
+    <span class="pending-note" id="pending-note">⚠ settings changed — reset to apply</span>
 
     <hr>
 
     <div class="panel-section">
-      <div class="panel-label">Controls</div>
       <div class="btn-group">
         <button class="primary" id="btn-reset">↺ Reset &amp; Draw</button>
         <button class="accent2" id="btn-playpause">⏸ Pause</button>
         <button id="btn-save">⬇ Save PNG</button>
-        <button class="danger" id="btn-clear">✕ Clear canvas</button>
+        <button class="danger" id="btn-clear">✕ Clear Canvas</button>
       </div>
     </div>
 
   </aside>
 
-  <!-- ── CANVAS ── -->
+  <!-- CANVAS -->
   <main class="canvas-wrap">
     <div id="canvas-container"></div>
   </main>
 
-  <!-- ── RIGHT PANEL ── -->
+  <!-- RIGHT PANEL -->
   <aside class="panel right">
 
     <div class="panel-section">
@@ -449,70 +232,55 @@
         <div class="status-dot running" id="status-dot"></div>
         <span id="status-text">Running</span>
       </div>
-      <div class="progress-wrap">
-        <div class="progress-fill" id="progress-fill"></div>
-      </div>
+      <div class="progress-wrap"><div class="progress-fill" id="progress-fill"></div></div>
       <div class="info-block">
-        <div class="info-row">
-          <span class="k">Cycle</span>
-          <span class="v" id="info-pct">0%</span>
-        </div>
-        <div class="info-row">
-          <span class="k">Deg</span>
-          <span class="v" id="info-deg">0°</span>
-        </div>
-        <div class="info-row">
-          <span class="k">Target</span>
-          <span class="v" id="info-target">—</span>
-        </div>
+        <div class="info-row"><span class="k">Progress</span><span class="v" id="info-pct">0%</span></div>
+        <div class="info-row"><span class="k">Deg</span><span class="v" id="info-deg">0°</span></div>
+        <div class="info-row"><span class="k">Cycle end</span><span class="v" id="info-target">—</span></div>
+        <div class="info-row"><span class="k">P1 orbits</span><span class="v" id="info-o1">—</span></div>
+        <div class="info-row"><span class="k">P2 orbits</span><span class="v" id="info-o2">—</span></div>
       </div>
     </div>
 
     <div class="panel-section">
-      <div class="panel-label">Planet 1</div>
-      <div class="info-block" id="p1-info">
-        <div class="info-row"><span class="k">Name</span><span class="v" id="p1-name">Earth</span></div>
-        <div class="info-row"><span class="k">Period</span><span class="v" id="p1-ov">1 yr</span></div>
-        <div class="info-row"><span class="k">Distance</span><span class="v" id="p1-au">1.00 AU</span></div>
+      <div class="panel-label">Active — Planet 1</div>
+      <div class="info-block">
+        <div class="info-row"><span class="k">Name</span><span class="v" id="p1-name">—</span></div>
+        <div class="info-row"><span class="k">Period</span><span class="v" id="p1-ov">—</span></div>
+        <div class="info-row"><span class="k">Distance</span><span class="v" id="p1-au">—</span></div>
       </div>
     </div>
 
     <div class="panel-section">
-      <div class="panel-label">Planet 2</div>
-      <div class="info-block" id="p2-info">
-        <div class="info-row"><span class="k">Name</span><span class="v" id="p2-name">Venus</span></div>
-        <div class="info-row"><span class="k">Period</span><span class="v" id="p2-ov">0.615 yr</span></div>
-        <div class="info-row"><span class="k">Distance</span><span class="v" id="p2-au">0.72 AU</span></div>
+      <div class="panel-label">Active — Planet 2</div>
+      <div class="info-block">
+        <div class="info-row"><span class="k">Name</span><span class="v" id="p2-name">—</span></div>
+        <div class="info-row"><span class="k">Period</span><span class="v" id="p2-ov">—</span></div>
+        <div class="info-row"><span class="k">Distance</span><span class="v" id="p2-au">—</span></div>
       </div>
     </div>
 
     <div class="panel-section">
       <div class="panel-label">Resonance</div>
       <div class="info-block">
-        <div class="info-row"><span class="k">LCM cycle</span><span class="v" id="res-lcm">—</span></div>
-        <div class="info-row"><span class="k">Ratio</span><span class="v" id="res-ratio">—</span></div>
+        <div class="info-row"><span class="k">Approx ratio</span><span class="v" id="res-ratio">—</span></div>
+        <div class="info-row"><span class="k">Cycle length</span><span class="v" id="res-lcm">—</span></div>
       </div>
     </div>
 
     <div class="panel-section">
-      <div class="panel-label">File</div>
+      <div class="panel-label">Save filename</div>
       <div class="info-block">
-        <div class="info-row"><span class="k">Filename</span></div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--accent);word-break:break-all;line-height:1.5;" id="info-filename">—</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--accent);word-break:break-all;line-height:1.6;" id="info-filename">—</div>
       </div>
     </div>
 
   </aside>
 
-  <!-- ── FOOTER ── -->
   <footer>
-    <span>Dance of Planets v2.0 &nbsp;·&nbsp; Based on Dance of Venus v1.45</span>
-    <span>
-      Data: <a href="http://hyperphysics.phy-astr.gsu.edu/hbase/kepler.html" target="_blank">Hyperphysics</a>
-      &nbsp;·&nbsp;
-      <a href="https://www.jpl.nasa.gov/edu/pdfs/scaless_reference.pdf" target="_blank">JPL</a>
-    </span>
-    <span>© Jesal Mehta &nbsp;·&nbsp; @cabofcuriosity</span>
+    <span>Dance of Planets v2.0 · Based on Dance of Venus v1.45</span>
+    <span>Data: <a href="http://hyperphysics.phy-astr.gsu.edu/hbase/kepler.html" target="_blank">Hyperphysics</a> · <a href="https://www.jpl.nasa.gov/edu/pdfs/scaless_reference.pdf" target="_blank">JPL</a></span>
+    <span>© Jesal Mehta · @cabofcuriosity</span>
   </footer>
 
 </div>
@@ -521,121 +289,166 @@
 // ── Dance of Planets v2.0
 // © Jesal Mehta, @cabofcuriosity
 // Based on Dance of Venus v1.45
-// Data: hyperphysics.phy-astr.gsu.edu | jpl.nasa.gov
+// Data sources:
+//   http://hyperphysics.phy-astr.gsu.edu/hbase/kepler.html
+//   https://www.jpl.nasa.gov/edu/pdfs/scaless_reference.pdf
 
 new p5(function(s) {
 
-  // ── Solar system data (matching original variable style) ──
-  let solar = [];
+  // ── Solar system data (indices 1–9, matching original) ──
+  const solar = [
+    null,
+    { name:'Mercury', ov:0.241,  au:0.39   },
+    { name:'Venus',   ov:0.615,  au:0.72   },
+    { name:'Earth',   ov:1.000,  au:1.00   },
+    { name:'Mars',    ov:1.880,  au:1.52   },
+    { name:'Jupiter', ov:11.900, au:5.20   },
+    { name:'Saturn',  ov:29.500, au:9.54   },
+    { name:'Uranus',  ov:84.000, au:19.20  },
+    { name:'Neptune', ov:165.00, au:30.06  },
+    { name:'Pluto',   ov:248.00, au:40.00  },
+  ];
+
+  // ── Active drawing state (frozen at each reset) ──
   let rEarth, rVenus, avEarth, avVenus, scl;
   let deg, step;
   let px, py, xEarth, yEarth, xVenus, yVenus;
   let p1, p2;
-  let running = true;
-  let cycleTarget;
-  let loopMode = 'once'; // 'once' | 'cont'
+  let cycleTarget;  // in deg-driver units (see comment in doReset)
+  let loopMode;     // 'once' | 'cont'
+  let drawMode;     // 1 | 2
+  let fadeAlpha;
 
-  // ── UI refs ──
-  const selP1      = document.getElementById('sel-p1');
-  const selP2      = document.getElementById('sel-p2');
-  const slScl      = document.getElementById('sl-scl');
-  const slStp      = document.getElementById('sl-stp');
-  const valScl     = document.getElementById('val-scl');
-  const valStp     = document.getElementById('val-stp');
-  const btnReset   = document.getElementById('btn-reset');
-  const btnPP      = document.getElementById('btn-playpause');
-  const btnSave    = document.getElementById('btn-save');
-  const btnClear   = document.getElementById('btn-clear');
-  const statusDot  = document.getElementById('status-dot');
-  const statusText = document.getElementById('status-text');
-  const progFill   = document.getElementById('progress-fill');
-  const infoPct    = document.getElementById('info-pct');
-  const infoDeg    = document.getElementById('info-deg');
-  const infoTarget = document.getElementById('info-target');
-  const infoFile   = document.getElementById('info-filename');
+  // ── DOM ──
+  const selP1    = document.getElementById('sel-p1');
+  const selP2    = document.getElementById('sel-p2');
+  const slScl    = document.getElementById('sl-scl');
+  const txScl    = document.getElementById('tx-scl');
+  const slStp    = document.getElementById('sl-stp');
+  const txStp    = document.getElementById('tx-stp');
+  const slFade   = document.getElementById('sl-fade');
+  const txFade   = document.getElementById('tx-fade');
+  const btnReset = document.getElementById('btn-reset');
+  const btnPP    = document.getElementById('btn-playpause');
+  const btnSave  = document.getElementById('btn-save');
+  const btnClear = document.getElementById('btn-clear');
+  const pendNote = document.getElementById('pending-note');
 
-  function solarData() {
-    // index 0 unused; 1=Mercury … 9=Pluto
-    for (let i = 0; i <= 10; i++) solar.push({ ov: 0, au: 0, name: '' });
-    solar[1]  = { name:'Mercury', ov:0.241, au:0.39  };
-    solar[2]  = { name:'Venus',   ov:0.615, au:0.72  };
-    solar[3]  = { name:'Earth',   ov:1,     au:1     };
-    solar[4]  = { name:'Mars',    ov:1.88,  au:1.52  };
-    solar[5]  = { name:'Jupiter', ov:11.9,  au:5.2   };
-    solar[6]  = { name:'Saturn',  ov:29.5,  au:9.54  };
-    solar[7]  = { name:'Uranus',  ov:84,    au:19.2  };
-    solar[8]  = { name:'Neptune', ov:165,   au:30.06 };
-    solar[9]  = { name:'Pluto',   ov:248,   au:40    };
+  // ── Sync slider <-> number input ──
+  function syncPair(sl, tx, onDone) {
+    sl.addEventListener('input', () => { tx.value = sl.value; markDirty(); if(onDone) onDone(parseFloat(sl.value)); });
+    tx.addEventListener('change', () => {
+      let v = parseFloat(tx.value);
+      v = Math.max(parseFloat(tx.min), Math.min(parseFloat(tx.max), isNaN(v) ? parseFloat(tx.min) : v));
+      tx.value = v; sl.value = v;
+      markDirty(); if(onDone) onDone(v);
+    });
   }
 
-  function lcmYears(a, b) {
-    // LCM of two orbital periods (float): find approx integer ratio
-    // Use the ratio period_a/period_b, approximate as fraction p/q
-    const ratio = a / b;
-    const tol = 0.01;
-    for (let q = 1; q <= 200; q++) {
+  // Scale is special: applies live without reset
+  syncPair(slScl, txScl, (v) => {
+    scl = s.width / 2 * (v / 100);
+    // Rebase px/py so midpoint trail doesn't jump
+    xEarth = rEarth * scl * s.cos(avEarth * deg);
+    yEarth = rEarth * scl * s.sin(avEarth * deg);
+    xVenus = rVenus * scl * s.cos(avVenus * deg);
+    yVenus = rVenus * scl * s.sin(avVenus * deg);
+    px = (xEarth + xVenus) / 2;
+    py = (yEarth + yVenus) / 2;
+  });
+  syncPair(slStp, txStp);
+  syncPair(slFade, txFade);
+
+  function markDirty() {
+    pendNote.classList.add('show');
+  }
+  document.querySelectorAll('.setting').forEach(el => {
+    el.addEventListener('change', markDirty);
+  });
+
+  // ── Resonance: find smallest n1, n2 integers where n1*T1 ≈ n2*T2 ──
+  // Strategy: ratio = T2/T1, find best p/q rational approximation
+  // Then n1=q orbits of P1, n2=p orbits of P2 close the pattern.
+  function findResonance(T1, T2) {
+    if (T1 === T2) return { n1:1, n2:1, cycleYears: T1 };
+    const ratio = T2 / T1;
+    const tol = 0.004;
+    let bestP = 1, bestQ = 1, bestErr = Infinity;
+    for (let q = 1; q <= 1000; q++) {
       const p = Math.round(ratio * q);
-      if (Math.abs(p / q - ratio) < tol) {
-        // LCM in years = a * q / gcd(p,q) ... simplified: a*q
-        return { years: (a * q).toFixed(1), p, q };
-      }
+      if (p < 1) continue;
+      const err = Math.abs(p / q - ratio);
+      if (err < bestErr) { bestErr = err; bestP = p; bestQ = q; }
+      if (err < tol) break;
     }
-    return { years: '—', p: '?', q: '?' };
+    return { n1: bestQ, n2: bestP, cycleYears: bestQ * T1 };
   }
 
-  function updatePlanetInfo() {
-    p1 = parseInt(selP1.value);
-    p2 = parseInt(selP2.value);
-    document.getElementById('p1-name').textContent = solar[p1].name;
-    document.getElementById('p1-ov').textContent   = solar[p1].ov + ' yr';
-    document.getElementById('p1-au').textContent   = solar[p1].au + ' AU';
-    document.getElementById('p2-name').textContent = solar[p2].name;
-    document.getElementById('p2-ov').textContent   = solar[p2].ov + ' yr';
-    document.getElementById('p2-au').textContent   = solar[p2].au + ' AU';
-
-    const res = lcmYears(solar[p1].ov, solar[p2].ov);
-    document.getElementById('res-lcm').textContent   = res.years + ' yr';
-    document.getElementById('res-ratio').textContent = res.p + ':' + res.q;
-
-    updateFilename();
+  function updateInfoPanel(a_p1, a_p2, res) {
+    document.getElementById('p1-name').textContent = solar[a_p1].name;
+    document.getElementById('p1-ov').textContent   = solar[a_p1].ov + ' yr';
+    document.getElementById('p1-au').textContent   = solar[a_p1].au + ' AU';
+    document.getElementById('p2-name').textContent = solar[a_p2].name;
+    document.getElementById('p2-ov').textContent   = solar[a_p2].ov + ' yr';
+    document.getElementById('p2-au').textContent   = solar[a_p2].au + ' AU';
+    document.getElementById('res-ratio').textContent = res.n1 + ' : ' + res.n2;
+    document.getElementById('res-lcm').textContent   = res.cycleYears.toFixed(2) + ' yr';
+    document.getElementById('info-o1').textContent   = res.n1 + ' orbits of ' + solar[a_p1].name;
+    document.getElementById('info-o2').textContent   = res.n2 + ' orbits of ' + solar[a_p2].name;
+    // cycleTarget in deg-driver space = n1 * (360 / avEarth)
+    // because planet1 completes one orbit when avEarth*deg = 360 → deg = 360/avEarth
+    const ctDeg = res.n1 * (360 / solar[a_p1].ov);
+    document.getElementById('info-target').textContent = ctDeg.toFixed(1) + '°';
+    updateFilename(a_p1, a_p2);
   }
 
-  function updateFilename() {
-    const n1 = solar[parseInt(selP1.value)].name;
-    const n2 = solar[parseInt(selP2.value)].name;
+  function updateFilename(a_p1, a_p2) {
+    const n1  = solar[a_p1].name;
+    const n2  = solar[a_p2].name;
     const now = new Date();
     const pad = n => String(n).padStart(2,'0');
-    const ts = `${now.getFullYear()}_${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-    const res = (slStp.value/10).toFixed(1).replace('.','p');
-    infoFile.textContent = `${n1}_${n2}_${ts}_${res}.png`;
+    const ts  = `${now.getFullYear()}_${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    const res = parseFloat(txStp.value).toFixed(1).replace('.','p');
+    document.getElementById('info-filename').textContent = `${n1}_${n2}_${ts}_${res}.png`;
   }
 
-  function initPlanets() {
-    p1 = parseInt(selP1.value);
-    p2 = parseInt(selP2.value);
+  function setStatus(state) {
+    document.getElementById('status-dot').className = 'status-dot ' + state;
+    document.getElementById('status-text').textContent =
+      state === 'running' ? 'Running' : state === 'paused' ? 'Paused' : 'Complete';
+    btnPP.textContent = (state === 'paused') ? '▶ Resume' : '⏸ Pause';
+  }
+
+  // ── RESET: freeze all settings, restart drawing ──
+  function doReset() {
+    p1       = parseInt(selP1.value);
+    p2       = parseInt(selP2.value);
+    loopMode = document.querySelector('input[name="loop"]:checked').value;
+    drawMode = parseInt(document.querySelector('input[name="mode"]:checked').value);
+    fadeAlpha = parseInt(txFade.value);
+    step     = parseFloat(txStp.value);
+
+    // Scale: slider is % of canvas radius (e.g. value 8 → 8% → 0.08)
+    const sclPct = parseFloat(txScl.value);
+    scl = s.width / 2 * (sclPct / 100);
 
     rEarth  = solar[p1].au;
     rVenus  = solar[p2].au;
     avEarth = solar[p1].ov;
     avVenus = solar[p2].ov;
 
-    const m = slScl.value / 100;
-    scl = s.width / 2 * m;
-    step = slStp.value / 10;
+    const res = findResonance(avEarth, avVenus);
+
+    // ── Cycle target in deg-driver space ──
+    // Our loop variable `deg` is a raw angle driver.
+    // Planet 1 position: angle = avEarth * deg  (in degrees)
+    // Planet 1 completes one full orbit when avEarth * deg = 360
+    //   → deg = 360 / avEarth
+    // To complete n1 full orbits of Planet 1:
+    //   cycleTarget = n1 * (360 / avEarth)
+    cycleTarget = res.n1 * (360 / avEarth);
 
     deg = 0;
-
-    // Safe-guard: if same planet, avVenus will equal avEarth but no division by zero in the math
-    // The pattern will just be a dot (midpoint of identical positions)
-
-    // Cycle target: 360 * LCM in years (years → degrees at avEarth=1 baseline)
-    // We drive deg in "Earth-year-degrees", so one full cycle = 360 * max_period
-    const maxPeriod = Math.max(avEarth, avVenus);
-    const res = lcmYears(avEarth, avVenus);
-    cycleTarget = parseFloat(res.years) * 360;
-    if (isNaN(cycleTarget) || cycleTarget <= 0) cycleTarget = 360 * maxPeriod * 10;
-    infoTarget.textContent = cycleTarget.toFixed(0) + '°';
-
     xEarth = rEarth * scl * s.cos(avEarth * deg);
     yEarth = rEarth * scl * s.sin(avEarth * deg);
     xVenus = rVenus * scl * s.cos(avVenus * deg);
@@ -643,53 +456,13 @@ new p5(function(s) {
     px = (xEarth + xVenus) / 2;
     py = (yEarth + yVenus) / 2;
 
-    running = true;
-    setStatus('running');
-    updatePlanetInfo();
-  }
-
-  function resetCanvas() {
-    loopMode = document.querySelector('input[name="loop"]:checked').value;
     s.background(0);
-    initPlanets();
-    s.loop();
+    pendNote.classList.remove('show');
+    setStatus('running');
+    if (!s.isLooping()) s.loop();
+
+    updateInfoPanel(p1, p2, res);
   }
-
-  function setStatus(state) {
-    statusDot.className = 'status-dot ' + state;
-    statusText.textContent = state === 'running' ? 'Running'
-                           : state === 'paused'  ? 'Paused'
-                           : 'Complete';
-    btnPP.textContent = (state === 'paused') ? '▶ Resume' : '⏸ Pause';
-  }
-
-  function saveImg() {
-    updateFilename();
-    const fname = infoFile.textContent.replace('.png','');
-    s.saveCanvas(fname, 'png');
-  }
-
-  // ── Slider display updates ──
-  slScl.addEventListener('input', () => {
-    valScl.textContent = (slScl.value / 100).toFixed(2);
-  });
-  slStp.addEventListener('input', () => {
-    valStp.textContent = (slStp.value / 10).toFixed(1);
-  });
-
-  btnReset.addEventListener('click', resetCanvas);
-  btnClear.addEventListener('click', () => s.background(0));
-  btnSave.addEventListener('click', saveImg);
-  btnPP.addEventListener('click', () => {
-    if (!running) return;
-    if (s.isLooping()) {
-      s.noLoop();
-      setStatus('paused');
-    } else {
-      s.loop();
-      setStatus('running');
-    }
-  });
 
   // ── p5 setup ──
   s.setup = function() {
@@ -699,47 +472,44 @@ new p5(function(s) {
     s.background(0);
     s.stroke(255);
     s.noFill();
+    doReset();
 
-    solarData();
-    initPlanets();
-
-    // Scroll wheel zoom
+    // Scroll wheel zoom — applies live without reset
     document.getElementById('canvas-container').addEventListener('wheel', (e) => {
       e.preventDefault();
-      let v = parseInt(slScl.value);
-      v = s.constrain(v + (e.deltaY < 0 ? 2 : -2), 1, 100);
-      slScl.value = v;
-      valScl.textContent = (v / 100).toFixed(2);
-      // update scl live (affects next frame positions)
+      let v = parseFloat(slScl.value);
+      const delta = e.deltaY < 0 ? 0.5 : -0.5;
+      v = Math.round(Math.max(0.5, Math.min(50, v + delta)) * 10) / 10;
+      slScl.value = v; txScl.value = v;
       scl = s.width / 2 * (v / 100);
+      // Rebase midpoint so trail doesn't jump on zoom
+      xEarth = rEarth * scl * s.cos(avEarth * deg);
+      yEarth = rEarth * scl * s.sin(avEarth * deg);
+      xVenus = rVenus * scl * s.cos(avVenus * deg);
+      yVenus = rVenus * scl * s.sin(avVenus * deg);
+      px = (xEarth + xVenus) / 2;
+      py = (yEarth + yVenus) / 2;
     }, { passive: false });
-
-    updatePlanetInfo();
   };
 
   // ── p5 draw ──
   s.draw = function() {
-    loopMode = document.querySelector('input[name="loop"]:checked').value;
-    const drawMode = parseInt(document.querySelector('input[name="mode"]:checked').value);
 
-    // Continuous fade mode
+    // ── Continuous fade: full-canvas black overlay in SCREEN space (before any translate) ──
     if (loopMode === 'cont') {
       s.push();
       s.noStroke();
-      s.fill(0, 18);
-      s.rect(-s.width/2, -s.height/2, s.width, s.height);
+      s.fill(0, fadeAlpha);
+      // Draw rect from (0,0) in screen space — no translate active here
+      s.rect(0, 0, s.width, s.height);
       s.pop();
     }
 
+    // ── All orbital drawing in centred coordinate space ──
     s.push();
     s.translate(s.width / 2, s.height / 2);
     s.stroke(255);
     s.noFill();
-
-    // Live scale from slider (scroll wheel updates scl directly)
-    const m = slScl.value / 100;
-    scl = s.width / 2 * m;
-    step = slStp.value / 10;
 
     xEarth = rEarth * scl * s.cos(avEarth * deg);
     yEarth = rEarth * scl * s.sin(avEarth * deg);
@@ -755,25 +525,25 @@ new p5(function(s) {
       s.line(px, py, mx, my);
     }
 
-    deg += step;
-    px = mx;
-    py = my;
+    deg  += step;
+    px    = mx;
+    py    = my;
+
     s.pop();
 
-    // Progress update
-    const pct = s.min(100, (deg / cycleTarget) * 100);
-    progFill.style.width = pct.toFixed(1) + '%';
-    infoPct.textContent  = pct.toFixed(1) + '%';
-    infoDeg.textContent  = deg.toFixed(1) + '°';
+    // ── Progress ──
+    const pct = cycleTarget > 0 ? Math.min(100, (deg / cycleTarget) * 100) : 0;
+    document.getElementById('progress-fill').style.width = pct.toFixed(1) + '%';
+    document.getElementById('info-pct').textContent = pct.toFixed(1) + '%';
+    document.getElementById('info-deg').textContent = deg.toFixed(1) + '°';
 
-    // Cycle end
+    // ── Cycle end ──
     if (deg >= cycleTarget + step) {
       if (loopMode === 'once') {
         s.noLoop();
-        running = false;
         setStatus('done');
       } else {
-        // continuous: reset deg but keep drawing on same canvas
+        // Restart deg, rebase position
         deg = 0;
         xEarth = rEarth * scl * s.cos(avEarth * deg);
         yEarth = rEarth * scl * s.sin(avEarth * deg);
@@ -784,6 +554,19 @@ new p5(function(s) {
       }
     }
   };
+
+  // ── Button events ──
+  btnReset.addEventListener('click', doReset);
+  btnClear.addEventListener('click', () => { s.background(0); });
+  btnPP.addEventListener('click', () => {
+    if (s.isLooping()) { s.noLoop(); setStatus('paused'); }
+    else               { s.loop();   setStatus('running'); }
+  });
+  btnSave.addEventListener('click', () => {
+    updateFilename(p1, p2);
+    const fname = document.getElementById('info-filename').textContent.replace('.png','');
+    s.saveCanvas(fname, 'png');
+  });
 
 }, document.body);
 </script>
