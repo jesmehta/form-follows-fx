@@ -3,6 +3,28 @@ import { seededRandom, pickFromId } from "./random.js";
 import { buildRectTree, getCandidateRects, assignEntries } from "./subdivision.js";
 
 const field = document.querySelector("#subdivision-field");
+const sectionMenu = document.querySelector("#section-menu");
+
+// Built once, not per render(): the set of sections that ever appear
+// (enabled + at least one visible entry) doesn't change without a code
+// edit, only their on-page *position* does. Each button looks up its
+// anchor by id at click time (not at attach time), so it always finds
+// whichever anchor the current render() pass created.
+function buildSectionMenu() {
+  const visibleSectionIds = new Set(entries.filter(e => e.status !== false).map(e => e.section));
+  const menuSections = sections.filter(s => s.enabled && visibleSectionIds.has(s.id)).sort((a, b) => a.order - b.order);
+
+  sectionMenu.innerHTML = menuSections.map(s =>
+    `<button type="button" data-section-id="${s.id}">${s.label}</button>`
+  ).join("");
+
+  sectionMenu.querySelectorAll("button").forEach(button => {
+    button.addEventListener("click", () => {
+      const anchor = document.getElementById(`section-anchor-${button.dataset.sectionId}`);
+      if (anchor) anchor.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+}
 
 // One fresh random component per page load (module scope = evaluated
 // once when the script first runs), not per render() call. That keeps
@@ -42,36 +64,43 @@ function fillerContent(treatment, rect, rng) {
   }
 }
 
-// PLACEHOLDER pending the real per-section colour pass (v2.0 phase 4):
-// now that the tree is partitioned by section first (see buildRectTree()
-// in subdivision.js), a rect's id no
-// longer encodes which section it's in — id segments encode the rect's
-// position in the section *chain* and its own internal subdivision, not
-// section identity. The old "first segment after 0" trick is therefore
-// meaningless now and would silently produce nonsense groupings. Every
-// rect carries an explicit `sectionId` already (inherited from its
-// section's root, tagged in buildRectTree()), so this hashes that string
-// directly to pick warm or cool — still just a placeholder two-tone
-// split, not the real per-section-hue structure-layer work, which is
-// still pending.
-const STRUCT_TINT_WARM = "168, 99, 47";
-const STRUCT_TINT_COOL = "74, 90, 122";
+// v2.0 phase 4: every rect carries a `sectionId` (inherited from its
+// section's root — see buildRectTree() in subdivision.js), so the
+// structure layer now tints by section instead of the old warm/cool
+// placeholder. These are the same ten hues as landing.css's
+// `--accent-<section>` custom properties (hsl(H, 58%, 62%) each,
+// 36° apart) — duplicated here as plain RGB triples because the inline
+// `rgba()` string this feeds (see renderStruct() below) needs actual
+// numbers, not a CSS var lookup. If a section's hue in landing.css ever
+// changes, recompute its RGB triple here to match (HSL→RGB by hand;
+// there's no shared single source of truth between the two files for
+// this, same as the original STRUCT_TINT_WARM/COOL constants before it).
+const SECTION_TINTS = {
+  "prompt-collections": "214, 158, 102",
+  "deep-studies": "203, 214, 102",
+  "recreating-the-past": "136, 214, 102",
+  "tools-and-libraries": "102, 214, 136",
+  "generative-projects": "102, 214, 203",
+  "image-experiments": "102, 158, 214",
+  "sketch-families": "113, 102, 214",
+  "plotter-fabrication": "181, 102, 214",
+  "code-to-objects": "214, 102, 181",
+  "legacy-processing": "214, 102, 113"
+};
+const STRUCT_TINT_FALLBACK = "127, 135, 150";
 
 function tintForRect(rect) {
-  if (!rect.sectionId) return STRUCT_TINT_WARM;
-  let hash = 0;
-  for (let i = 0; i < rect.sectionId.length; i++) {
-    hash = (hash * 31 + rect.sectionId.charCodeAt(i)) | 0;
-  }
-  return Math.abs(hash) % 2 === 0 ? STRUCT_TINT_WARM : STRUCT_TINT_COOL;
+  return SECTION_TINTS[rect.sectionId] || STRUCT_TINT_FALLBACK;
 }
 
 // One div per non-root rect, filled with a low, constant alpha. Rects
 // are drawn in the order they appear in allRects — pre-order, parent
 // always before its children — so for any point on the field, every
 // rect that covers it (its full ancestor chain) paints in shallow-to-
-// deep order, accumulating stacked layers and drifting warm or cool
-// depending on which branch they're on.
+// deep order, accumulating stacked layers of that point's own section's
+// hue. Colour reads as "which section," alpha-stacking reads as "how
+// nested" — two separate signals, not one warm/cool duality (the v1.0
+// approach, since superseded — see tintForRect() above).
 //
 // No inset math here — rect.x/y/width/height are already the inset
 // geometry, baked in by buildRectTree() at split time (see insetRect()
@@ -177,14 +206,6 @@ function render() {
   const depthConfig = isMobile ? layoutConfig.mobile : layoutConfig.desktop;
 
   const fieldWidth = field.clientWidth;
-  const fieldHeight = Math.max(
-    field.clientHeight,
-    isMobile ? entries.length * 230 : field.clientHeight
-  );
-
-  document.body.classList.toggle("fffx-is-mobile", isMobile);
-
-  const rng = seededRandom(`${landingConfig.seed}-${loadSeed}-${fieldWidth}-${fieldHeight}`);
 
   const visibleEntries = [...entries]
     .filter(entry => entry.status !== false)
@@ -203,17 +224,53 @@ function render() {
       order: s.order,
       weight: visibleEntries
         .filter(entry => entry.section === s.id)
-        .reduce((sum, entry) => sum + entry.weight, 0)
+        .reduce((sum, entry) => sum + entry.weight, 0),
+      entryCount: visibleEntries.filter(entry => entry.section === s.id).length
     }))
     .filter(s => s.weight > 0)
     .sort((a, b) => a.order - b.order);
 
-  const rootRect = { id: "0", parentId: null, depth: 0, x: 0, y: 0, width: fieldWidth, height: fieldHeight };
-  const { allRects, leafRects } = buildRectTree(rootRect, sectionWeights, { ...layoutConfig, ...depthConfig }, rng);
-
   const minThumbWidth = isMobile
     ? fieldWidth * layoutConfig.mobile.minThumbWidthRatio
     : layoutConfig.desktop.minThumbWidth;
+  const minThumbHeight = depthConfig.minThumbHeight;
+
+  // A section's area share of the field is (weight_i / totalWeight) ×
+  // fieldArea — so for every section's share to clear its own hard
+  // floor (one minThumbWidth × minThumbHeight candidate per visible
+  // entry it has, times sectionAreaBuffer headroom) *simultaneously*,
+  // the field needs to be at least as large as whichever section's
+  // (floor ÷ its own weight) ratio is most demanding, scaled by the
+  // total weight. This is what replaces the old mobile-only
+  // `entries.length * 230` heuristic — that was a flat guess unrelated
+  // to actual thumb-size thresholds or section weight, and had no
+  // desktop equivalent at all, which is exactly how a low-weight
+  // section (e.g. one with a single entry) could end up narrower than
+  // minThumbWidth without anything ever growing the field to compensate
+  // — see the bug writeup in LANDING-PAGE-NOTES.md.
+  const totalSectionWeight = sectionWeights.reduce((sum, s) => sum + s.weight, 0) || 1;
+  const requiredFieldArea = sectionWeights.reduce((max, s) => {
+    const minSectionArea = s.entryCount * minThumbWidth * minThumbHeight * layoutConfig.sectionAreaBuffer;
+    return Math.max(max, (minSectionArea / s.weight) * totalSectionWeight);
+  }, 0);
+  const requiredFieldHeight = fieldWidth > 0 ? requiredFieldArea / fieldWidth : 0;
+
+  const fieldHeight = Math.max(field.clientHeight, requiredFieldHeight);
+
+  // #subdivision-field has `overflow: hidden` and every child is
+  // `position: absolute`, so the element never grows to fit its content
+  // on its own — without this, any fieldHeight taller than the CSS
+  // min-height would silently clip whatever got placed below it. This
+  // is what actually makes the grown height visible/scrollable, not
+  // just a number used for layout math.
+  field.style.height = `${fieldHeight}px`;
+
+  document.body.classList.toggle("fffx-is-mobile", isMobile);
+
+  const rng = seededRandom(`${landingConfig.seed}-${loadSeed}-${fieldWidth}-${fieldHeight}`);
+
+  const rootRect = { id: "0", parentId: null, depth: 0, x: 0, y: 0, width: fieldWidth, height: fieldHeight };
+  const { allRects, leafRects, sectionRoots } = buildRectTree(rootRect, sectionWeights, { ...layoutConfig, ...depthConfig }, rng);
 
   const candidateRects = getCandidateRects(
     allRects,
@@ -268,7 +325,26 @@ function render() {
     .forEach((rect, index) => {
       field.appendChild(renderFiller(rect, rng, index));
     });
+
+  // Invisible, zero-size scroll targets — one per section root. Each
+  // section's tiles already live inside this exact rect (see the
+  // assignment-scoping comment above), so this is what the section menu
+  // scrolls to: a real, stable region, not a guess. Recreated every
+  // render() since field.innerHTML is cleared each time; the menu's
+  // click handlers look these up by id at click time, so they always
+  // find whichever pass most recently created them.
+  sectionRoots.forEach(rect => {
+    const anchor = document.createElement("div");
+    anchor.id = `section-anchor-${rect.sectionId}`;
+    anchor.style.position = "absolute";
+    anchor.style.left = `${rect.x}px`;
+    anchor.style.top = `${rect.y}px`;
+    anchor.style.width = "1px";
+    anchor.style.height = "1px";
+    field.appendChild(anchor);
+  });
 }
 
 render();
 window.addEventListener("resize", render);
+buildSectionMenu();

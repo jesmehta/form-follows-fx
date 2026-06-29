@@ -53,6 +53,15 @@ export const landingConfig = {
     structInset: 1.5,
     structAlpha: 0.05,
 
+    // How much headroom a section's guaranteed minimum area gets beyond
+    // the bare "one minThumbWidth × minThumbHeight candidate per visible
+    // entry" floor — see layout.js's field-height growth calculation.
+    // >1 on purpose: subdivision/inset overhead and the section's own
+    // filler space both eat into the raw area before a tile candidate
+    // ever appears, and excess negative space is explicitly preferred
+    // over a section being too cramped to fit its own entries.
+    sectionAreaBuffer: 3,
+
     desktop: {
       // One step deeper and a lower size floor than before — with tiles
       // now claiming ~65% of the field (see targetTileAreaFraction), the

@@ -28,17 +28,13 @@ function insetRect(rect, d) {
   return { ...rect, x: rect.x + d, y: rect.y + d, width: rect.width - 2 * d, height: rect.height - 2 * d };
 }
 
-// Splits one rect into two by `ratio` (childA's share), along whichever
-// axis is currently longer — the same heuristic used for every ordinary
-// subdivision pass and reused for the section-chain split below, so both
-// kinds of split produce geometrically identical results for a given
-// rect/ratio. `depth` is only used to label the children; callers that
-// want a different depth numbering (see buildRectTree's section roots)
+// Splits one rect into two by `ratio` (childA's share), along an
+// explicit axis (`vertical: true` = side-by-side, `false` = stacked).
+// `depth` is only used to label the children; callers that want a
+// different depth numbering (see buildRectTree's section roots)
 // override it afterward.
-function splitRect(rect, ratio, depth) {
-  const splitVertical = rect.width >= rect.height;
-
-  if (splitVertical) {
+function splitRectOnAxis(rect, ratio, depth, vertical) {
+  if (vertical) {
     const leftWidth = rect.width * ratio;
     const rightWidth = rect.width - leftWidth;
     return {
@@ -53,6 +49,37 @@ function splitRect(rect, ratio, depth) {
     childA: { id: `${rect.id}.0`, parentId: rect.id, depth: depth + 1, x: rect.x, y: rect.y, width: rect.width, height: topHeight },
     childB: { id: `${rect.id}.1`, parentId: rect.id, depth: depth + 1, x: rect.x, y: rect.y + topHeight, width: rect.width, height: bottomHeight }
   };
+}
+
+// Ordinary subdivision: split along whichever axis is currently longer.
+// Fine — good, even — for repeated *random* subdivision, where the goal
+// is overall visual variety, not any single split's shape. Wrong for
+// the section-chain peel below, which is why that one uses
+// splitRectSquarified() instead, not this.
+function splitRect(rect, ratio, depth) {
+  return splitRectOnAxis(rect, ratio, depth, rect.width >= rect.height);
+}
+
+function aspectDistortion(rect) {
+  return Math.max(rect.width, rect.height) / Math.min(rect.width, rect.height);
+}
+
+// Squarified choice, used only for the section-chain peel in
+// buildRectTree(). Tries both axes and keeps whichever leaves the
+// peeled-off section (childA) closer to square. "Whichever axis is
+// currently longer" (splitRect's heuristic) breaks down here: on a
+// landscape field, width starts longer and *stays* longer through
+// several consecutive peels, since each peel only shaves a small
+// fraction off it — so every early section in the chain got sliced from
+// the same axis regardless of how little area it actually needed,
+// producing thin vertical slivers (see the bug writeup in
+// LANDING-PAGE-NOTES.md: a low-weight section landing third in the
+// chain ended up ~160px wide × full field height, well under
+// minThumbWidth, even though its *area* share was perfectly reasonable).
+function splitRectSquarified(rect, ratio, depth) {
+  const vertical = splitRectOnAxis(rect, ratio, depth, true);
+  const horizontal = splitRectOnAxis(rect, ratio, depth, false);
+  return aspectDistortion(vertical.childA) <= aspectDistortion(horizontal.childA) ? vertical : horizontal;
 }
 
 // v2.0: the root no longer subdivides freely from the start. It first
@@ -113,7 +140,7 @@ export function buildRectTree(rootRect, sections, depthConfig, rng) {
     }
 
     const ratio = section.weight / remainingWeight;
-    const { childA, childB } = splitRect(remaining, ratio, 0);
+    const { childA, childB } = splitRectSquarified(remaining, ratio, 0);
     const sectionRect = { ...insetRect(childA, inset), depth: 0 };
     const restRect = insetRect(childB, inset);
 

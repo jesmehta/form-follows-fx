@@ -1,31 +1,55 @@
 .fffx-landing {
-  --bg: #f5f1e6;
-  --ink: #18181a;
-  --muted: #65605a;
-  --line: rgba(20, 18, 14, 0.2);
-  --line-soft: rgba(20, 18, 14, 0.09);
-  --tile: #fffcf4;
-  --accent: #c4452e;
-  --filler-mark: rgba(24, 22, 18, 0.32);
+  /* v2.0 dark + cyan palette. Token *names* are unchanged from v1.0
+     (DESIGN-SYSTEM.md/LANDING-PAGE-NOTES.md already document them) —
+     only the values flip from the v1.0 light-paper theme to this one.
+     --ink now holds light text/border colour (dark bg needs light ink,
+     not dark), --tile is a dark slate a touch lighter than --bg rather
+     than near-white, and --accent is reserved as the *single* saturated
+     colour on the page — cyan — used only for hover/focus states and as
+     the fallback tile accent, never as a section colour. */
+  --bg: #0a0d13;
+  --ink: #e7e9f0;
+  --muted: #7f879c;
+  --line: rgba(255, 255, 255, 0.14);
+  --line-soft: rgba(255, 255, 255, 0.06);
+  --tile: #12161f;
+  --tile-hover: #1b212c;
+  --accent: #00d4ff;
+  --filler-mark: rgba(255, 255, 255, 0.22);
 
-  /* One muted accent hue per `section` value (see data.js). Tools &
-     Libraries deliberately reuses --accent rather than getting its own
-     hue, so the flagship tile keeps the original brand colour. */
-  --accent-prompt-collections: #b85c38;
-  --accent-deep-studies: #7a7d3c;
-  --accent-recreating-the-past: #7a4a6b;
-  --accent-tools-and-libraries: var(--accent);
-  --accent-generative-projects: #3d7a6e;
-  --accent-image-experiments: #4a5a7a;
-  --accent-sketch-families: #4f6b3c;
-  --accent-plotter-fabrication: #a8632f;
-  --accent-code-to-objects: #8a4a3a;
-  --accent-legacy-processing: #555f6b;
+  /* One accent hue per `section` value (see data.js), all at matched
+     saturation/lightness (58%/62%) so no section reads as more or less
+     important than another by colour alone — only hue differs. Spaced
+     36° apart around the wheel, offset to avoid the ~175–205° band
+     where --accent's cyan sits, so no section hue gets confused with
+     the one global interactive accent. No section reuses --accent
+     (an earlier version special-cased Tools & Libraries to do that;
+     dropped now that --accent's role is strictly "the one cross-cutting
+     accent," not a section's brand colour). */
+  --accent-prompt-collections: hsl(30, 58%, 62%);
+  --accent-deep-studies: hsl(66, 58%, 62%);
+  --accent-recreating-the-past: hsl(102, 58%, 62%);
+  --accent-tools-and-libraries: hsl(138, 58%, 62%);
+  --accent-generative-projects: hsl(174, 58%, 62%);
+  --accent-image-experiments: hsl(210, 58%, 62%);
+  --accent-sketch-families: hsl(246, 58%, 62%);
+  --accent-plotter-fabrication: hsl(282, 58%, 62%);
+  --accent-code-to-objects: hsl(318, 58%, 62%);
+  --accent-legacy-processing: hsl(354, 58%, 62%);
+
+  /* v2.0 phase 6: primary text (headings, body, the section menu) moves
+     off the system-sans stack onto Space Grotesk; the mono *accent*
+     elements (eyebrow, coords, tags, filler marks — already isolated
+     via var(--font-mono) below) upgrade from "Courier New" to IBM Plex
+     Mono now that a webfont stylesheet is loaded anyway. Loaded in
+     index.html's <head>. */
+  --font-display: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", "Courier New", monospace;
 
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-display);
 }
 
 .fffx-landing * {
@@ -40,7 +64,7 @@
 }
 
 .fffx-landing .eyebrow {
-  font-family: "Courier New", monospace;
+  font-family: var(--font-mono);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 0.72rem;
@@ -58,6 +82,34 @@
   max-width: 620px;
   font-size: 1.05rem;
   color: var(--muted);
+}
+
+/* ---------- section menu ---------- */
+
+.fffx-landing .fffx-section-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.6rem;
+  margin-top: 1.1rem;
+}
+
+.fffx-landing .fffx-section-menu button {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--line);
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+
+.fffx-landing .fffx-section-menu button:hover,
+.fffx-landing .fffx-section-menu button:focus-visible {
+  color: var(--accent);
+  border-color: var(--accent);
 }
 
 /* ---------- the subdivision field ---------- */
@@ -85,7 +137,7 @@
 .fffx-landing .fffx-struct {
   position: absolute;
   pointer-events: none;
-  border: 1px solid rgba(24, 22, 18, 0.05);
+  border: 1px solid var(--line-soft);
 }
 
 /* ---------- project tiles ---------- */
@@ -144,7 +196,7 @@
 .fffx-landing .fffx-tile:hover,
 .fffx-landing .fffx-tile:focus-visible {
   transform: scale(1.015);
-  background: white;
+  background: var(--tile-hover);
   border-width: 2.5px;
   z-index: 20;
 }
@@ -322,7 +374,7 @@
 }
 
 .fffx-landing .fffx-tile-tags li {
-  font-family: "Courier New", monospace;
+  font-family: var(--font-mono);
   font-size: 0.62rem;
   letter-spacing: 0.03em;
   color: var(--muted);
@@ -335,7 +387,7 @@
   top: 4px;
   right: 6px;
   z-index: 2;
-  font-family: "Courier New", monospace;
+  font-family: var(--font-mono);
   font-size: 0.6rem;
   color: var(--muted);
   opacity: 0.45;
@@ -387,7 +439,7 @@
 }
 
 .fffx-landing .fffx-cell-mark {
-  font-family: "Courier New", monospace;
+  font-family: var(--font-mono);
   color: var(--filler-mark);
   line-height: 1;
 }
