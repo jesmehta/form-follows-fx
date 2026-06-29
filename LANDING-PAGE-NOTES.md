@@ -119,11 +119,15 @@ entries = [{
 To add a portal: append to `entries` with all twelve required fields
 filled in, pick `order` relative to existing entries, pick `weight` 1–4
 per the rule above (`circle-packing-library` is currently the only
-weight-4 feature entry). If the portal has its own write-up page, add the
-`.md` file under the matching `docs/<section-folder>/` — but only add a
-`mkdocs.yml` `nav:` entry once that page has real content; otherwise
-leave the page in place and the nav line commented out (see "MkDocs
-integration" below).
+weight-4 feature entry). `href` must be **relative, no leading slash**
+(`tools-and-libraries/mandala-generator/`, not
+`/tools-and-libraries/mandala-generator/`) — see "Deployment" further
+down for why a leading slash breaks the link as soon as the site is
+served from anywhere other than a domain root. If the portal has its own
+write-up page, add the `.md` file under the matching
+`docs/<section-folder>/` — but only add a `mkdocs.yml` `nav:` entry once
+that page has real content; otherwise leave the page in place and the
+nav line commented out (see "MkDocs integration" below).
 
 ### `status`
 
@@ -341,6 +345,37 @@ before handing it to `getCandidateRects`. Worth remembering if a similar
 again — check for silent `undefined` comparisons in the candidate filter
 first.
 
+### Known bug fixed (2026-06-29, inset)
+
+An earlier attempt at the structure-layer inset computed
+`inset = rect.depth * structInset` in `renderStruct()` against each
+rect's **raw** bounds — i.e. the same untouched geometry
+`buildRectTree()` always produced, where a child's bounds always touch
+its parent's and siblings' exactly with zero gap. Computing an inset
+independently per node against bounds that were never inset to begin
+with has no reliable relationship to where the parent is actually
+*drawn* — depth-proportional inset against a flat, never-shrunk tree
+produces inconsistent, overlapping-looking gaps ("haywire"), not a clean
+nested-frame effect.
+
+The fix: bake the inset into the recursion itself, in
+`subdivision.js`'s `buildRectTree()`. After computing a raw split
+(`childA`/`childB`, exactly as before), each child is passed through
+`insetRect(child, d)` — `x += d, y += d, width -= d, height -= d`
+(`d = structInset`, **not** `width -= 2d` centred on every side; only
+the top-left corner moves in, the bottom/right edge stays exactly on the
+split line) — and it's *that* inset rect, not the raw one, that gets
+pushed into `allRects` and passed to the next recursive `subdivide()`
+call. Because every level's split now operates on its parent's
+already-inset rect rather than raw mathematical bounds, the inset
+compounds correctly and consistently with depth, anchored to where each
+ancestor is actually drawn. This change is in the tree-building function
+itself, so it applies uniformly to every consumer — tiles, filler, and
+the structure layer all read from the same corrected `allRects`; there
+is no separate inset calculation left anywhere in `layout.js`.
+`renderStruct()` was simplified accordingly to draw `rect.x/y/width/
+height` with no inset math of its own.
+
 ## CSS scoping
 
 Every selector in `landing.css` is prefixed `.fffx-landing` (set as a
@@ -391,18 +426,34 @@ server pointed at `docs/` (e.g. `python -m http.server` from inside
 
 ## Deployment
 
-Not yet wired up in this repo (no `.github/workflows/` present). When
-added, should follow the same pattern documented in the Bookshelf
-project's `README.md`/`MKDOCS-LANDING-PAGE-NOTES.md`: `mkdocs build
---site-dir public` in CI, official `actions/configure-pages` →
-`actions/upload-pages-artifact` → `actions/deploy-pages` (not the
+`.github/workflows/deploy.yml` exists and follows the Bookshelf pattern:
+`mkdocs build --site-dir public` in CI, official `actions/configure-pages`
+→ `actions/upload-pages-artifact` → `actions/deploy-pages` (not the
 `peaceiris` gh-pages-branch approach — defaults to a read-only
-`GITHUB_TOKEN` on new repos and fails silently). fffx currently has no
-standalone static sub-projects (everything is either the MkDocs-built
-`docs/` tree or external repos linked via `entries[].repo`), so the
-"copy static interactive projects into `public/`" step from the Bookshelf
-pipeline isn't needed yet — add it if/when a project like `scifi/` shows
-up here.
+`GITHUB_TOKEN` on new repos and fails silently). Pre-lists `scifi`/`asimov`
+in the "copy static interactive projects" step even though neither exists
+in this repo yet (the `if [ -d "$proj" ]` guard makes that harmless) —
+add a project there if/when one shows up at the repo root.
+
+### `entries[].href` must be relative, not root-absolute
+
+`mkdocs.yml` declares `site_url: https://fffx.cabinetofcuriosities.in/`,
+implying the site is meant to live at a custom domain's root. In
+practice, until that domain is actually wired up (CNAME file + DNS),
+GitHub Pages serves the build from its default project URL instead —
+`https://jesmehta.github.io/form-follows-fx/`, one path segment deeper
+than the domain root the `entries[]` hrefs were originally written
+assuming.
+
+Every `href` in `data.js` is root-relative — `recreating-the-past/
+vera-molnar/`, no leading slash — specifically so this doesn't matter.
+`index.html` always sits at whatever the actual site root is, custom
+domain or GitHub Pages subpath, so a relative href resolves correctly
+either way: append it to the current document's directory. **Never**
+write a leading-slash href like `/recreating-the-past/vera-molnar/` — sed
+hint at the time this was caught (it's an easy regression to reintroduce
+one entry at a time): `grep -n 'href: "/' docs/assets/js/data.js` should
+always return nothing.
 
 ## Changelog
 
@@ -563,35 +614,24 @@ up here.
   safety net on both, `text-overflow: ellipsis` on the meta line, and
   the tags row now only renders in the markup at all for tiles
   `≥200×150px` (`showTags` in `renderTile()`).
-
-### Known bug fixed (2026-06-29, inset)
-
-The "cumulative by depth" fix immediately above this entry was itself
-wrong, per a corrected algorithm the user spelled out explicitly. The
-bug: `renderStruct()` computed `inset = rect.depth * structInset` against
-each rect's **raw** bounds — i.e. the same untouched geometry
-`buildRectTree()` always produced, where a child's bounds always touch
-its parent's and siblings' exactly with zero gap. Computing an inset
-independently per node against bounds that were never inset to begin
-with has no reliable relationship to where the parent is actually
-*drawn* — depth-proportional inset against a flat, never-shrunk tree
-produces inconsistent, overlapping-looking gaps ("haywire"), not a clean
-nested-frame effect.
-
-The fix: bake the inset into the recursion itself, in
-`subdivision.js`'s `buildRectTree()`. After computing a raw split
-(`childA`/`childB`, exactly as before), each child is passed through
-`insetRect(child, d)` — `x += d, y += d, width -= d, height -= d`
-(`d = structInset`, **not** `width -= 2d` centred on every side; only
-the top-left corner moves in, the bottom/right edge stays exactly on the
-split line) — and it's *that* inset rect, not the raw one, that gets
-pushed into `allRects` and passed to the next recursive `subdivide()`
-call. Because every level's split now operates on its parent's
-already-inset rect rather than raw mathematical bounds, the inset
-compounds correctly and consistently with depth, anchored to where each
-ancestor is actually drawn. This change is in the tree-building function
-itself, so it applies uniformly to every consumer — tiles, filler, and
-the structure layer all read from the same corrected `allRects`; there
-is no separate inset calculation left anywhere in `layout.js`.
-`renderStruct()` was simplified accordingly to draw `rect.x/y/width/
-height` with no inset math of its own.
+- **2026-06-29** — The "cumulative by depth" inset fix immediately above
+  was itself wrong — `renderStruct()` was computing inset against each
+  rect's raw, never-shrunk bounds, which has no reliable relationship to
+  where the parent is actually drawn. Properly fixed by baking the inset
+  into `buildRectTree()`'s recursion itself, per an algorithm the user
+  spelled out explicitly. See "Known bug fixed (2026-06-29, inset)" in
+  the "Rendering pipeline" section above for the full mechanism.
+- **2026-06-29** — Fixed all sixteen `href` values in `data.js` (fifteen
+  entries plus one `relatedLinks` href) — they were root-absolute
+  (`/recreating-the-past/vera-molnar/`), which only resolves correctly
+  when the site is served from a domain root. The live GitHub Pages
+  deployment currently serves from its default project URL,
+  `jesmehta.github.io/form-follows-fx/`, one path segment deeper than the
+  domain root those hrefs assumed — so every link 404'd in production
+  while working fine under `mkdocs serve` (which happened to also serve
+  from `/`). Stripped the leading slash from every href so they're
+  relative to wherever `index.html` actually sits, correctly resolving
+  under both a future custom-domain deploy and the current GitHub Pages
+  subpath. Also discovered `.github/workflows/deploy.yml` already
+  exists (added outside this conversation) — updated the "Deployment"
+  section above, which still said "not yet wired up."
