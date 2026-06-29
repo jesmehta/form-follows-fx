@@ -1,21 +1,24 @@
 .fffx-landing {
-  /* v2.0 dark + cyan palette. Token *names* are unchanged from v1.0
-     (DESIGN-SYSTEM.md/LANDING-PAGE-NOTES.md already document them) —
-     only the values flip from the v1.0 light-paper theme to this one.
-     --ink now holds light text/border colour (dark bg needs light ink,
-     not dark), --tile is a dark slate a touch lighter than --bg rather
-     than near-white, and --accent is reserved as the *single* saturated
+  /* v2.0 dark + cyan palette, sourced from tokens.css (loaded before
+     this file in index.html) rather than hardcoded here — tokens.css is
+     the single source of truth shared with the Material-side override
+     (stylesheets/fffx-material.css). Token *names* below are unchanged
+     from v1.0 (DESIGN-SYSTEM.md/LANDING-PAGE-NOTES.md already document
+     them); only where their values come from changed. --ink now holds
+     light text/border colour (dark bg needs light ink, not dark),
+     --tile is a dark slate a touch lighter than --bg rather than
+     near-white, and --accent is reserved as the *single* saturated
      colour on the page — cyan — used only for hover/focus states and as
      the fallback tile accent, never as a section colour. */
-  --bg: #0a0d13;
-  --ink: #e7e9f0;
-  --muted: #7f879c;
-  --line: rgba(255, 255, 255, 0.14);
-  --line-soft: rgba(255, 255, 255, 0.06);
-  --tile: #12161f;
-  --tile-hover: #1b212c;
-  --accent: #00d4ff;
-  --filler-mark: rgba(255, 255, 255, 0.22);
+  --bg: var(--fffx-bg);
+  --ink: var(--fffx-ink);
+  --muted: var(--fffx-muted);
+  --line: var(--fffx-line);
+  --line-soft: var(--fffx-line-soft);
+  --tile: var(--fffx-tile);
+  --tile-hover: var(--fffx-tile-hover);
+  --accent: var(--fffx-accent);
+  --filler-mark: var(--fffx-filler-mark);
 
   /* One accent hue per `section` value (see data.js), all at matched
      saturation/lightness (58%/62%) so no section reads as more or less
@@ -41,10 +44,9 @@
      off the system-sans stack onto Space Grotesk; the mono *accent*
      elements (eyebrow, coords, tags, filler marks — already isolated
      via var(--font-mono) below) upgrade from "Courier New" to IBM Plex
-     Mono now that a webfont stylesheet is loaded anyway. Loaded in
-     index.html's <head>. */
-  --font-display: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-mono: "IBM Plex Mono", "Courier New", monospace;
+     Mono. Also sourced from tokens.css now, not hardcoded here. */
+  --font-display: var(--fffx-font-display);
+  --font-mono: var(--fffx-font-mono);
 
   margin: 0;
   background: var(--bg);

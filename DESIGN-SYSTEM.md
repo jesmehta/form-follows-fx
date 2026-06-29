@@ -42,37 +42,64 @@ a templated shell instead of served standalone.
 
 ## Typography
 
-No custom font loading currently. System font stack only:
+**v2.0**: two Google Fonts, loaded via `<link>` tags in `index.html`'s
+`<head>` (the landing page bypasses Material, so it can't use
+`mkdocs.yml`'s `theme.font` — see "Site architecture" above). The actual
+font-family strings live in `docs/assets/css/tokens.css` as
+`--fffx-font-display`/`--fffx-font-mono`, mapped to local `--font-display`/
+`--font-mono` names in `landing.css` — see "Colour tokens" below for why
+tokens.css exists and what else it covers.
 
 ```css
-font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+--font-display: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+--font-mono: "IBM Plex Mono", "Courier New", monospace;
 ```
 
-Monospace (`"Courier New", monospace`) is used narrowly, as a deliberate
-register-shift, for anything that reads as machine output rather than
-authored copy:
+`--font-display` is `.fffx-landing`'s base `font-family` — it covers
+everything by default (`h1`, `.intro`, tile titles/body, the section
+menu) unless an element explicitly overrides it. `--font-mono` is used
+narrowly, as a deliberate register-shift, for anything that reads as
+machine output rather than authored copy:
 
 | Element | Font | Role |
 | --- | --- | --- |
-| `.eyebrow` | monospace | "Cabinet of Curiosities / Level 1 World" kicker |
-| `.fffx-tile-coord` | monospace | Per-tile `x,y` coordinate, top-right of each tile |
-| `.fffx-tile-tags li` | monospace | Tag chips, revealed on tile hover/focus |
-| `.fffx-cell-mark` | monospace | Filler-cell glyph / code-fragment / coordinate-label content |
-| `h1`, body text | sans (system) | Everything else — title, intro, tile titles/body |
+| `.eyebrow` | mono | "Cabinet of Curiosities / Level 1 World" kicker |
+| `.fffx-tile-coord` | mono | Per-tile `x,y` coordinate, top-right of each tile |
+| `.fffx-tile-tags li` | mono | Tag chips, revealed on tile hover/focus |
+| `.fffx-cell-mark` | mono | Filler-cell glyph / code-fragment / coordinate-label content |
+| `h1`, body text, `.fffx-section-menu button` | display | Everything else — title, intro, tile titles/body, section menu |
 
-If a display font is ever introduced, it should differentiate fffx further
-from Bookshelf's Libre Baskerville/Instrument Serif pairing — favor
-something geometric/grotesk over serif.
+Same pairing extends to every Material-rendered page (everything except
+`index.html`) via `mkdocs.yml`'s `theme.font: { text: Space Grotesk,
+code: IBM Plex Mono }` — kept in sync with tokens.css *by hand*, since
+plain YAML can't reference a CSS custom property. If that pairing ever
+changes, update both places.
+
+This replaced v1.0's system-font-stack-only approach (no custom font
+loading, `"Courier New"` instead of a real mono webfont) — chosen to
+differentiate fffx further from Bookshelf's Libre Baskerville/Instrument
+Serif pairing: geometric/grotesk, not serif.
 
 ---
 
 ## Colour tokens
 
-Defined as CSS custom properties on `.fffx-landing`. Never hardcode hex
-values elsewhere — extend this table first. **v2.0**: dark + single-accent
-palette, replacing v1.0's light paper-and-ink theme. Token *names* are
-unchanged (so existing references elsewhere in this repo still resolve) —
-only the values flipped.
+Raw values live in `docs/assets/css/tokens.css` as `--fffx-*` custom
+properties (`:root`, no element scoping — it's loaded on every page,
+landing and Material alike). `landing.css` maps those onto the
+`.fffx-landing`-scoped names below (`--bg: var(--fffx-bg)`, etc.); a
+second file, `docs/stylesheets/fffx-material.css`, maps the *same*
+`--fffx-*` tokens onto Material's own `--md-*` variables for every other
+page, loaded via `mkdocs.yml`'s `extra_css`. Change a value once in
+tokens.css; both flows pick it up — never hardcode a hex value directly
+in either `landing.css` or `fffx-material.css` again, extend tokens.css
+first. (Per-section accent hues are the one exception, kept local to
+`landing.css` only — see "Per-section accent hues" below for why.)
+
+Token *names* below are unchanged from v1.0 (so existing references
+elsewhere in this repo still resolve) — only where the values come from
+changed, first to hardcoded v2.0 dark-theme hex values, now to
+tokens.css.
 
 | Token | Value | Use |
 | --- | --- | --- |
@@ -542,3 +569,4 @@ different parameters, orchestrated entirely from `layout.js`.
   closer to square instead of always "whichever's longer." Full
   before/after geometry in `LANDING-PAGE-NOTES.md`'s bug writeup.
 - **2026-06-29** — v2.0 phases 5–6: added `.fffx-section-menu` (mono, uppercase, cyan hover/focus, matches the per-section tab/meta treatment) and swapped base typography to Space Grotesk (display) + IBM Plex Mono (the existing mono-accent role, was "Courier New"). See `LANDING-PAGE-NOTES.md` for the anchor/scroll mechanism.
+- **2026-06-29** — Extended dark + cyan to every Material-rendered page, not just the landing page. Both this file's `Typography` section (it had never actually been updated for phase 6 — still described v1.0's system-stack-only approach) and `Colour tokens` section were stale; rewritten to describe `docs/assets/css/tokens.css` as the actual single source of truth for both flows, plus the new `docs/stylesheets/fffx-material.css` mapping the same tokens onto Material's `--md-*` variables. `mkdocs.yml`: `theme.palette` -> `scheme: slate`/`primary: black`/`accent: cyan`; `theme.font` -> Space Grotesk + IBM Plex Mono. `theme.icon.logo` (the Bookshelf-era tortoise, flagged but not fixed in the previous entry) is now `material/mushroom-outline` — quirky + nature-pattern, picked over `honeycomb` (not a real MDI icon), `snowflake-variant` (recorded second preference), `function-variant`, and `spider-web`. `theme.favicon` still points at a nonexistent file — still open.

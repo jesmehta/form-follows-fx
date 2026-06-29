@@ -39,8 +39,10 @@ doesn't exist and break the build. The homepage doesn't need a nav entry —
 
 | File | Responsibility |
 | --- | --- |
-| `docs/index.html` | Static shell: `<head>`, hero header markup, one `<main id="subdivision-field">` mount point, `<script type="module" src="assets/js/layout.js">`. No content data, no logic. |
-| `docs/assets/css/landing.css` | All landing CSS, every rule scoped under `.fffx-landing` on `<body>`. |
+| `docs/index.html` | Static shell: `<head>` (Google Fonts `<link>`s, then `tokens.css`, then `landing.css`), hero header markup (including `#section-menu`), one `<main id="subdivision-field">` mount point, `<script type="module" src="assets/js/layout.js">`. No content data, no logic. |
+| `docs/assets/css/tokens.css` | Single source of truth for colour/font values (`--fffx-*` custom properties, `:root`-scoped) — shared between `landing.css` (loaded by `index.html` directly) and `docs/stylesheets/fffx-material.css` (loaded by every other, Material-rendered page via `mkdocs.yml`'s `extra_css`). See `DESIGN-SYSTEM.md`'s "Colour tokens" for the full rationale. |
+| `docs/assets/css/landing.css` | All landing CSS, every rule scoped under `.fffx-landing` on `<body>`. Colour/font custom properties are mapped from `tokens.css`'s `--fffx-*` names, not hardcoded. |
+| `docs/stylesheets/fffx-material.css` | Maps the same `tokens.css` values onto Material's own `--md-*` variables, scoped to `[data-md-color-scheme="slate"]`, so every Material-rendered page matches the landing page's palette. Not part of the landing page proper — listed here because it shares tokens.css with it. |
 | `docs/assets/js/data.js` | Source of truth — `landingConfig` (seed, layout tuning) + `sections[]` (the section registry — id/label/order/enabled) + `entries[]` (project content). Pure data, no DOM/logic. |
 | `docs/assets/js/random.js` | Seeded PRNG (`seededRandom`) + `pickFromId`, a deterministic per-rect-id picker used for filler-cell variety. No DOM, no knowledge of rects or entries — purely a randomness utility. |
 | `docs/assets/js/subdivision.js` | Pure logic: `buildRectTree` (recursive split), `getCandidateRects` (size/aspect/depth filtering), `scoreRectForEntry` + `assignEntries` (entry-to-rectangle matching and blocking). No DOM access at all — this file could run in a non-browser JS environment unchanged. |
@@ -81,7 +83,7 @@ landingConfig = {
     // minThumbWidthRatio (mobile only) is a fraction of live viewport
     // width, not a fixed px value — computed in layout.js, not stored
     structInset,                     // px each freshly-split child is nudged in by, baked into buildRectTree()
-                                      // itself (x+=d, y+=d, width-=d, height-=d) — not a rendering-time inset
+                                      // itself (x+=d, y+=d, width-=2d, height-=2d) — not a rendering-time inset
     structAlpha                      // structure-layer fill alpha — see "Structure layer" further down
   }
 }
@@ -551,12 +553,26 @@ in place and nothing needs retrofitting.
   uncommented nav listing every placeholder buries the two pages worth
   reading in a sidebar mostly full of stubs. Uncomment a page's nav line
   exactly when it stops being a stub.
-- `extra_css` is intentionally absent. An earlier version of this file
-  pointed at `stylesheets/bookshelf.css`, copied over from the Bookshelf
-  repo's `mkdocs.yml` template but never relevant here (that file never
-  existed in this repo, and `docs/index.html` doesn't even load through
-  Material's `extra_css` pipeline since it's not Markdown-rendered).
-  Removed rather than fixed, since nothing currently needs it.
+- `extra_css` now lists `assets/css/tokens.css` and
+  `stylesheets/fffx-material.css`, in that order (order matters — the
+  second file reads `--fffx-*` variables the first one defines). This
+  is the *real* mechanism now, not the dead reference an earlier version
+  of this file had: that one pointed at `stylesheets/bookshelf.css`,
+  copied over from the Bookshelf repo's `mkdocs.yml` template but never
+  relevant here (the file never existed in this repo, and
+  `docs/index.html` doesn't even load through Material's `extra_css`
+  pipeline since it's not Markdown-rendered — `index.html` gets the same
+  `tokens.css` via its own manual `<link>` instead). See
+  `DESIGN-SYSTEM.md`'s "Colour tokens" for the full tokens.css rationale.
+- `theme.palette`/`theme.font`/`theme.icon.logo` were brought in line
+  with the landing page: `scheme: slate`/`primary: black`/`accent: cyan`
+  (was a light scheme with an unwired `primary: custom`), Space Grotesk +
+  IBM Plex Mono (was Ubuntu/Ubuntu Mono — kept in sync with tokens.css's
+  font values *by hand*, since YAML can't reference a CSS custom
+  property), and `material/mushroom-outline` (was `material/tortoise`, a
+  Bookshelf-era leftover). `theme.favicon` still points at
+  `images/favicon.svg`, which doesn't exist in `docs/images/` — a
+  pre-existing, separate bug, not yet fixed.
 - `requirements.txt` mirrors the Bookshelf/Cabinet-of-Curiosities Python
   dependency set (`mkdocs-material`, `mkdocs-video`,
   `mkdocs-git-revision-date-localized-plugin`, etc.) for consistency
@@ -869,3 +885,4 @@ always return nothing.
   ${fieldHeight}px` (set explicitly in JS) so a grown field is actually
   visible/scrollable, not just correct in the underlying math.
 - **2026-06-29** — v2.0 phases 5–6. Section menu: `#section-menu` (built once in `layout.js`'s `buildSectionMenu()`) lists every enabled section with a visible entry; click scrolls to a 1x1px `#section-anchor-<id>` div positioned at that section's `sectionRoot` rect, recreated every `render()`. Typography: Google Fonts (Space Grotesk + IBM Plex Mono) loaded in `index.html`; `--font-display` (Space Grotesk) replaces the system-sans stack as `.fffx-landing`'s base font; `--font-mono` (IBM Plex Mono) replaces the four hardcoded "Courier New" refs (eyebrow, tags, coords, filler marks).
+- **2026-06-29** — Extended dark + cyan to every Material-rendered page. Added `docs/assets/css/tokens.css` (single source of truth for colour/font values, `:root`-scoped) and `docs/stylesheets/fffx-material.css` (maps the same tokens onto Material's `--md-*` vars); `landing.css` now reads from tokens.css instead of hardcoding the same hex/font values a second time. `mkdocs.yml`'s `extra_css` (previously absent — an earlier dead Bookshelf reference had been removed, not replaced) now lists both files. `theme.palette`/`theme.font`/`theme.icon.logo` updated to match; `material/tortoise` -> `material/mushroom-outline`. Also fixed stale prose this pass exposed: the "File responsibilities" table, "CSS scoping"/"MkDocs integration" sections, the `structInset" comment in the data-model code block (still said `width-=d`, not `-=2d`, from the earlier squarify-adjacent inset fix), and `DESIGN-SYSTEM.md`'s entire "Typography" section, which had never been updated for phase 6 at all.

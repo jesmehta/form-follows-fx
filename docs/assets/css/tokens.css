@@ -1,0 +1,25 @@
+/* Single source of truth for fffx's colour + font values, shared
+   between two otherwise-separate flows:
+   - the landing page (landing.css, loaded directly by index.html,
+     which bypasses MkDocs Material entirely)
+   - the rest of the site (stylesheets/fffx-material.css, loaded via
+     mkdocs.yml's extra_css, mapping these onto Material's own --md-*
+     variable names)
+   Change a value here once; both flows pick it up. Section accent hues
+   stay local to landing.css — they're a landing-page-only concept
+   (per-portal category colour), not used in Material's generic content
+   pages. */
+:root {
+  --fffx-bg: #0a0d13;
+  --fffx-ink: #e7e9f0;
+  --fffx-muted: #7f879c;
+  --fffx-line: rgba(255, 255, 255, 0.14);
+  --fffx-line-soft: rgba(255, 255, 255, 0.06);
+  --fffx-tile: #12161f;
+  --fffx-tile-hover: #1b212c;
+  --fffx-accent: #00d4ff;
+  --fffx-filler-mark: rgba(255, 255, 255, 0.22);
+
+  --fffx-font-display: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --fffx-font-mono: "IBM Plex Mono", "Courier New", monospace;
+}

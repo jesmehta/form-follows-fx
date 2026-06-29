@@ -1,0 +1,30 @@
+/* Maps fffx's shared tokens (assets/css/tokens.css) onto MkDocs
+   Material's own --md-* customization variables, so every Material-
+   rendered page (everything except docs/index.html, which bypasses
+   Material entirely) matches the landing page's dark + cyan palette.
+   Loaded via mkdocs.yml's extra_css, after tokens.css.
+
+   theme.palette in mkdocs.yml sets scheme: slate so this only ever
+   needs to target the slate scheme — there's no light/dark toggle, so
+   slate is the only scheme that exists on this site. Targeting the
+   same [data-md-color-scheme="slate"] selector Material uses
+   internally (rather than :root) keeps specificity unambiguous instead
+   of relying on a same-specificity source-order tiebreak. */
+[data-md-color-scheme="slate"] {
+  --md-default-bg-color: var(--fffx-bg);
+  --md-default-fg-color: var(--fffx-ink);
+  --md-default-fg-color--light: var(--fffx-muted);
+  --md-default-fg-color--lighter: var(--fffx-line);
+  --md-default-fg-color--lightest: var(--fffx-line-soft);
+
+  --md-primary-fg-color: var(--fffx-bg);
+  --md-primary-bg-color: var(--fffx-ink);
+
+  --md-accent-fg-color: var(--fffx-accent);
+  --md-accent-bg-color: var(--fffx-bg);
+
+  --md-code-bg-color: var(--fffx-tile);
+  --md-code-fg-color: var(--fffx-ink);
+
+  --md-typeset-a-color: var(--fffx-accent);
+}
