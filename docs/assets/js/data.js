@@ -76,6 +76,29 @@ export const landingConfig = {
   }
 };
 
+// One entry per section value used below. This is the single source of
+// truth for which sections exist, their reading-order sequence
+// (`order`), and whether they're switched on at all (`enabled`) —
+// independent of whether any entries currently happen to populate them.
+// v2.0's subdivision tree partitions the root into one contiguous
+// region per *enabled* section (sized by that section's total visible-
+// entry weight) before any of the normal recursive subdivision happens
+// — see buildRectTree() in subdivision.js. A section with zero visible
+// entries contributes zero weight and is skipped entirely (no empty
+// region reserved for it).
+export const sections = [
+  { id: "prompt-collections", label: "Prompt Collections", order: 10, enabled: true },
+  { id: "deep-studies", label: "Deep Studies", order: 20, enabled: true },
+  { id: "recreating-the-past", label: "Recreating the Past", order: 30, enabled: true },
+  { id: "tools-and-libraries", label: "Tools & Libraries", order: 40, enabled: true },
+  { id: "generative-projects", label: "Generative Projects", order: 50, enabled: true },
+  { id: "image-experiments", label: "Image Experiments", order: 60, enabled: true },
+  { id: "sketch-families", label: "Sketch Families", order: 70, enabled: true },
+  { id: "plotter-fabrication", label: "Plotter & Fabrication", order: 80, enabled: true },
+  { id: "code-to-objects", label: "Code to Objects", order: 90, enabled: true },
+  { id: "legacy-processing", label: "Legacy Processing", order: 100, enabled: true }
+];
+
 // Each entry is a *portal*, not a sketch — a collection, study, tool, or
 // archive grouping, never one tile per tiny version folder. See
 // LANDING-PAGE-NOTES.md for the full field reference.
@@ -83,10 +106,12 @@ export const landingConfig = {
 // weight: 1 = small/archive, 2 = regular, 3 = important collection/study,
 // 4 = major feature portal. Controls the target rectangle area a tile is
 // scored against, not a guaranteed size — the subdivision tree may not
-// always offer a perfectly matching rectangle at a given viewport.
+// always offer a perfectly matching rectangle at a given viewport. Also
+// feeds the section-level partition: a section's own page area is the
+// sum of its visible entries' weights, relative to other sections' sums.
 //
 // status: true (renders normally) | false (excluded from the field
-//   entirely) | "wip" (renders, but muted — dashed border, lower
+//   entirely) | "wip" (renders, but muted — quieter line weight, lower
 //   opacity, a "wip" tag in the meta line). One field, one job: this is
 //   both the visibility switch and the "is this actually finished" flag.
 // era: "current-web" | "p5-archive" | "processing-legacy" | "other-code".
@@ -99,7 +124,7 @@ export const entries = [
     section: "prompt-collections",
     kind: "prompt-series",
     order: 10,
-    weight: 3,
+    weight: 4,
     status: "wip",
     tags: ["p5", "genuary", "daily-prompts"],
     era: "p5-archive",
@@ -143,8 +168,8 @@ export const entries = [
     href: "recreating-the-past/vera-molnar/",
     section: "recreating-the-past",
     kind: "artist-study",
-    order: 40,
-    weight: 3,
+    order: 10,
+    weight: 4,
     status: true,
     tags: ["artist-study", "geometry"],
     era: "p5-archive",
@@ -158,7 +183,7 @@ export const entries = [
     image: "assets/thumbs/circle-packing.jpg",
     section: "tools-and-libraries",
     kind: "library",
-    order: 50,
+    order: 10,
     weight: 4,
     status: true,
     tags: ["p5", "circle-packing", "library"],
@@ -177,7 +202,7 @@ export const entries = [
     section: "tools-and-libraries",
     kind: "digital-tool",
     order: 60,
-    weight: 2,
+    weight: 4,
     status: "wip",
     tags: ["p5", "mandala", "tool"],
     era: "p5-archive",

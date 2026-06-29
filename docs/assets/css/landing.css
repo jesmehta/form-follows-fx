@@ -187,8 +187,16 @@
   opacity: 0.5;
 }
 
-/* live-resubdivision hint: two hairlines that grow from the tile's
-   center on hover, as if the algorithm just re-split this rectangle */
+/* live-resubdivision hint: four hairlines that grow in from the tile's
+   own edges on hover, as if the algorithm just re-split this rectangle
+   — two verticals offset from the right edge, two horizontals offset
+   from the top edge, at k and 2k where k = 10% of the tile's shorter
+   dimension (--split-k, set per-tile in layout.js from rect.width/
+   rect.height, so the offsets scale with the tile rather than being a
+   fixed px value that would look right on one tile size and wrong on
+   another). Replaces an earlier version: a single cross of two lines
+   meeting at the tile's center — visually read as a generic "2x2 grid"
+   rather than a re-subdivision cue. */
 .fffx-landing .fffx-tile-split {
   position: absolute;
   z-index: 1;
@@ -197,20 +205,36 @@
   opacity: 0;
 }
 
-.fffx-landing .fffx-tile-split-h {
+.fffx-landing .fffx-tile-split-v1,
+.fffx-landing .fffx-tile-split-v2 {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  transform: scaleY(0);
+}
+
+.fffx-landing .fffx-tile-split-v1 {
+  right: var(--split-k, 10%);
+}
+
+.fffx-landing .fffx-tile-split-v2 {
+  right: calc(var(--split-k, 10%) * 2);
+}
+
+.fffx-landing .fffx-tile-split-h1,
+.fffx-landing .fffx-tile-split-h2 {
   left: 0;
   right: 0;
-  top: 50%;
   height: 1px;
   transform: scaleX(0);
 }
 
-.fffx-landing .fffx-tile-split-v {
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  width: 1px;
-  transform: scaleY(0);
+.fffx-landing .fffx-tile-split-h1 {
+  top: var(--split-k, 10%);
+}
+
+.fffx-landing .fffx-tile-split-h2 {
+  top: calc(var(--split-k, 10%) * 2);
 }
 
 .fffx-landing .fffx-tile:hover .fffx-tile-split,
@@ -218,14 +242,18 @@
   opacity: 1;
 }
 
-.fffx-landing .fffx-tile:hover .fffx-tile-split-h,
-.fffx-landing .fffx-tile:focus-visible .fffx-tile-split-h {
-  transform: scaleX(1);
+.fffx-landing .fffx-tile:hover .fffx-tile-split-v1,
+.fffx-landing .fffx-tile:hover .fffx-tile-split-v2,
+.fffx-landing .fffx-tile:focus-visible .fffx-tile-split-v1,
+.fffx-landing .fffx-tile:focus-visible .fffx-tile-split-v2 {
+  transform: scaleY(1);
 }
 
-.fffx-landing .fffx-tile:hover .fffx-tile-split-v,
-.fffx-landing .fffx-tile:focus-visible .fffx-tile-split-v {
-  transform: scaleY(1);
+.fffx-landing .fffx-tile:hover .fffx-tile-split-h1,
+.fffx-landing .fffx-tile:hover .fffx-tile-split-h2,
+.fffx-landing .fffx-tile:focus-visible .fffx-tile-split-h1,
+.fffx-landing .fffx-tile:focus-visible .fffx-tile-split-h2 {
+  transform: scaleX(1);
 }
 
 .fffx-landing .fffx-tile-content {

@@ -38,7 +38,7 @@ form-follows-fx/
     │   ├── css/
     │   │   └── landing.css        All landing-page CSS, scoped under .fffx-landing
     │   └── js/
-    │       ├── data.js            Source of truth: landingConfig + entries[] (the portal IA)
+    │       ├── data.js            Source of truth: landingConfig + sections[] + entries[] (the portal IA)
     │       ├── random.js          Seeded PRNG + deterministic filler-variant picker
     │       ├── subdivision.js     Rectangle tree, candidate filtering, scoring, assignment (no DOM)
     │       └── layout.js          DOM rendering, resize handling — orchestrates the above
@@ -268,3 +268,26 @@ touched or migrated yet.
   operates on the already-inset rect. `renderStruct()` in `layout.js`
   no longer does any inset math at all; it just draws the geometry as
   given, because the geometry is now correct at the source.
+- **2026-06-29** — Fixed all sixteen `href` values in `data.js` (every
+  entry plus one `relatedLinks` href) — they were root-absolute
+  (`/recreating-the-past/vera-molnar/`), which only resolves correctly
+  when served from a domain root. GitHub Pages currently serves this
+  site from `jesmehta.github.io/form-follows-fx/`, one path segment
+  deeper, so every link 404'd in production while working under
+  `mkdocs serve`. Stripped the leading slash from every href so they
+  resolve relative to wherever `index.html` actually sits.
+- **2026-06-29** — v1.0 held as a stable milestone; v2.0 work started on
+  a local `v2-dark-theme` branch (`main` untouched). v2.0 phase 1–3:
+  added `sections[]` to `data.js` (the section registry — id, label,
+  order, enabled), and reworked the subdivision tree so the root
+  partitions into one contiguous region per enabled section — sized by
+  that section's total visible-entry weight, via a linear chain of
+  splits rather than a balanced binary tree — *before* any of the usual
+  recursive subdivision happens. Every rect now carries a `sectionId`,
+  and entry assignment runs once per section, scoped to that section's
+  own rects only. A section's tiles now occupy one real, stable area of
+  the page rather than being scattered wherever a good-fitting rectangle
+  happened to exist. Colour (dark palette, per-section hue stacking on
+  the structure layer), display/mono fonts, and a section-jump menu row
+  are still pending — see `LANDING-PAGE-NOTES.md`/`DESIGN-SYSTEM.md` for
+  the full mechanism and what's left.
