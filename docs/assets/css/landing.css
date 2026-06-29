@@ -1,0 +1,413 @@
+.fffx-landing {
+  --bg: #f5f1e6;
+  --ink: #18181a;
+  --muted: #65605a;
+  --line: rgba(20, 18, 14, 0.2);
+  --line-soft: rgba(20, 18, 14, 0.09);
+  --tile: #fffcf4;
+  --accent: #c4452e;
+  --filler-mark: rgba(24, 22, 18, 0.32);
+
+  /* One muted accent hue per `section` value (see data.js). Tools &
+     Libraries deliberately reuses --accent rather than getting its own
+     hue, so the flagship tile keeps the original brand colour. */
+  --accent-prompt-collections: #b85c38;
+  --accent-deep-studies: #7a7d3c;
+  --accent-recreating-the-past: #7a4a6b;
+  --accent-tools-and-libraries: var(--accent);
+  --accent-generative-projects: #3d7a6e;
+  --accent-image-experiments: #4a5a7a;
+  --accent-sketch-families: #4f6b3c;
+  --accent-plotter-fabrication: #a8632f;
+  --accent-code-to-objects: #8a4a3a;
+  --accent-legacy-processing: #555f6b;
+
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.fffx-landing * {
+  box-sizing: border-box;
+}
+
+/* ---------- header ---------- */
+
+.fffx-landing .site-header {
+  padding: 2rem;
+  max-width: 880px;
+}
+
+.fffx-landing .eyebrow {
+  font-family: "Courier New", monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.fffx-landing h1 {
+  margin: 0;
+  font-size: clamp(3rem, 9vw, 8rem);
+  line-height: 0.9;
+  letter-spacing: -0.07em;
+}
+
+.fffx-landing .intro {
+  max-width: 620px;
+  font-size: 1.05rem;
+  color: var(--muted);
+}
+
+/* ---------- the subdivision field ---------- */
+
+.fffx-landing #subdivision-field {
+  position: relative;
+  margin: 1rem;
+  min-height: 72vh;
+  border: 1px solid var(--ink);
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* ---------- structure layer (the actual subdivision, drawn) ---------- */
+/*
+   One .fffx-struct div per non-root rect in the tree, root-to-leaf
+   order, each inset a couple px from its own raw bounds. Because a
+   child's inset bounds always sit inside its parent's, and elements are
+   appended parent-before-child, the visible gap at every split shows the
+   parent's (semi-transparent) fill underneath — that gap *is* the
+   subdivision line. Background colour/alpha is set inline per rect in
+   layout.js, not here, so depth-based darkening lives in JS, alongside
+   the rect data it depends on.
+*/
+.fffx-landing .fffx-struct {
+  position: absolute;
+  pointer-events: none;
+  border: 1px solid rgba(24, 22, 18, 0.05);
+}
+
+/* ---------- project tiles ---------- */
+
+.fffx-landing .fffx-tile {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0.85rem;
+  text-decoration: none;
+  color: var(--ink);
+  border: 1.5px solid var(--ink);
+  background: var(--tile);
+  overflow: hidden;
+  transition: transform 180ms ease, background 180ms ease, border-width 120ms ease;
+  --tile-accent: var(--accent);
+}
+
+/* data-section -> --tile-accent. One line per section value in data.js;
+   anything unrecognised just falls back to --accent above. */
+.fffx-landing .fffx-tile[data-section="prompt-collections"] { --tile-accent: var(--accent-prompt-collections); }
+.fffx-landing .fffx-tile[data-section="deep-studies"] { --tile-accent: var(--accent-deep-studies); }
+.fffx-landing .fffx-tile[data-section="recreating-the-past"] { --tile-accent: var(--accent-recreating-the-past); }
+.fffx-landing .fffx-tile[data-section="tools-and-libraries"] { --tile-accent: var(--accent-tools-and-libraries); }
+.fffx-landing .fffx-tile[data-section="generative-projects"] { --tile-accent: var(--accent-generative-projects); }
+.fffx-landing .fffx-tile[data-section="image-experiments"] { --tile-accent: var(--accent-image-experiments); }
+.fffx-landing .fffx-tile[data-section="sketch-families"] { --tile-accent: var(--accent-sketch-families); }
+.fffx-landing .fffx-tile[data-section="plotter-fabrication"] { --tile-accent: var(--accent-plotter-fabrication); }
+.fffx-landing .fffx-tile[data-section="code-to-objects"] { --tile-accent: var(--accent-code-to-objects); }
+.fffx-landing .fffx-tile[data-section="legacy-processing"] { --tile-accent: var(--accent-legacy-processing); }
+
+.fffx-landing .fffx-tile-tab {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 28px;
+  max-width: 38%;
+  height: 4px;
+  background: var(--tile-accent);
+  z-index: 3;
+}
+
+.fffx-landing .fffx-tile::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--thumb);
+  background-size: cover;
+  background-position: center;
+  opacity: 0.22;
+  filter: grayscale(1);
+  transition: opacity 200ms ease;
+}
+
+.fffx-landing .fffx-tile:hover,
+.fffx-landing .fffx-tile:focus-visible {
+  transform: scale(1.015);
+  background: white;
+  border-width: 2.5px;
+  z-index: 20;
+}
+
+.fffx-landing .fffx-tile:hover::before,
+.fffx-landing .fffx-tile:focus-visible::before {
+  opacity: 0.34;
+}
+
+.fffx-landing .fffx-tile:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* status: "wip" de-emphasis: content that exists as a portal but isn't
+   actually written yet. Still a real, clickable tile — just visually
+   quieter, so it doesn't compete with finished content for attention.
+   Signalled by line weight, not dashing: a thinner border at rest, and
+   a smaller hover/focus jump than a live tile gets — see the live-tile
+   border rule above (1.5px solid, jumping to 2.5px on hover) for the
+   weights this is quieter than. */
+.fffx-landing .fffx-tile--muted {
+  border-width: 1px;
+  background: var(--bg);
+  opacity: 0.72;
+}
+
+.fffx-landing .fffx-tile--muted:hover,
+.fffx-landing .fffx-tile--muted:focus-visible {
+  border-width: 2px;
+  opacity: 1;
+  background: var(--tile);
+}
+
+.fffx-landing .fffx-tile--muted .fffx-tile-meta {
+  color: var(--muted);
+}
+
+.fffx-landing .fffx-tile--muted .fffx-tile-tab {
+  opacity: 0.5;
+}
+
+/* live-resubdivision hint: two hairlines that grow from the tile's
+   center on hover, as if the algorithm just re-split this rectangle */
+.fffx-landing .fffx-tile-split {
+  position: absolute;
+  z-index: 1;
+  background: var(--line);
+  transition: transform 220ms ease, opacity 220ms ease;
+  opacity: 0;
+}
+
+.fffx-landing .fffx-tile-split-h {
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  transform: scaleX(0);
+}
+
+.fffx-landing .fffx-tile-split-v {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transform: scaleY(0);
+}
+
+.fffx-landing .fffx-tile:hover .fffx-tile-split,
+.fffx-landing .fffx-tile:focus-visible .fffx-tile-split {
+  opacity: 1;
+}
+
+.fffx-landing .fffx-tile:hover .fffx-tile-split-h,
+.fffx-landing .fffx-tile:focus-visible .fffx-tile-split-h {
+  transform: scaleX(1);
+}
+
+.fffx-landing .fffx-tile:hover .fffx-tile-split-v,
+.fffx-landing .fffx-tile:focus-visible .fffx-tile-split-v {
+  transform: scaleY(1);
+}
+
+.fffx-landing .fffx-tile-content {
+  position: relative;
+  z-index: 2;
+}
+
+.fffx-landing .fffx-tile h2 {
+  margin: 0;
+  /* --tile-title-size is set per-tile in layout.js from the tile's own
+     rect width/height — falls back to a fixed size only if JS hasn't
+     run (shouldn't happen, but degrades sanely). */
+  font-size: var(--tile-title-size, 1.1rem);
+  line-height: 1.05;
+  /* Safety net, not the primary fix: even with tile-relative sizing,
+     a long title in a small tile clamps to 2 lines with an ellipsis
+     instead of silently overflowing past overflow:hidden. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+.fffx-landing .fffx-tile p {
+  margin: 0.3rem 0 0;
+  font-size: var(--tile-body-size, 0.82rem);
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+.fffx-landing .fffx-tile-meta {
+  margin-top: 0.5rem;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--tile-accent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fffx-landing .fffx-tile-tags {
+  position: relative;
+  z-index: 2;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 180ms ease, opacity 180ms ease;
+}
+
+.fffx-landing .fffx-tile:hover .fffx-tile-tags,
+.fffx-landing .fffx-tile:focus-visible .fffx-tile-tags {
+  max-height: 3rem;
+  opacity: 1;
+}
+
+.fffx-landing .fffx-tile-tags li {
+  font-family: "Courier New", monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  padding: 0.05rem 0.35rem;
+}
+
+.fffx-landing .fffx-tile-coord {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  z-index: 2;
+  font-family: "Courier New", monospace;
+  font-size: 0.6rem;
+  color: var(--muted);
+  opacity: 0.45;
+}
+
+/* ---------- filler cells ---------- */
+
+.fffx-landing .fffx-cell {
+  position: absolute;
+  border: 1px solid var(--line-soft);
+  transition: background-position 600ms ease, opacity 300ms ease;
+}
+
+.fffx-landing .fffx-cell--plain {
+  background: transparent;
+}
+
+.fffx-landing .fffx-cell--hatch {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 7px,
+    var(--line-soft) 8px
+  );
+}
+
+.fffx-landing .fffx-cell--dots {
+  background-image: radial-gradient(var(--line) 1px, transparent 1.4px);
+  background-size: 9px 9px;
+  background-position: 0 0;
+}
+
+.fffx-landing .fffx-cell--gradient {
+  background-image: linear-gradient(
+    160deg,
+    transparent,
+    var(--line-soft) 60%,
+    transparent
+  );
+}
+
+.fffx-landing .fffx-cell--glyph,
+.fffx-landing .fffx-cell--code,
+.fffx-landing .fffx-cell--coord {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding: 0.3rem;
+}
+
+.fffx-landing .fffx-cell-mark {
+  font-family: "Courier New", monospace;
+  color: var(--filler-mark);
+  line-height: 1;
+}
+
+.fffx-landing .fffx-cell-glyph {
+  font-size: 0.95rem;
+}
+
+.fffx-landing .fffx-cell-code {
+  font-size: 0.58rem;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.fffx-landing .fffx-cell-coord {
+  font-size: 0.58rem;
+  opacity: 0.8;
+}
+
+.fffx-landing .fffx-cell:hover {
+  background-position: 4px 3px;
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 700px) {
+  .fffx-landing .site-header {
+    padding: 1.25rem;
+  }
+
+  .fffx-landing #subdivision-field {
+    margin: 0.75rem;
+    min-height: 120vh;
+  }
+}
+
+.fffx-landing.fffx-is-mobile .fffx-cell {
+  opacity: 0.6;
+}
+
+/* ---------- motion safety ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .fffx-landing .fffx-tile,
+  .fffx-landing .fffx-tile::before,
+  .fffx-landing .fffx-tile-split,
+  .fffx-landing .fffx-tile-tags,
+  .fffx-landing .fffx-cell {
+    transition: none;
+  }
+}

@@ -1,0 +1,79 @@
+site_name: Form follows f(x)
+site_url: https://fffx.cabinetofcuriosities.in/
+site_description: A Collection of Jesal's creative codig explorations
+site_author: Jesal Mehta
+copyright: Copyright &copy; 2026 Jesal Mehta. Creative Commons Attribution-NonCommercial.
+# Nav lists only pages with real, finished-enough content. Placeholder
+# portals (everything commented out below) still exist as real .md files
+# under docs/ and still get built and linked from the fffx landing page
+# (muted there via migrationStatus) — they're just left out of the
+# MkDocs sidebar/nav so they don't bury the few pages with actual
+# content. Uncomment an entry here once its page has real content.
+nav:
+  # - Prompt Collections:
+  #     - Genuary: prompt-collections/genuary.md
+  # - Deep Studies:
+  #     - 100 Gradients: deep-studies/100-gradients.md
+  #     - Particle Systems: deep-studies/particle-systems.md
+  - Recreating the Past:
+      - Vera Molnar: recreating-the-past/vera-molnar.md
+  - Tools & Libraries:
+      - Circle Packing Library: tools-and-libraries/circle-packing-library.md
+      # - Mandala Generator: tools-and-libraries/mandala-generator.md
+      # - Lenticular Image Generator: tools-and-libraries/lenticular-image-generator.md
+      # - Harmonics / Dance of Planets: tools-and-libraries/harmonics-dance-of-planets.md
+  # - Generative Projects:
+  #     - Windows of Berlin: generative-projects/windows-of-berlin.md
+  # - Image / Pixel Experiments:
+  #     - Image Filters: image-experiments/image-filters.md
+  # - Sketch Families:
+  #     - Flow Fields: sketch-families/flow-fields.md
+  #     - Perlin Noise: sketch-families/perlin-noise.md
+  # - Physical Outputs:
+  #     - Plotter Work: physical-outputs/plotter-work.md
+  #     - Code to Fabrication: physical-outputs/code-to-fabrication.md
+  # - Archives:
+  #     - Legacy Processing Archive: archives/legacy-processing-archive.md
+
+extra:
+  # Set your own social media below (or remove)
+  social:
+    # For other social icons at https://squidfunk.github.io/mkdocs-material/setup/adding-social-links/
+    - icon: fontawesome/brands/instagram
+      link: https://instagram.com/cabofcuriosity
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/jesal-mehta-8762404a/
+
+theme:
+  name: material
+  palette:
+    # try other colors https://squidfunk.github.io/mkdocs-material/getting-started/#primary-colors
+    primary: custom
+    accent: indigo
+  font:
+    # See available fonts at https://fonts.google.com/
+    text: Ubuntu
+    code: Ubuntu Mono
+  icon:
+    logo: material/tortoise
+  favicon: images/favicon.svg
+  features:
+    # - navigation.tabs
+    # - navigation.instant
+    - navigation.expand
+    # - navigation.sections
+
+markdown_extensions:
+  - extra
+  - smarty
+  - admonition
+  - codehilite:
+      guess_lang: false
+  - toc:
+      permalink: true
+  - markdown_captions
+  - attr_list
+
+plugins:
+  - mkdocs-video
+

@@ -1,0 +1,15 @@
+jinja2>=3.0
+markdown
+mkdocs>=1.4.2
+mkdocs-material
+mkdocs-material-extensions
+pymdown-extensions
+pygments
+mkdocs-mermaid2-plugin
+mkdocs-video
+mkdocs-git-revision-date-localized-plugin
+markdown-captions
+
+
+
+
