@@ -69,52 +69,73 @@ something geometric/grotesk over serif.
 ## Colour tokens
 
 Defined as CSS custom properties on `.fffx-landing`. Never hardcode hex
-values elsewhere — extend this table first.
+values elsewhere — extend this table first. **v2.0**: dark + single-accent
+palette, replacing v1.0's light paper-and-ink theme. Token *names* are
+unchanged (so existing references elsewhere in this repo still resolve) —
+only the values flipped.
 
-| Token | Hex | Use |
+| Token | Value | Use |
 | --- | --- | --- |
-| `--bg` | `#f5f1e6` | Page background (warm paper, not stark white) |
-| `--ink` | `#18181a` | Primary text, borders |
-| `--muted` | `#65605a` | Secondary text — eyebrow, subtitle, tile body copy, coordinate labels |
-| `--line` | `rgba(20,18,14,0.2)` | Tile-split hairlines, filler borders at full strength |
-| `--line-soft` | `rgba(20,18,14,0.09)` | Background grid lines, filler hatch/dots/gradient — quieter than `--line` |
-| `--tile` | `#fffcf4` | Project tile background |
-| `--accent` | `#c4452e` | Focus outline (always, regardless of section) and the fallback tile accent for any unrecognised section |
-| `--filler-mark` | `rgba(24,22,18,0.32)` | Glyph / code-fragment / coordinate text inside filler cells |
+| `--bg` | `#0a0d13` | Page background — dark slate, not pure black |
+| `--ink` | `#e7e9f0` | Primary text, tile borders — light-on-dark now, was dark-on-light in v1.0 |
+| `--muted` | `#7f879c` | Secondary text — eyebrow, subtitle, tile body copy, coordinate labels |
+| `--line` | `rgba(255,255,255,0.14)` | Tile-split hairlines, filler borders at full strength |
+| `--line-soft` | `rgba(255,255,255,0.06)` | Structure-layer border, filler hatch/dots/gradient — quieter than `--line` |
+| `--tile` | `#12161f` | Project tile background — a touch lighter than `--bg`, not near-white |
+| `--tile-hover` | `#1b212c` | Tile hover/focus background — was a hardcoded `white` in v1.0, which would flash jarringly bright on a dark page |
+| `--accent` | `#00d4ff` (cyan) | The **one** saturated colour on the page — focus outline, tile hover border, fallback tile accent for any unrecognised section. Never a section's own colour (see below) |
+| `--filler-mark` | `rgba(255,255,255,0.22)` | Glyph / code-fragment / coordinate text inside filler cells |
 
-Light, paper-and-ink palette deliberately distinct from Bookshelf's dark
-ink/gold/amber system. fffx reads as a lit drafting table, not a dim
-gallery wall.
+Dark, low-saturation-except-one-accent palette — the "dark + cyan,
+computational" register the v2.0 prompt asked for, adapted (not applied
+verbatim — see the v2.0 changelog entries for what was kept vs. changed):
+section identity still gets its own hue each (the prompt's spec was
+fully achromatic except cyan), since per-section colour is load-bearing
+here for telling sections apart visually, not just decorative.
 
 ### Per-section accent hues
 
-A second, smaller colour layer sits on top of the base palette: each
-`section` value from `data.js` gets its own muted accent hue, set as a
-`--tile-accent` custom property via a `data-section` attribute selector on
-`.fffx-tile` (no JS colour logic — the mapping lives entirely in
+A second colour layer sits on top of the base dark/cyan palette: each
+`section` value from `data.js` gets its own hue, set as a `--tile-accent`
+custom property via a `data-section` attribute selector on `.fffx-tile`
+(no JS colour logic for *tiles* — that mapping lives entirely in
 `landing.css`). `--tile-accent` drives the `.fffx-tile-meta` text colour
-and the `.fffx-tile-tab` corner mark (see below); everything else on a
-tile stays on the base ink/paper palette.
+and the `.fffx-tile-tab` corner mark. The **structure layer** also tints
+by section now (`tintForRect()` in `layout.js`) — see "Structure layer"
+below — using the same ten hues, duplicated there as plain RGB triples
+since inline `rgba()` strings need actual numbers, not a CSS var lookup;
+if a hue changes here, the matching triple in `layout.js` needs updating
+to stay in sync (no shared source of truth between the two files for
+this conversion, by design — same as v1.0's warm/cool constants before
+it).
 
-| Token | Hex | Section |
+| Token | Value | Section |
 | --- | --- | --- |
-| `--accent-prompt-collections` | `#b85c38` | prompt-collections |
-| `--accent-deep-studies` | `#7a7d3c` | deep-studies |
-| `--accent-recreating-the-past` | `#7a4a6b` | recreating-the-past |
-| `--accent-tools-and-libraries` | `var(--accent)` | tools-and-libraries — deliberately reuses the base accent, not a new hue, so the flagship Circle Packing Library tile keeps the original brand colour |
-| `--accent-generative-projects` | `#3d7a6e` | generative-projects |
-| `--accent-image-experiments` | `#4a5a7a` | image-experiments |
-| `--accent-sketch-families` | `#4f6b3c` | sketch-families |
-| `--accent-plotter-fabrication` | `#a8632f` | plotter-fabrication |
-| `--accent-code-to-objects` | `#8a4a3a` | code-to-objects |
-| `--accent-legacy-processing` | `#555f6b` | legacy-processing |
+| `--accent-prompt-collections` | `hsl(30, 58%, 62%)` | prompt-collections |
+| `--accent-deep-studies` | `hsl(66, 58%, 62%)` | deep-studies |
+| `--accent-recreating-the-past` | `hsl(102, 58%, 62%)` | recreating-the-past |
+| `--accent-tools-and-libraries` | `hsl(138, 58%, 62%)` | tools-and-libraries |
+| `--accent-generative-projects` | `hsl(174, 58%, 62%)` | generative-projects |
+| `--accent-image-experiments` | `hsl(210, 58%, 62%)` | image-experiments |
+| `--accent-sketch-families` | `hsl(246, 58%, 62%)` | sketch-families |
+| `--accent-plotter-fabrication` | `hsl(282, 58%, 62%)` | plotter-fabrication |
+| `--accent-code-to-objects` | `hsl(318, 58%, 62%)` | code-to-objects |
+| `--accent-legacy-processing` | `hsl(354, 58%, 62%)` | legacy-processing |
 
-All ten are muted/midtone — chosen to read clearly on the `--bg` paper
-colour without tipping into anything saturated enough to look neon. The
-**focus outline stays on the global `--accent`** regardless of section —
-deliberately: a focus ring that changed colour per tile would read as
-inconsistent state rather than "you are here," so accessibility signalling
-and content-category colour are kept as two separate channels.
+All ten share the same saturation/lightness (58%/62%) — only hue differs
+— so no section reads as more or less important than another by colour
+alone, per the user's explicit request. Spaced 36° apart around the
+wheel, offset so none lands in the ~175–205° band where `--accent`'s
+cyan sits, keeping every section hue visually distinct from the one
+cross-cutting accent. v1.0 special-cased `tools-and-libraries` to reuse
+`--accent` directly (so the flagship Circle Packing Library tile kept
+the page's one "brand" colour); that's gone in v2.0, since `--accent`'s
+role narrowed to strictly "the one interactive accent," not any
+section's colour. The **focus outline and hover border stay on the
+global `--accent`** regardless of section — deliberately: a focus ring
+that changed colour per tile would read as inconsistent state rather
+than "you are here," so accessibility signalling and content-category
+colour are kept as two separate channels.
 
 ---
 
@@ -134,15 +155,13 @@ directly from the same rect data the tiles use — see "Structure layer."
   order. The inset itself is **not** computed here, or anywhere in
   `layout.js` — it's baked into the rect geometry at split time, in
   `subdivision.js`'s `buildRectTree()`. Each freshly-split child is
-  nudged in from its own top-left corner (`x += d, y += d, width -= d,
-  height -= d`, `d = structInset` ≈ 1.5px) — note: **not** `width -= 2d`
-  centred on all sides. The bottom/right edge stays exactly on the split
-  line; only the top-left corner moves. That inset rect, not the raw
-  split, is what gets pushed into the tree and recursed into for the
-  *next* split — so each generation is inset relative to where its own
-  immediate parent was actually drawn, and the effect compounds
-  consistently with depth. `renderStruct()` just draws `rect.x/y/width/
-  height` as given, with zero inset math of its own.
+  shrunk by `d` on every side (`x += d, y += d, width -= 2d, height -= 2d`,
+  `d = structInset` ≈ 1.5px). That inset rect, not the raw split, is what
+  gets pushed into the tree and recursed into for the *next* split — so
+  each generation is inset relative to where its own immediate parent was
+  actually drawn, and the effect compounds consistently with depth.
+  `renderStruct()` just draws `rect.x/y/width/height` as given, with zero
+  inset math of its own.
 
   An earlier version computed inset as `rect.depth × structInset` against
   each rect's *raw*, never-inset bounds, as a rendering-only pass layered
@@ -156,21 +175,33 @@ directly from the same rect data the tiles use — see "Structure layer."
   into the recursion itself is what fixes that — there's no separate
   stroke/border system drawing the structure — the structure draws
   itself, correctly, because the geometry *is* correct.
-- Each rect is also filled with a warm or cool low-alpha tint
-  (`STRUCT_TINT_WARM`/`STRUCT_TINT_COOL` in `layout.js`), decided once
-  per top-level branch — by which side of the *root's* split a rect
-  descends from, not its immediate parent's. Keying off the immediate
-  parent was tried first and tints alternated every single level
-  independently of the levels above; by 5–7 levels deep a typical rect's
-  ancestor chain was a roughly random mix of both tints, which averaged
-  out to a flat, cancelled-out neutral grey-brown almost everywhere
-  instead of staying legibly warm or cool. Keying off the top-level
-  branch means one entire half of the field commits to warm and
-  compounds it consistently all the way down, the other half commits to
-  cool — two legible colour zones, darkening with depth within each,
-  instead of one homogenized wash. Generated entirely by ordinary CSS
-  alpha compositing of stacked elements, not by any hand-authored
-  gradient.
+
+  A second correction followed: the first baked-in version only
+  subtracted a single `d` from width/height (only the top-left corner
+  moving in), on the theory that the bottom/right edge should stay
+  exactly on the split line. True for the *interior* edge a split just
+  created — but each child also has two edges inherited directly from
+  the parent's own boundary (whichever dimension that split didn't
+  touch), and those were never inset at all under the single-`d`
+  formula, leaving a child's far corner sitting exactly on its parent's
+  boundary rather than nested inside it. Subtracting `2d` instead of `d`
+  (while `x`/`y` still only advance by `d`) insets every edge uniformly,
+  whatever it borders.
+- Each rect is filled with a low-alpha tint of its own section's hue
+  (`tintForRect()` in `layout.js`, looked up by `rect.sectionId` — every
+  rect carries one, inherited from its section's root). This replaced an
+  interim two-tone warm/cool placeholder, which itself replaced v1.0's
+  "key off the root split side" mechanism — that trick stopped meaning
+  anything once v2.0's tree started partitioning by section first (see
+  `LANDING-PAGE-NOTES.md`), since a rect's id no longer encodes which
+  top-level branch it descends from. Colour now reads as "which
+  section," and the existing alpha-stacking-by-depth still reads as "how
+  nested" — two separate signals, not one warm/cool duality. The ten
+  hues are the same `--accent-<section>` values from the table above,
+  duplicated in `layout.js` as RGB triples (`SECTION_TINTS`) since the
+  inline `rgba()` string this feeds needs actual numbers. Generated
+  entirely by ordinary CSS alpha compositing of stacked elements, not by
+  any hand-authored gradient.
 - `pointer-events: none` — purely visual, never intercepts clicks meant
   for a tile or filler cell sitting on top of it.
 
@@ -195,9 +226,9 @@ directly from the same rect data the tiles use — see "Structure layer."
   edge regardless of tile size.
 - `.fffx-tile-tab`: a small 28×4px coloured bar at the top-left corner,
   filled with `--tile-accent` (the entry's section colour). The one
-  deliberately "graphic" mark on an otherwise ink/paper tile — reads like
-  an index-card or file-tab flag, reinforcing the categorical colour
-  without turning the whole tile into a colour block.
+  deliberately "graphic" mark on an otherwise dark-slate tile — reads
+  like an index-card or file-tab flag, reinforcing the categorical
+  colour without turning the whole tile into a colour block.
 - A `::before` pseudo-element carries the entry's thumbnail image at low
   opacity (0.22, rising to 0.34 on hover) and full grayscale — a ghost of
   the artwork behind the type, not a photo treatment. Never raise opacity
@@ -206,12 +237,19 @@ directly from the same rect data the tiles use — see "Structure layer."
 - Hover/focus-visible: `scale(1.015)`, background brightens to pure white,
   border thickens to 2.5px, `z-index: 20`. Subtle — this is not a card
   lift-and-shadow interaction.
-- **Live re-subdivision hint**: two 1px hairlines (`.fffx-tile-split-h`,
-  `.fffx-tile-split-v`) cross through the tile's center, scaled to zero
-  and invisible by default, growing to full length/opacity on hover or
-  focus. The effect reads as "the algorithm just re-split this rectangle
-  in front of you" — the one place the metaphor becomes an explicit
-  interaction rather than a static fact about the layout.
+- **Live re-subdivision hint**: four 1px hairlines
+  (`.fffx-tile-split-v1`/`-v2`/`-h1`/`-h2`), scaled to zero and invisible
+  by default, growing to full length/opacity on hover or focus. Two
+  verticals sit at `k` and `2k` in from the tile's *right* edge; two
+  horizontals sit at `k` and `2k` down from the tile's *top* edge — not a
+  cross through the center (an earlier version did that and read as a
+  generic 2×2 grid rather than a re-subdivision cue). `k` = 10% of the
+  tile's shorter dimension, computed per-tile in `renderTile()` and set
+  as `--split-k`, so the offsets scale with the tile rather than landing
+  right on one tile size and wrong on another. The effect reads as "the
+  algorithm just re-split this rectangle in front of you" — the one
+  place the metaphor becomes an explicit interaction rather than a
+  static fact about the layout.
 - **Tag reveal**: `.fffx-tile-tags` sits at `max-height: 0; opacity: 0` by
   default and expands on hover/focus-visible. Keeps tiles visually quiet
   at rest while still surfacing tags to anyone who pauses on a tile —
@@ -238,8 +276,9 @@ directly from the same rect data the tiles use — see "Structure layer."
 - Signalled by **line weight, not dashing** — a live tile's border is
   `1.5px` at rest, `2.5px` on hover/focus; a muted tile's is thinner at
   rest (`1px`) and gets a smaller hover/focus jump (`2px`), always solid.
-  Background drops to `--bg` (paper, not tile-white) at rest, `opacity:
-  0.72`. On hover/focus it snaps back to a normal solid `--tile`
+  Background drops to `--bg` (the page's own dark ground, not the tile
+  colour) at rest, `opacity: 0.72`. On hover/focus it snaps back to a
+  normal solid `--tile`
   background at full opacity — the muting is a resting-state signal, not
   a permanent disability; it should never read as broken or unclickable.
 - The `.fffx-tile-meta` line gains the literal text `wip` appended after a
@@ -267,7 +306,7 @@ directly from the same rect data the tiles use — see "Structure layer."
   cell's own rect id (not from draw order, so a given id always maps to
   the same treatment — though the tree reseeds every page load, so which
   ids exist at all changes from load to load; see `LANDING-PAGE-NOTES.md`):
-  `plain` (×3 weight — most filler should be quiet paper), `hatch` (×2,
+  `plain` (×3 weight — most filler should be quiet ground), `hatch` (×2,
   45° diagonal lines), `dots` (radial-dot grid), `gradient` (soft diagonal
   wash), `glyph` (one of `+ * × ∘ ~ f(x) sin noise p5 Σ`), `code` (a short
   fragment like `noise(x, y)` or `lerp(a, b, t)`), `coord` (the cell's
@@ -296,6 +335,29 @@ the scoring system to aim at, not a hard constraint a layout engine
 enforces exactly; actual coverage can drift somewhat depending on which
 candidate rects the reseeded tree happens to offer. See
 `LANDING-PAGE-NOTES.md` for the formula.
+
+### Section minimum-area guarantee
+
+A section's share of the field is weight-proportional
+(`weight_i / totalWeight`), which means a low-weight section can end up
+with very little area — and if that area is too small, that section's
+entries simply never get a candidate rect to render in (this happened in
+practice: a single weight-4 entry in an otherwise-light section landed
+in a region narrower than `minThumbWidth`, see
+`LANDING-PAGE-NOTES.md`'s bug writeup). Rather than guess at a bigger
+field and hope, `layout.js` computes the minimum field area that
+guarantees *every* enabled section's proportional share clears its own
+hard floor — one `minThumbWidth × minThumbHeight` candidate per visible
+entry it has, times `sectionAreaBuffer` (3×) headroom — and grows the
+field (vertically only; width stays viewport-locked to avoid horizontal
+scroll) to that minimum if the actual viewport is smaller. This is a
+guarantee, not a target: excess negative space if a section needed more
+room than its neighbours is the explicitly preferred failure mode over
+ever silently dropping an entry. See `LANDING-PAGE-NOTES.md` for the
+formula and why `#subdivision-field`'s height has to be set explicitly
+in JS for this to actually be visible (it doesn't grow on its own —
+`overflow: hidden` plus every child being `position: absolute` means the
+element never expands to fit taller content by itself).
 
 ## Spacing & structure
 
@@ -341,9 +403,13 @@ Single breakpoint at `700px`. Below it, `isMobile` in `layout.js` switches
 *ratio of the live viewport width* (`minThumbWidthRatio: 0.78`, i.e.
 roughly 78% of viewport width) rather than a fixed px floor — this is what
 guarantees mobile tiles read as near-full-width rows instead of shrinking
-to fit a desktop-shaped rectangle. Canvas height on mobile is synthetic
-(`entries.length * 230`) so there's vertical room for every entry to get a
-viable rectangle on a narrow, tall, scrolling viewport. Filler cells also
+to fit a desktop-shaped rectangle. Canvas height (mobile *and* desktop)
+grows beyond the CSS `min-height` whenever needed to guarantee every
+section can fit its own visible entries above `minThumbWidth ×
+minThumbHeight` — see "Tile/filler area balance" below; this replaced an
+earlier mobile-only flat heuristic (`entries.length * 230`) that had no
+desktop equivalent and no actual relationship to thumb-size thresholds.
+Filler cells also
 drop to `opacity: 0.6` on mobile (`body.fffx-is-mobile`) — quieter
 decoration, more attention on tiles. There is no separate mobile layout
 file or markup — the same subdivision algorithm (`subdivision.js`) runs at
@@ -418,3 +484,61 @@ different parameters, orchestrated entirely from `layout.js`.
   the inset into `buildRectTree()`'s recursion itself — see "Structure
   layer" above, fully rewritten to describe the corrected mechanism.
   `renderStruct()` no longer computes any inset at all.
+- **2026-06-29** — v2.0 work started (new local `v2-dark-theme` branch,
+  v1.0 held as-is on `main`). Phase 1–3 landed: the subdivision tree now
+  partitions by section first (one contiguous region per enabled section,
+  sized by weight, via a linear chain of splits — see
+  `LANDING-PAGE-NOTES.md`), so every rect carries a `sectionId` and a
+  section's tiles now occupy one stable, contiguous area instead of being
+  scattered wherever a good-fitting rect happened to exist. This breaks
+  the structure layer's old warm/cool mechanism (a rect's id no longer
+  encodes top-level branch identity) — patched to a `sectionId`-hash
+  placeholder for now; see "Structure layer" above. Colour
+  (per-section-hue structure layer + dark palette), the section-jump menu
+  row, and the display/mono font swap are still pending — this file's
+  palette/typography tables above still describe v1.0's light paper
+  theme until that phase happens.
+- **2026-06-29** — Two fixes from user inspection of the v2.0 branch.
+  Structure-layer inset corrected again: subtracting only `d` from
+  width/height (the first baked-in fix) insets the interior edge a
+  split just created, but leaves each child's other two edges —
+  inherited straight from the parent's own boundary — untouched, so a
+  child's far corner still landed exactly on its parent's edge. Now
+  subtracts `2d` so every edge is inset by `d` uniformly; see
+  "Structure layer" above. Also replaced the tile hover "live
+  re-subdivision hint": was two hairlines crossing at the tile's center
+  (read as a generic 2×2 grid), now four hairlines offset from the
+  tile's own right/top edges at `k`/`2k`, `k` = 10% of the tile's
+  shorter dimension — see "Live re-subdivision hint" above.
+- **2026-06-29** — v2.0 phase 4: full dark + cyan colour pass. Rewrote
+  every colour token — `--bg`, `--ink`, `--muted`, `--line`/`--line-soft`,
+  `--tile`, `--accent` — from v1.0's light paper-and-ink palette to a
+  dark slate ground with `--accent` narrowed to the single saturated
+  colour on the page (cyan). Added `--tile-hover` (was a hardcoded
+  `white` background-on-hover, which would have flashed jarringly bright
+  against the new dark ground). Redid all ten `--accent-<section>` hues
+  as `hsl(H, 58%, 62%)` at matched saturation/lightness, spaced 36°
+  apart, offset to avoid `--accent`'s cyan band — dropped the v1.0
+  special-case where `tools-and-libraries` reused `--accent` directly,
+  since `--accent` is no longer any section's colour. The structure
+  layer's interim `sectionId`-hash warm/cool placeholder (phase 1–3) is
+  replaced with the real mechanism: `tintForRect()` now looks up each
+  rect's actual section hue (`SECTION_TINTS` in `layout.js`, the same ten
+  hues as plain RGB triples, since the inline `rgba()` it builds needs
+  numbers, not a CSS var). Also fixed two now-stale dark-on-light
+  artifacts the colour pass exposed: `.fffx-struct`'s border was a
+  hardcoded dark-ink rgba (invisible-to-wrong against the new dark
+  background) — switched to `var(--line-soft)`; several places in this
+  file's live prose ("ink/paper tile," "background drops to paper") still
+  described the removed light theme and were updated to match.
+- **2026-06-29** — Fixed a real bug: `vera-molnar` (the only entry in
+  `recreating-the-past`) never rendered, because the section-chain
+  partition could slice a low-weight section into a sliver narrower than
+  `minThumbWidth` despite its area *share* being perfectly reasonable —
+  not a weight/order problem. Added "Section minimum-area guarantee"
+  above: the field now grows (height only) whenever needed so every
+  section's proportional share clears a hard per-entry minimum, and the
+  section-chain split now picks whichever axis keeps each peeled section
+  closer to square instead of always "whichever's longer." Full
+  before/after geometry in `LANDING-PAGE-NOTES.md`'s bug writeup.
+- **2026-06-29** — v2.0 phases 5–6: added `.fffx-section-menu` (mono, uppercase, cyan hover/focus, matches the per-section tab/meta treatment) and swapped base typography to Space Grotesk (display) + IBM Plex Mono (the existing mono-accent role, was "Courier New"). See `LANDING-PAGE-NOTES.md` for the anchor/scroll mechanism.

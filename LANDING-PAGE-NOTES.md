@@ -41,7 +41,7 @@ doesn't exist and break the build. The homepage doesn't need a nav entry —
 | --- | --- |
 | `docs/index.html` | Static shell: `<head>`, hero header markup, one `<main id="subdivision-field">` mount point, `<script type="module" src="assets/js/layout.js">`. No content data, no logic. |
 | `docs/assets/css/landing.css` | All landing CSS, every rule scoped under `.fffx-landing` on `<body>`. |
-| `docs/assets/js/data.js` | Source of truth — `landingConfig` (seed, layout tuning) + `entries[]` (project content). Pure data, no DOM/logic. |
+| `docs/assets/js/data.js` | Source of truth — `landingConfig` (seed, layout tuning) + `sections[]` (the section registry — id/label/order/enabled) + `entries[]` (project content). Pure data, no DOM/logic. |
 | `docs/assets/js/random.js` | Seeded PRNG (`seededRandom`) + `pickFromId`, a deterministic per-rect-id picker used for filler-cell variety. No DOM, no knowledge of rects or entries — purely a randomness utility. |
 | `docs/assets/js/subdivision.js` | Pure logic: `buildRectTree` (recursive split), `getCandidateRects` (size/aspect/depth filtering), `scoreRectForEntry` + `assignEntries` (entry-to-rectangle matching and blocking). No DOM access at all — this file could run in a non-browser JS environment unchanged. |
 | `docs/assets/js/layout.js` | Orchestration + rendering only: calls into `data.js`/`random.js`/`subdivision.js`, builds the actual `<a>`/`<div>` DOM nodes, owns the resize listener. Imports the others as ES modules (`<script type="module">`, so this requires being served over HTTP — `file://` will block the module import in most browsers; use `mkdocs serve` or any static server for local preview, not double-clicking the HTML file). |
@@ -85,6 +85,13 @@ landingConfig = {
     structAlpha                      // structure-layer fill alpha — see "Structure layer" further down
   }
 }
+
+// One entry per section value used by entries[] below — the single
+// source of truth for which sections exist, their reading-order
+// sequence, and whether they're switched on at all.
+sections = [{
+  id, label, order, enabled
+}]
 
 // Each entry is a *portal*: a collection, study, tool, project, or
 // archive grouping — never one entry per tiny sketch version. Required
@@ -155,7 +162,19 @@ independently):
 
 Split across `subdivision.js` (pure) and `layout.js` (orchestration + DOM):
 
-1. **Seed** (`layout.js`). `seededRandom(`${seed}-${loadSeed}-${fieldWidth}-${fieldHeight}`)`
+1. **Seed** (`layout.js`). `fieldWidth` is just `field.clientWidth` (never
+   grown — width stays viewport-locked to avoid horizontal scrolling).
+   `fieldHeight` is `Math.max(field.clientHeight, requiredFieldHeight)`,
+   where `requiredFieldHeight` comes from the section minimum-area
+   guarantee (see "Section minimum-area guarantee" in
+   `DESIGN-SYSTEM.md`, and the formula a few steps below) — and is then
+   *explicitly written back* to the DOM (`field.style.height =
+   `${fieldHeight}px``) before anything else happens, because
+   `#subdivision-field` has `overflow: hidden` and every child is
+   `position: absolute`, so the element never grows to fit taller
+   content on its own; without this line, a grown `fieldHeight` would be
+   correct in the layout math but silently clip on screen. Then
+   `seededRandom(`${seed}-${loadSeed}-${fieldWidth}-${fieldHeight}`)`
    — a mulberry32-style PRNG (in `random.js`) keyed on the configured seed
    string, a `loadSeed` (`Math.random().toString(36).slice(2)`, computed
    once at module scope — i.e. once per page load, not once per `render()`
@@ -168,21 +187,53 @@ Split across `subdivision.js` (pure) and `layout.js` (orchestration + DOM):
    `weight` are untouched by any of this — they still drive which entry
    gets first pick of which size of rectangle, every load, identically.
 
-2. **Subdivide** (`subdivision.js` → `buildRectTree`). Recursive: pushes
-   the *current* rect into `allRects` first (so every depth survives, not
-   just leaves), then — unless `depth >= maxDepth` or either dimension is
-   below `minRectSize` (both terminate the branch into `leafRects`) —
-   splits along whichever axis is currently longer (`width >= height` →
-   vertical split), at a ratio drawn from `[splitRatioMin, splitRatioMax]`.
-   Each child's `id` is its parent's `id` plus `.0` or `.1` (root is
-   `"0"`) — this path encoding is what makes ancestor/descendant blocking
-   in step 4 a string check instead of a tree walk.
+2. **Partition into sections, then subdivide each one** (`subdivision.js`
+   → `buildRectTree`, v2.0). Before any of the random recursive
+   subdivision below happens, the root is split into exactly one
+   contiguous region per *enabled* section — `landingConfig`'s `sections[]`
+   filtered to `enabled`, with weight per section computed in `layout.js`
+   as the sum of that section's own visible entries' `weight` (sections
+   with zero visible entries get zero weight and are dropped — no region
+   reserved for them). This is a **linear chain** of `sectionCount − 1`
+   splits, not a balanced binary tree: peel section 1's weight-share off
+   the root, recurse into the remainder for section 2, and so on, so N
+   sections produce exactly N regions, not `2^(N−1)`. Each chain split
+   uses `splitRectSquarified()` (try both axes, keep whichever leaves the
+   peeled-off section closer to square) rather than ordinary `splitRect()`
+   — see "Known bug fixed (2026-06-29, thin section slivers)" below for
+   why "whichever axis is currently longer" breaks down specifically for
+   this chain. Each resulting region becomes its own subdivision root — `depth` resets to `0` for
+   that region specifically, so every section gets the same
+   `maxDepth`/`minRectSize` budget regardless of where it falls in the
+   chain — and is tagged with `sectionId`, inherited by every descendant
+   rect produced underneath it.
+
+   *Within* each section's region, the recursion is the same as before:
+   pushes the *current* rect into `allRects` first (so every depth
+   survives, not just leaves), then — unless `depth >= maxDepth` or either
+   dimension is below `minRectSize` (both terminate the branch into
+   `leafRects`) — splits along whichever axis is currently longer
+   (`width >= height` → vertical split), at a ratio drawn from
+   `[splitRatioMin, splitRatioMax]`. Each child's `id` is its parent's
+   `id` plus `.0` or `.1` — this path encoding is what makes
+   ancestor/descendant blocking in step 4 a string check instead of a
+   tree walk, and the section-chain splits use the exact same `id`
+   suffixing, so a section's internal ids nest naturally under its own
+   chain position with no separate id scheme needed.
 
    Before recursing, each freshly-split child is run through
    `insetRect(child, d)` (`d = structInset`, ≈1.5px): `x += d, y += d,
-   width -= d, height -= d` — **not** `width -= 2d` centred on all sides.
-   The bottom/right edge stays exactly on the split line; only the
-   top-left corner moves in. It's this *inset* rect — not the raw split —
+   width -= 2d, height -= 2d` — every edge moves in by exactly `d`, not
+   just the top-left corner. A single split only creates *one* new
+   interior edge per child (e.g. a vertical split gives `childA` a new
+   right edge and `childB` a new left edge, at the split line); the
+   other three edges of each child are still whatever the parent's own
+   edges were. Subtracting only `d` from width/height insets the side
+   that just moved but leaves the *un-split* dimension's far edge sitting
+   exactly on the parent's own boundary — touching it, not inset from it.
+   Subtracting `2d` while only advancing `x`/`y` by `d` insets every edge
+   uniformly, whether it borders the parent's own boundary or a fresh
+   interior split line. It's this *inset* rect — not the raw split —
    that gets pushed into `allRects` and recursed into for the next split,
    so every generation is inset relative to where its own immediate
    parent actually sits, and the effect compounds correctly with depth.
@@ -200,8 +251,15 @@ Split across `subdivision.js` (pure) and `layout.js` (orchestration + DOM):
    has no notion of "mobile"), an aspect-ratio band (`minAspect`/
    `maxAspect`), and excludes anything covering ~the entire field.
 
-4. **Assign entries to rects** (`subdivision.js` → `assignEntries`). Live
-   entries (status ≠ "draft"), sorted by `order` ascending. This step has
+4. **Assign entries to rects** (`subdivision.js` → `assignEntries`, called
+   once per section from `layout.js`'s `render()`, v2.0). Live entries
+   (`status !== false`), sorted by `order` ascending. Assignment is scoped
+   per section: each call only sees that section's own visible entries and
+   only that section's own `candidateRects`/`allRects` (filtered by
+   `sectionId` in `layout.js` before the call) — an entry can no longer be
+   placed in a rect belonging to a different section just because it
+   scored well, and the assignments/blocked-ids from each call are
+   concatenated/merged afterward. Within one section's call, this step has
    two layers, deliberately separated:
 
    - **Where, roughly** (reading-order windowing). `candidateRects` is
@@ -251,10 +309,12 @@ Split across `subdivision.js` (pure) and `layout.js` (orchestration + DOM):
    pre-order — parent always before children). `renderStruct()` does
    **no inset math at all** — `rect.x/y/width/height` are drawn exactly
    as given, because the inset is already baked into the geometry by
-   `buildRectTree()` (see step 2 above). `tintForRect()` reads the
-   *top-level* segment of the rect's id (not the immediate parent's, for
-   the cancellation reason covered in the 2026-06-29 colour fix below) to
-   pick a warm or cool base colour, filled at `structAlpha`. This has to
+   `buildRectTree()` (see step 2 above). `tintForRect()` looks up the
+   rect's `sectionId` (every rect carries one, inherited from its
+   section's root — see step 2) in `SECTION_TINTS`, an RGB-triple map
+   mirroring `landing.css`'s `--accent-<section>` hues, and fills at
+   `structAlpha` — colour reads as "which section," depth-stacked alpha
+   reads as "how nested." This has to
    happen before step 6 and 7 in DOM order so tiles/filler paint on top
    of it, not under it — see `DESIGN-SYSTEM.md`'s "Structure layer"
    section for why the paint-order requirement is load-bearing for the
@@ -271,8 +331,9 @@ Split across `subdivision.js` (pure) and `layout.js` (orchestration + DOM):
    `clamp(…vw…)`. The tags row is only included in the markup at all for
    tiles `≥200×150px` (`showTags` in `renderTile()`); smaller tiles get
    no tags row, not a cramped one. Markup also includes the coloured
-   corner tab, the two hover-revealed split hairlines, and the coordinate
-   label — see `DESIGN-SYSTEM.md` for what each one does visually.
+   corner tab, the four hover-revealed split hairlines (offsets computed
+   from `--split-k`, also set here — see `DESIGN-SYSTEM.md`'s "Live
+   re-subdivision hint" for the geometry), and the coordinate label.
    `tile.dataset.section` (already set for data purposes) is what
    `landing.css`'s `data-section` attribute selectors key off of to set
    `--tile-accent` — no colour logic lives in JS.
@@ -330,6 +391,82 @@ actual achieved coverage depends on what the reseeded tree happens to
 offer as candidates near each entry's reading-order window, so don't
 expect it to land on exactly 65% every load.
 
+### Section minimum-area guarantee
+
+A section's area share is `weight_i / totalWeight` of the field — fine in
+aggregate, but a section can have so little weight that its proportional
+share is too small to fit even one `minThumbWidth × minThumbHeight`
+candidate, especially combined with the squarified chain split still not
+being a *guarantee* of squareness, just a reduction of distortion (see
+"Known bug fixed (2026-06-29, thin section slivers)" below). Rather than
+hope the field happens to be big enough, `layout.js` computes the
+minimum field area that makes every section's proportional share clear
+its own floor simultaneously:
+
+```js
+const totalSectionWeight = sectionWeights.reduce((sum, s) => sum + s.weight, 0) || 1;
+const requiredFieldArea = sectionWeights.reduce((max, s) => {
+  const minSectionArea = s.entryCount * minThumbWidth * minThumbHeight * layoutConfig.sectionAreaBuffer;
+  return Math.max(max, (minSectionArea / s.weight) * totalSectionWeight);
+}, 0);
+const requiredFieldHeight = requiredFieldArea / fieldWidth;
+const fieldHeight = Math.max(field.clientHeight, requiredFieldHeight);
+```
+
+Why this formula: a section's actual area, given field area `A`, is
+`A × weight_i / totalWeight`. Setting that `≥ minSectionArea_i` and
+solving for `A` gives `A ≥ minSectionArea_i × totalWeight / weight_i` for
+*that* section alone; taking the max of this across all sections gives
+the smallest `A` that satisfies every section's floor at once (the
+section with the worst `minSectionArea_i / weight_i` ratio is the
+binding constraint — every other section clears its floor with room to
+spare once that one is satisfied). `sectionAreaBuffer` (3×, in
+`data.js`) inflates each floor beyond the bare minimum, since the raw
+floor only guarantees a candidate *can* exist geometrically, not that
+subdivision/inset overhead and the section's own filler space leave one
+comfortably. Growth only ever happens to height, never width — width
+stays locked to the live viewport to avoid horizontal scrolling, the
+same convention the old mobile-only heuristic already followed.
+
+This is a hard guarantee, not a soft target like `targetTileAreaFraction`
+above: the explicit design intent (user's words) is that excess negative
+space is an acceptable cost, but an entry never getting a rectangle to
+render in at all is not.
+
+### Known bug fixed (2026-06-29, thin section slivers)
+
+The section-chain partition (step 2 above) originally used the same
+`splitRect()` as ordinary subdivision — split along whichever axis is
+*currently* longer. That heuristic is fine for repeated random
+subdivision (the goal there is overall visual variety across many
+splits, not any one split's shape), but wrong for the chain: on a
+landscape field, width starts longer and *stays* longer through several
+consecutive peels, because each peel only shaves a small fraction off
+it. So several sections in a row got sliced from the same axis
+regardless of how little area they actually needed. Concretely, on a
+~1600×1000 field with section weights `prompt-collections=4,
+deep-studies=6, recreating-the-past=4, ...` (`total=40`):
+`prompt-collections` peels off as a ~160px-wide vertical strip (full
+1000px height), `deep-studies` as a ~240px-wide strip from what's left,
+then `recreating-the-past` — despite having a perfectly reasonable 10%
+*area* share of the field — peels off as another ~160px-wide × 1000px
+strip, because width was still the longer dimension of the remainder at
+that point. ~160px is under `minThumbWidth: 180`, so `getCandidateRects`
+filtered out every rect in that section's entire region, and its one
+entry (`vera-molnar`) never got assigned a tile — not a weight or order
+problem, a shape problem.
+
+Fixed two ways, addressing different parts of the same failure: (1)
+`splitRectSquarified()` now tries both axes for each chain peel and
+keeps whichever leaves the peeled-off section closer to square, instead
+of blindly following "whichever's longer" — see step 2 above and the
+function itself in `subdivision.js`. This reduces but doesn't *guarantee*
+eliminate thin slivers (a section with a genuinely tiny weight share can
+still end up small even when squarified). (2) The section minimum-area
+guarantee above is the actual guarantee — it grows the field until even
+the worst-case section's proportional share clears its own floor,
+regardless of how squarification happens to shake out.
+
 ### Known bug fixed (2026-06-28)
 
 The mobile branch of the candidate filter originally referenced
@@ -361,20 +498,33 @@ nested-frame effect.
 The fix: bake the inset into the recursion itself, in
 `subdivision.js`'s `buildRectTree()`. After computing a raw split
 (`childA`/`childB`, exactly as before), each child is passed through
-`insetRect(child, d)` — `x += d, y += d, width -= d, height -= d`
-(`d = structInset`, **not** `width -= 2d` centred on every side; only
-the top-left corner moves in, the bottom/right edge stays exactly on the
-split line) — and it's *that* inset rect, not the raw one, that gets
-pushed into `allRects` and passed to the next recursive `subdivide()`
-call. Because every level's split now operates on its parent's
-already-inset rect rather than raw mathematical bounds, the inset
-compounds correctly and consistently with depth, anchored to where each
-ancestor is actually drawn. This change is in the tree-building function
-itself, so it applies uniformly to every consumer — tiles, filler, and
-the structure layer all read from the same corrected `allRects`; there
-is no separate inset calculation left anywhere in `layout.js`.
-`renderStruct()` was simplified accordingly to draw `rect.x/y/width/
-height` with no inset math of its own.
+`insetRect(child, d)` — and it's *that* inset rect, not the raw one,
+that gets pushed into `allRects` and passed to the next recursive
+`subdivide()` call. Because every level's split now operates on its
+parent's already-inset rect rather than raw mathematical bounds, the
+inset compounds correctly and consistently with depth, anchored to where
+each ancestor is actually drawn. This change is in the tree-building
+function itself, so it applies uniformly to every consumer — tiles,
+filler, and the structure layer all read from the same corrected
+`allRects`; there is no separate inset calculation left anywhere in
+`layout.js`. `renderStruct()` was simplified accordingly to draw
+`rect.x/y/width/height` with no inset math of its own.
+
+`insetRect()` itself went through a second correction after this one
+shipped: the first version was `x += d, y += d, width -= d, height -= d`
+— only the top-left corner moving in, on the theory that the
+bottom/right edge should stay exactly on the split line. That's true for
+the *interior* edge a split just created, but each child also has edges
+inherited directly from the parent's own boundary (whichever dimension
+wasn't touched by this particular split) — those edges were never
+inset at all under the single-`d` formula, so a rect's far corner kept
+landing exactly on its parent's boundary, touching it rather than
+nested inside it. Fixed by subtracting `2d` from width/height instead of
+`d`, while `x`/`y` still only advance by `d` — every edge, whether it's
+a freshly-split interior line or an inherited parent boundary, ends up
+inset by exactly `d` from whatever it borders. See the corrected
+`insetRect()` comment in `subdivision.js` for the edge-by-edge
+reasoning.
 
 ## CSS scoping
 
@@ -635,3 +785,87 @@ always return nothing.
   subpath. Also discovered `.github/workflows/deploy.yml` already
   exists (added outside this conversation) — updated the "Deployment"
   section above, which still said "not yet wired up."
+- **2026-06-29** — v1.0 held as a stable milestone (tagged in the user's
+  own words, not a file change) and v2.0 work started on a new local
+  `v2-dark-theme` branch, leaving `main` exactly as currently deployed.
+  v2.0 phase 1–3 (data + tree partitioning + scoped assignment): added
+  `sections[]` to `data.js` — the registry of which sections exist,
+  their order, and whether they're enabled, independent of `entries[]`.
+  `buildRectTree()` in `subdivision.js` no longer subdivides the whole
+  field freely from the start; it first partitions the root into one
+  contiguous region per enabled, weighted section via a **linear chain**
+  of splits (peel one section's weight-share off the remainder, recurse
+  into what's left) — N sections produce exactly N regions, not a
+  doubling binary tree's `2^(N−1)`. Every rect now carries a `sectionId`,
+  inherited from its section's root. `assignEntries()` itself is
+  unchanged, but `layout.js`'s `render()` now calls it once per section,
+  each time scoped to only that section's own entries/candidates/rects,
+  rather than once globally — so an entry can never be assigned a rect
+  outside its own section's region. This sets up the next v2.0 phases
+  (colour: per-section hue stacking on the structure layer instead of the
+  current warm/cool placeholder; a section-jump menu row, since each
+  section's tiles now occupy one real, stable, contiguous area rather
+  than being scattered wherever a good-fitting rect happened to exist).
+  `tintForRect()` in `layout.js` was patched minimally (hash `sectionId`
+  to warm/cool) only so the structure layer doesn't render nonsense now
+  that rect ids no longer encode section identity — the real per-section
+  colour work is still pending, tracked separately.
+- **2026-06-29** — Two fixes from user inspection of the v2.0 branch.
+  (1) `insetRect()`'s corner case from the earlier inset fix: it only
+  ever moved a child's top-left corner in by `d` (`width -= d, height
+  -= d`), which insets the *interior* edge a split just created but
+  leaves each child's other two edges — whichever dimension wasn't
+  touched by this split — exactly on the parent's own boundary, still
+  touching it. Fixed by subtracting `2d` from width/height instead of
+  `d`; see "Subdivide" above and the rewritten comment in
+  `subdivision.js` for the edge-by-edge reasoning. (2) Replaced the
+  tile hover "live re-subdivision hint" — previously two hairlines
+  crossing at the tile's center, which read as a generic 2×2 grid — with
+  four hairlines offset from the tile's own edges instead: two verticals
+  at `k`/`2k` from the right edge, two horizontals at `k`/`2k` from the
+  top edge, where `k` = 10% of the tile's shorter dimension
+  (`--split-k`, computed per-tile in `renderTile()` alongside the
+  existing title/body font-size custom properties). Still hover/
+  focus-visible only, still a grow-in transform, just different
+  geometry and four elements instead of two.
+- **2026-06-29** — v2.0 phase 4: full dark + cyan colour pass — see
+  `DESIGN-SYSTEM.md`'s "Colour tokens" and "Structure layer" sections for
+  the token table and per-section hue list. `tintForRect()` in
+  `layout.js` now looks up each rect's actual section hue via
+  `SECTION_TINTS` (an object literal mapping `sectionId` → RGB triple)
+  instead of the phase 1–3 hash-based warm/cool placeholder. `landing.css`
+  tokens (`--bg`, `--ink`, `--muted`, `--line`/`--line-soft`, `--tile`,
+  `--accent`, plus a new `--tile-hover`) flipped from v1.0's light
+  palette to dark; the ten `--accent-<section>` hues were redone as
+  `hsl()` values at matched saturation/lightness. Also fixed two
+  dark-on-light leftovers this pass exposed: `.fffx-struct`'s border was
+  a hardcoded dark rgba (now `var(--line-soft)`), and the tile
+  hover/focus background was a hardcoded `white` (now `var(--tile-hover)`,
+  a lighter dark slate, since flashing to white on a dark page would be
+  jarring).
+- **2026-06-29** — Fixed a real bug the user caught by inspection:
+  `vera-molnar` (the sole entry in `recreating-the-past`) never rendered
+  as a tile. Root cause was the section-chain partition (phase 1–3),
+  not weight or order — see "Known bug fixed (2026-06-29, thin section
+  slivers)" above for the full geometric explanation (short version: the
+  chain kept slicing the same — currently-longer — axis for several
+  peels in a row on a landscape field, so a low-weight section landed as
+  a sliver narrower than `minThumbWidth` despite having a perfectly
+  reasonable area *share*). Two-part fix: `splitRectSquarified()` in
+  `subdivision.js` now picks whichever axis keeps each peeled section
+  closer to square, instead of blindly following "whichever's longer";
+  and `layout.js` now computes a hard minimum field area (see "Section
+  minimum-area guarantee" above) that guarantees every section's
+  proportional share clears its own `minThumbWidth × minThumbHeight ×
+  sectionAreaBuffer` floor, growing field height (never width) to meet
+  it. This also replaced the old mobile-only `entries.length * 230`
+  height heuristic — unprincipled and with no desktop equivalent — with
+  the same unified calculation on both breakpoints. Caught and fixed a
+  latent, previously-irrelevant bug while implementing this: `layout.js`
+  computed a synthetic `fieldHeight` for layout math but never wrote it
+  back to the DOM — `#subdivision-field` has `overflow: hidden` and
+  every child is `position: absolute`, so the element never grows to fit
+  taller content on its own. Added `field.style.height =
+  ${fieldHeight}px` (set explicitly in JS) so a grown field is actually
+  visible/scrollable, not just correct in the underlying math.
+- **2026-06-29** — v2.0 phases 5–6. Section menu: `#section-menu` (built once in `layout.js`'s `buildSectionMenu()`) lists every enabled section with a visible entry; click scrolls to a 1x1px `#section-anchor-<id>` div positioned at that section's `sectionRoot` rect, recreated every `render()`. Typography: Google Fonts (Space Grotesk + IBM Plex Mono) loaded in `index.html`; `--font-display` (Space Grotesk) replaces the system-sans stack as `.fffx-landing`'s base font; `--font-mono` (IBM Plex Mono) replaces the four hardcoded "Courier New" refs (eyebrow, tags, coords, filler marks).

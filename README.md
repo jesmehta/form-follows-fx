@@ -287,7 +287,37 @@ touched or migrated yet.
   and entry assignment runs once per section, scoped to that section's
   own rects only. A section's tiles now occupy one real, stable area of
   the page rather than being scattered wherever a good-fitting rectangle
-  happened to exist. Colour (dark palette, per-section hue stacking on
-  the structure layer), display/mono fonts, and a section-jump menu row
-  are still pending — see `LANDING-PAGE-NOTES.md`/`DESIGN-SYSTEM.md` for
-  the full mechanism and what's left.
+  happened to exist. Two follow-up fixes from user inspection: the
+  structure-layer inset (`insetRect()`) was still touching parent edges
+  on the un-split dimension — fixed by subtracting `2d` from width/height
+  instead of `d`; and the tile hover "live re-subdivision hint" changed
+  from two lines crossing at center to four offset from the tile's own
+  right/top edges. Display/mono fonts and a section-jump menu row are
+  still pending — see `LANDING-PAGE-NOTES.md`/`DESIGN-SYSTEM.md`.
+- **2026-06-29** — v2.0 phase 4: full dark + cyan colour pass. Every
+  `landing.css` colour token flipped from v1.0's light paper-and-ink
+  palette to a dark slate ground, with `--accent` narrowed to the one
+  saturated colour on the page (cyan, used only for focus/hover, never a
+  section's own colour). The ten `--accent-<section>` hues were redone at
+  matched saturation/lightness, spaced evenly around the colour wheel.
+  The structure layer now tints by each rect's actual section (looked up
+  via `SECTION_TINTS` in `layout.js`) instead of the interim warm/cool
+  placeholder from phase 1–3. See `DESIGN-SYSTEM.md` for the full token
+  table. Section-jump menu row and the display/mono font swap are still
+  pending.
+- **2026-06-29** — Fixed a real bug the user caught: `vera-molnar` (the
+  only entry in `recreating-the-past`) never rendered as a tile. Not a
+  weight or order problem — the section-chain partition could slice a
+  low-weight section into a sliver narrower than `minThumbWidth` despite
+  its area *share* of the field being perfectly reasonable, because the
+  chain kept splitting whichever axis was "currently longer" several
+  times in a row on a landscape field. Fixed two ways: the chain split
+  now picks whichever axis keeps each peeled section closer to square
+  (`splitRectSquarified()`), and `layout.js` now computes a hard minimum
+  field area guaranteeing every section's share clears its own
+  per-entry floor, growing field height (never width) when needed —
+  replacing an old mobile-only height heuristic that had no actual
+  relationship to thumb-size thresholds. See `LANDING-PAGE-NOTES.md`'s
+  "Section minimum-area guarantee" and bug writeup for the full
+  mechanism and the math.
+- **2026-06-29** — v2.0 phases 5–6: section-jump menu (scrolls to each section's real on-page region) and Space Grotesk + IBM Plex Mono typography, replacing system-sans/Courier New. See `LANDING-PAGE-NOTES.md`.
