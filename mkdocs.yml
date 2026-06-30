@@ -67,7 +67,7 @@ theme:
     # Bookshelf-era tortoise replaced — fffx isn't that site. Second
     # preference, for the record: material/snowflake-variant.
     logo: material/mushroom-outline
-  favicon: images/favicon.svg
+  favicon: assets/images/favicon.svg
   features:
     # - navigation.tabs
     # - navigation.instant

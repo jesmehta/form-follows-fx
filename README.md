@@ -37,12 +37,12 @@ form-follows-fx/
     │   │                          section folders below so nothing collides with them
     │   ├── css/
     │   │   └── fffx-landing.css        All landing-page CSS, scoped under .fffx-landing
-    │   └── js/
-    │       ├── data.js            Source of truth: landingConfig + sections[] + entries[] (the portal IA)
-    │       ├── random.js          Seeded PRNG + deterministic filler-variant picker
-    │       ├── subdivision.js     Rectangle tree, candidate filtering, scoring, assignment (no DOM)
-    │       └── layout.js          DOM rendering, resize handling — orchestrates the above
-    ├── images/CirclePacking/      Images for the Circle Packing writeup
+    │   ├── js/
+    │   │   ├── data.js            Source of truth: landingConfig + sections[] + entries[] (the portal IA)
+    │   │   ├── random.js          Seeded PRNG + deterministic filler-variant picker
+    │   │   ├── subdivision.js     Rectangle tree, candidate filtering, scoring, assignment (no DOM)
+    │   │   └── layout.js          DOM rendering, resize handling — orchestrates the above
+    │   └── images/CirclePacking/  Images for the Circle Packing writeup
     ├── recreating-the-past/
     │   └── vera-molnar.md         Vera Molnar study writeup — real content
     ├── tools-and-libraries/
@@ -329,3 +329,4 @@ touched or migrated yet.
 - **2026-06-29** — Extended v2.0's dark + cyan palette and typography to the rest of the site (every Material-rendered page, not just the landing page). Extracted shared values into `docs/assets/css/tokens.css` (single source of truth: `--fffx-bg`, `--fffx-accent`, `--fffx-font-display`, etc.) — `landing.css` now reads from it instead of hardcoding the same hex values twice, and a new `docs/stylesheets/fffx-material.css` maps the same tokens onto Material's `--md-*` variables. `mkdocs.yml`: `theme.palette` switched to `scheme: slate` / `primary: black` / `accent: cyan` (was a light scheme with an unwired `primary: custom`), `theme.font` switched to Space Grotesk + IBM Plex Mono (was Ubuntu/Ubuntu Mono), added `extra_css` listing both new stylesheets. Fixed a typo in `site_description` while in there. `theme.icon.logo` (a Bookshelf-era tortoise icon) and `theme.favicon` (points at a file that doesn't exist in `docs/images/`) are still open — flagged, not fixed.
 - **2026-06-30** — Cross-world normalization pass (see new `WORLD-SYSTEMS.md`, shared with the Bookshelf sibling repo): renamed `docs/assets/css/tokens.css` -> `fffx-tokens.css` and `landing.css` -> `fffx-landing.css` to match the new world-prefixed CSS naming convention (Bookshelf's equivalent files got the matching treatment in its own repo). Updated every reference — `index.html`'s `<link>` tags, `mkdocs.yml`'s `extra_css`, and prose throughout this file/`DESIGN-SYSTEM.md`/`README.md` — except inside already-dated changelog entries describing earlier states, which correctly still say `tokens.css`/`landing.css` (what was true at the time).
 - **2026-06-30** — Added a `docs/index.md` guard: a step in `.github/workflows/deploy.yml` (before `mkdocs build`) that fails the build if `docs/index.md` exists, plus an explicit note in `README.md`'s repository-structure section and `LANDING-PAGE-NOTES.md`'s architecture/MkDocs-integration sections — this site's homepage is `docs/index.html`, and a stray `docs/index.md` (e.g. copied out of habit from the Bookshelf sibling repo, which does use one) would collide with it. See `WORLD-SYSTEMS.md`'s "Homepage rule."
+- **2026-06-30** — Moved `docs/images/` -> `docs/assets/images/`, matching the preferred asset layout documented in `WORLD-SYSTEMS.md` (`docs/assets/js/`/`docs/assets/css/` already lived there). Updated every reference — `mkdocs.yml`'s `favicon`, `circle-packing-library.md`'s six `![]()` image paths, and prose in this file/`LANDING-PAGE-NOTES.md` — except inside already-dated changelog entries above, which correctly still say `docs/images/` (what was true at the time). `theme.favicon` pointing at a file that doesn't actually exist is a separate, still-open bug (see the 2026-06-29 entry above) — only the path prefix moved, the missing-file problem wasn't fixed. Verified via `git mv` (history-preserving rename) and a clean `mkdocs build`.

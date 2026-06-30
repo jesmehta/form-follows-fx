@@ -204,12 +204,12 @@ bookshelf-material.css
 Both worlds' `*-tokens.css` and `*-material.css` files already follow
 this. Both worlds' landing stylesheet has been renamed to
 `*-landing.css` to match (was `landing.css` in fffx, `bookshelf.css` in
-Bookshelf). Neither world has fully moved its JS/images into
-`docs/assets/` yet — fffx already has `docs/assets/js/`/`docs/assets/css/`
-but keeps `docs/images/` separate; Bookshelf has no `docs/assets/` at
-all (`docs/js/`, `docs/images/`, `docs/stylesheets/` are siblings at
-`docs/` root). Both are deferred — see TODOs below — rather than moved
-partially.
+Bookshelf). Both worlds have now moved JS/images under `docs/assets/`:
+fffx has `docs/assets/js/`/`docs/assets/css/`/`docs/assets/images/`;
+Bookshelf has `docs/assets/js/`/`docs/assets/images/`. Both keep
+`docs/stylesheets/` as a sibling of `docs/assets/`, not nested inside
+it — that split is intentional (see asset folder list above), not a
+leftover.
 
 ## Order-based rendering
 
@@ -244,13 +244,14 @@ start; no change needed there.
   dead. Left alone this pass.
 - **Bookshelf: derive `span` from `weight`** instead of maintaining both
   independently, if/when Bookshelf's card grid is revisited.
-- **Bookshelf: move `docs/js/`, `docs/images/` under `docs/assets/`** to
-  fully match the preferred asset layout — deferred because it touches
-  every `<script src>` in `index.md` plus any image references; not
-  attempted partially.
-- **fffx: move `docs/images/` under `docs/assets/images/`** — same
-  reasoning, smaller blast radius (one content page references the
-  Circle Packing images).
+- ~~Bookshelf: move `docs/js/`, `docs/images/` under `docs/assets/`~~ —
+  done 2026-06-30: `docs/assets/js/`, `docs/assets/images/`, all
+  references updated.
+- ~~fffx: move `docs/images/` under `docs/assets/images/`~~ — done
+  2026-06-30: `docs/assets/images/CirclePacking/`, all references
+  updated (`mkdocs.yml`'s `favicon`, `circle-packing-library.md`'s
+  6 image refs, README.md's structure tree, `LANDING-PAGE-NOTES.md`'s
+  MkDocs-integration notes).
 - **Cross-world `primarySection`/`sections[]` fields** — add only when
   an actual cross-listed-within-one-world entry exists; not bolted on
   speculatively.

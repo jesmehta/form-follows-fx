@@ -588,8 +588,8 @@ in place and nothing needs retrofitting.
   font values *by hand*, since YAML can't reference a CSS custom
   property), and `material/mushroom-outline` (was `material/tortoise`, a
   Bookshelf-era leftover). `theme.favicon` still points at
-  `images/favicon.svg`, which doesn't exist in `docs/images/` — a
-  pre-existing, separate bug, not yet fixed.
+  `assets/images/favicon.svg`, which doesn't exist in
+  `docs/assets/images/` — a pre-existing, separate bug, not yet fixed.
 - `requirements.txt` mirrors the Bookshelf/Cabinet-of-Curiosities Python
   dependency set (`mkdocs-material`, `mkdocs-video`,
   `mkdocs-git-revision-date-localized-plugin`, etc.) for consistency
