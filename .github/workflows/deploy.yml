@@ -31,6 +31,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: Guard against docs/index.md
+      run: |
+        if [ -f docs/index.md ]; then
+          echo "ERROR: docs/index.md must not exist. This site uses docs/index.html as the standalone Level 1 landing page. See LANDING-PAGE-NOTES.md."
+          exit 1
+        fi
+
     - name: Build MkDocs Site
       run: mkdocs build --site-dir public
 

@@ -45,10 +45,10 @@ a templated shell instead of served standalone.
 **v2.0**: two Google Fonts, loaded via `<link>` tags in `index.html`'s
 `<head>` (the landing page bypasses Material, so it can't use
 `mkdocs.yml`'s `theme.font` — see "Site architecture" above). The actual
-font-family strings live in `docs/assets/css/tokens.css` as
+font-family strings live in `docs/assets/css/fffx-tokens.css` as
 `--fffx-font-display`/`--fffx-font-mono`, mapped to local `--font-display`/
-`--font-mono` names in `landing.css` — see "Colour tokens" below for why
-tokens.css exists and what else it covers.
+`--font-mono` names in `fffx-landing.css` — see "Colour tokens" below for why
+fffx-tokens.css exists and what else it covers.
 
 ```css
 --font-display: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -71,7 +71,7 @@ machine output rather than authored copy:
 
 Same pairing extends to every Material-rendered page (everything except
 `index.html`) via `mkdocs.yml`'s `theme.font: { text: Space Grotesk,
-code: IBM Plex Mono }` — kept in sync with tokens.css *by hand*, since
+code: IBM Plex Mono }` — kept in sync with fffx-tokens.css *by hand*, since
 plain YAML can't reference a CSS custom property. If that pairing ever
 changes, update both places.
 
@@ -84,22 +84,22 @@ Serif pairing: geometric/grotesk, not serif.
 
 ## Colour tokens
 
-Raw values live in `docs/assets/css/tokens.css` as `--fffx-*` custom
+Raw values live in `docs/assets/css/fffx-tokens.css` as `--fffx-*` custom
 properties (`:root`, no element scoping — it's loaded on every page,
-landing and Material alike). `landing.css` maps those onto the
+landing and Material alike). `fffx-landing.css` maps those onto the
 `.fffx-landing`-scoped names below (`--bg: var(--fffx-bg)`, etc.); a
 second file, `docs/stylesheets/fffx-material.css`, maps the *same*
 `--fffx-*` tokens onto Material's own `--md-*` variables for every other
 page, loaded via `mkdocs.yml`'s `extra_css`. Change a value once in
-tokens.css; both flows pick it up — never hardcode a hex value directly
-in either `landing.css` or `fffx-material.css` again, extend tokens.css
+fffx-tokens.css; both flows pick it up — never hardcode a hex value directly
+in either `fffx-landing.css` or `fffx-material.css` again, extend fffx-tokens.css
 first. (Per-section accent hues are the one exception, kept local to
-`landing.css` only — see "Per-section accent hues" below for why.)
+`fffx-landing.css` only — see "Per-section accent hues" below for why.)
 
 Token *names* below are unchanged from v1.0 (so existing references
 elsewhere in this repo still resolve) — only where the values come from
 changed, first to hardcoded v2.0 dark-theme hex values, now to
-tokens.css.
+fffx-tokens.css.
 
 | Token | Value | Use |
 | --- | --- | --- |
@@ -126,7 +126,7 @@ A second colour layer sits on top of the base dark/cyan palette: each
 `section` value from `data.js` gets its own hue, set as a `--tile-accent`
 custom property via a `data-section` attribute selector on `.fffx-tile`
 (no JS colour logic for *tiles* — that mapping lives entirely in
-`landing.css`). `--tile-accent` drives the `.fffx-tile-meta` text colour
+`fffx-landing.css`). `--tile-accent` drives the `.fffx-tile-meta` text colour
 and the `.fffx-tile-tab` corner mark. The **structure layer** also tints
 by section now (`tintForRect()` in `layout.js`) — see "Structure layer"
 below — using the same ten hues, duplicated there as plain RGB triples
@@ -570,3 +570,5 @@ different parameters, orchestrated entirely from `layout.js`.
   before/after geometry in `LANDING-PAGE-NOTES.md`'s bug writeup.
 - **2026-06-29** — v2.0 phases 5–6: added `.fffx-section-menu` (mono, uppercase, cyan hover/focus, matches the per-section tab/meta treatment) and swapped base typography to Space Grotesk (display) + IBM Plex Mono (the existing mono-accent role, was "Courier New"). See `LANDING-PAGE-NOTES.md` for the anchor/scroll mechanism.
 - **2026-06-29** — Extended dark + cyan to every Material-rendered page, not just the landing page. Both this file's `Typography` section (it had never actually been updated for phase 6 — still described v1.0's system-stack-only approach) and `Colour tokens` section were stale; rewritten to describe `docs/assets/css/tokens.css` as the actual single source of truth for both flows, plus the new `docs/stylesheets/fffx-material.css` mapping the same tokens onto Material's `--md-*` variables. `mkdocs.yml`: `theme.palette` -> `scheme: slate`/`primary: black`/`accent: cyan`; `theme.font` -> Space Grotesk + IBM Plex Mono. `theme.icon.logo` (the Bookshelf-era tortoise, flagged but not fixed in the previous entry) is now `material/mushroom-outline` — quirky + nature-pattern, picked over `honeycomb` (not a real MDI icon), `snowflake-variant` (recorded second preference), `function-variant`, and `spider-web`. `theme.favicon` still points at a nonexistent file — still open.
+- **2026-06-30** — Cross-world normalization pass: renamed `tokens.css` -> `fffx-tokens.css` and `landing.css` -> `fffx-landing.css` per the new world-prefixed CSS convention documented in `WORLD-SYSTEMS.md`. `sections[]` in `data.js` renamed `label` -> `title` and `enabled` -> `status` (boolean, same shared status model as `entries[]`) to match the canonical shared schema — `layout.js`'s two readers (`buildSectionMenu()`, `render()`'s section-weight filter) updated to match.
+- **2026-06-30** — Added a `docs/index.md` guard (CI step in `.github/workflows/deploy.yml` + explicit notes in `README.md`/`LANDING-PAGE-NOTES.md`) — see `WORLD-SYSTEMS.md`'s "Homepage rule" for the cross-world version of this guidance.

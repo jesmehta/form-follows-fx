@@ -87,25 +87,30 @@ export const landingConfig = {
 
 // One entry per section value used below. This is the single source of
 // truth for which sections exist, their reading-order sequence
-// (`order`), and whether they're switched on at all (`enabled`) —
+// (`order`), and whether they're switched on at all (`status`) —
 // independent of whether any entries currently happen to populate them.
-// v2.0's subdivision tree partitions the root into one contiguous
-// region per *enabled* section (sized by that section's total visible-
-// entry weight) before any of the normal recursive subdivision happens
-// — see buildRectTree() in subdivision.js. A section with zero visible
-// entries contributes zero weight and is skipped entirely (no empty
-// region reserved for it).
+// `title`/`status` match the shared cross-world schema (WORLD-SYSTEMS.md)
+// — were `label`/`enabled` before a 2026-06-30 normalization pass; the
+// values/semantics didn't change, just the field names (`status` here
+// is boolean only, true|false, same model as entries[].status without
+// the "wip" middle state — nothing currently needs a muted-but-visible
+// section). v2.0's subdivision tree partitions the root into one
+// contiguous region per *enabled* section (sized by that section's
+// total visible-entry weight) before any of the normal recursive
+// subdivision happens — see buildRectTree() in subdivision.js. A
+// section with zero visible entries contributes zero weight and is
+// skipped entirely (no empty region reserved for it).
 export const sections = [
-  { id: "prompt-collections", label: "Prompt Collections", order: 10, enabled: true },
-  { id: "deep-studies", label: "Deep Studies", order: 20, enabled: true },
-  { id: "recreating-the-past", label: "Recreating the Past", order: 30, enabled: true },
-  { id: "tools-and-libraries", label: "Tools & Libraries", order: 40, enabled: true },
-  { id: "generative-projects", label: "Generative Projects", order: 50, enabled: true },
-  { id: "image-experiments", label: "Image Experiments", order: 60, enabled: true },
-  { id: "sketch-families", label: "Sketch Families", order: 70, enabled: true },
-  { id: "plotter-fabrication", label: "Plotter & Fabrication", order: 80, enabled: true },
-  { id: "code-to-objects", label: "Code to Objects", order: 90, enabled: true },
-  { id: "legacy-processing", label: "Legacy Processing", order: 100, enabled: true }
+  { id: "prompt-collections", title: "Prompt Collections", order: 10, status: true },
+  { id: "deep-studies", title: "Deep Studies", order: 20, status: true },
+  { id: "recreating-the-past", title: "Recreating the Past", order: 30, status: true },
+  { id: "tools-and-libraries", title: "Tools & Libraries", order: 40, status: true },
+  { id: "generative-projects", title: "Generative Projects", order: 50, status: true },
+  { id: "image-experiments", title: "Image Experiments", order: 60, status: true },
+  { id: "sketch-families", title: "Sketch Families", order: 70, status: true },
+  { id: "plotter-fabrication", title: "Plotter & Fabrication", order: 80, status: true },
+  { id: "code-to-objects", title: "Code to Objects", order: 90, status: true },
+  { id: "legacy-processing", title: "Legacy Processing", order: 100, status: true }
 ];
 
 // Each entry is a *portal*, not a sketch — a collection, study, tool, or

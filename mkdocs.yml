@@ -49,16 +49,16 @@ theme:
   palette:
     # Built-in scheme/colour names get us close to the landing page's
     # dark + cyan palette out of the box; exact hex values come from
-    # extra_css below (docs/assets/css/tokens.css ->
+    # extra_css below (docs/assets/css/fffx-tokens.css ->
     # docs/stylesheets/fffx-material.css), which overrides Material's
-    # --md-* variables to match landing.css precisely. No light/dark
+    # --md-* variables to match fffx-landing.css precisely. No light/dark
     # toggle — slate is the only scheme on this site, to match the
     # landing page being dark-only.
     scheme: slate
     primary: black
     accent: cyan
   font:
-    # Matches docs/assets/css/tokens.css's --fffx-font-display/
+    # Matches docs/assets/css/fffx-tokens.css's --fffx-font-display/
     # --fffx-font-mono — kept in sync by hand since mkdocs.yml is plain
     # YAML and can't reference a CSS custom property.
     text: Space Grotesk
@@ -75,7 +75,7 @@ theme:
     # - navigation.sections
 
 extra_css:
-  - assets/css/tokens.css
+  - assets/css/fffx-tokens.css
   - stylesheets/fffx-material.css
 
 markdown_extensions:

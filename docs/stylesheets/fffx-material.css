@@ -1,8 +1,8 @@
-/* Maps fffx's shared tokens (assets/css/tokens.css) onto MkDocs
+/* Maps fffx's shared tokens (assets/css/fffx-tokens.css) onto MkDocs
    Material's own --md-* customization variables, so every Material-
    rendered page (everything except docs/index.html, which bypasses
    Material entirely) matches the landing page's dark + cyan palette.
-   Loaded via mkdocs.yml's extra_css, after tokens.css.
+   Loaded via mkdocs.yml's extra_css, after fffx-tokens.css.
 
    theme.palette in mkdocs.yml sets scheme: slate so this only ever
    needs to target the slate scheme — there's no light/dark toggle, so

@@ -12,10 +12,10 @@ const sectionMenu = document.querySelector("#section-menu");
 // whichever anchor the current render() pass created.
 function buildSectionMenu() {
   const visibleSectionIds = new Set(entries.filter(e => e.status !== false).map(e => e.section));
-  const menuSections = sections.filter(s => s.enabled && visibleSectionIds.has(s.id)).sort((a, b) => a.order - b.order);
+  const menuSections = sections.filter(s => s.status !== false && visibleSectionIds.has(s.id)).sort((a, b) => a.order - b.order);
 
   sectionMenu.innerHTML = menuSections.map(s =>
-    `<button type="button" data-section-id="${s.id}">${s.label}</button>`
+    `<button type="button" data-section-id="${s.id}">${s.title}</button>`
   ).join("");
 
   sectionMenu.querySelectorAll("button").forEach(button => {
@@ -67,11 +67,11 @@ function fillerContent(treatment, rect, rng) {
 // v2.0 phase 4: every rect carries a `sectionId` (inherited from its
 // section's root — see buildRectTree() in subdivision.js), so the
 // structure layer now tints by section instead of the old warm/cool
-// placeholder. These are the same ten hues as landing.css's
+// placeholder. These are the same ten hues as fffx-landing.css's
 // `--accent-<section>` custom properties (hsl(H, 58%, 62%) each,
 // 36° apart) — duplicated here as plain RGB triples because the inline
 // `rgba()` string this feeds (see renderStruct() below) needs actual
-// numbers, not a CSS var lookup. If a section's hue in landing.css ever
+// numbers, not a CSS var lookup. If a section's hue in fffx-landing.css ever
 // changes, recompute its RGB triple here to match (HSL→RGB by hand;
 // there's no shared single source of truth between the two files for
 // this, same as the original STRUCT_TINT_WARM/COOL constants before it).
@@ -150,7 +150,7 @@ function renderTile(entry, rect) {
   tile.style.setProperty("--tile-body-size", `${bodySize.toFixed(1)}px`);
 
   // Live-resubdivision hairline offsets (k, 2k) scale with the tile's
-  // own shorter dimension, not a fixed px value — see landing.css.
+  // own shorter dimension, not a fixed px value — see fffx-landing.css.
   const splitK = Math.max(1, Math.round(Math.min(rect.width, rect.height) * 0.1));
   tile.style.setProperty("--split-k", `${splitK}px`);
 
@@ -218,7 +218,7 @@ function render() {
   // sections with none get zero weight and are dropped entirely (no
   // region reserved for a section with nothing to show).
   const sectionWeights = sections
-    .filter(s => s.enabled)
+    .filter(s => s.status !== false)
     .map(s => ({
       id: s.id,
       order: s.order,

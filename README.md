@@ -36,7 +36,7 @@ form-follows-fx/
     ├── assets/                    All landing-page CSS/JS lives here, kept out of the
     │   │                          section folders below so nothing collides with them
     │   ├── css/
-    │   │   └── landing.css        All landing-page CSS, scoped under .fffx-landing
+    │   │   └── fffx-landing.css        All landing-page CSS, scoped under .fffx-landing
     │   └── js/
     │       ├── data.js            Source of truth: landingConfig + sections[] + entries[] (the portal IA)
     │       ├── random.js          Seeded PRNG + deterministic filler-variant picker
@@ -67,6 +67,11 @@ form-follows-fx/
   as the site's homepage. This is deliberate: it sidesteps the
   header/sidebar-hiding workarounds the Bookshelf project needed, because
   there's no Material chrome on this page to hide in the first place.
+  **Do not create `docs/index.md`** — this site uses `docs/index.html` as
+  the standalone Level 1 landing page; a `docs/index.md` would collide
+  with the generated `/index.html` output. CI guards against this (see
+  `.github/workflows/deploy.yml`'s "Guard against docs/index.md" step) —
+  see `LANDING-PAGE-NOTES.md` for the full reasoning.
 - Every other page under `docs/` is normal MkDocs Material content with
   the standard sidebar/nav — but `mkdocs.yml`'s `nav:` currently lists only
   the two pages with real, finished-enough content (Vera Molnar, Circle
@@ -322,3 +327,5 @@ touched or migrated yet.
   mechanism and the math.
 - **2026-06-29** — v2.0 phases 5–6: section-jump menu (scrolls to each section's real on-page region) and Space Grotesk + IBM Plex Mono typography, replacing system-sans/Courier New. See `LANDING-PAGE-NOTES.md`.
 - **2026-06-29** — Extended v2.0's dark + cyan palette and typography to the rest of the site (every Material-rendered page, not just the landing page). Extracted shared values into `docs/assets/css/tokens.css` (single source of truth: `--fffx-bg`, `--fffx-accent`, `--fffx-font-display`, etc.) — `landing.css` now reads from it instead of hardcoding the same hex values twice, and a new `docs/stylesheets/fffx-material.css` maps the same tokens onto Material's `--md-*` variables. `mkdocs.yml`: `theme.palette` switched to `scheme: slate` / `primary: black` / `accent: cyan` (was a light scheme with an unwired `primary: custom`), `theme.font` switched to Space Grotesk + IBM Plex Mono (was Ubuntu/Ubuntu Mono), added `extra_css` listing both new stylesheets. Fixed a typo in `site_description` while in there. `theme.icon.logo` (a Bookshelf-era tortoise icon) and `theme.favicon` (points at a file that doesn't exist in `docs/images/`) are still open — flagged, not fixed.
+- **2026-06-30** — Cross-world normalization pass (see new `WORLD-SYSTEMS.md`, shared with the Bookshelf sibling repo): renamed `docs/assets/css/tokens.css` -> `fffx-tokens.css` and `landing.css` -> `fffx-landing.css` to match the new world-prefixed CSS naming convention (Bookshelf's equivalent files got the matching treatment in its own repo). Updated every reference — `index.html`'s `<link>` tags, `mkdocs.yml`'s `extra_css`, and prose throughout this file/`DESIGN-SYSTEM.md`/`README.md` — except inside already-dated changelog entries describing earlier states, which correctly still say `tokens.css`/`landing.css` (what was true at the time).
+- **2026-06-30** — Added a `docs/index.md` guard: a step in `.github/workflows/deploy.yml` (before `mkdocs build`) that fails the build if `docs/index.md` exists, plus an explicit note in `README.md`'s repository-structure section and `LANDING-PAGE-NOTES.md`'s architecture/MkDocs-integration sections — this site's homepage is `docs/index.html`, and a stray `docs/index.md` (e.g. copied out of habit from the Bookshelf sibling repo, which does use one) would collide with it. See `WORLD-SYSTEMS.md`'s "Homepage rule."
