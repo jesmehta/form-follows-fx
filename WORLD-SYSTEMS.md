@@ -95,8 +95,6 @@ status          // see "Standard status model" below
 tags
 location
 repo            // { name, url } — if the entry has its own source repo
-relatedLinks    // [{ label, href }]
-notes
 ```
 
 `section` (singular) is what both worlds currently use for an entry's
@@ -150,12 +148,13 @@ renderer turns that into actual pixels:
 - **fffx** uses `weight` directly as the subdivision tile-area scoring
   multiplier (`scoreRectForEntry` in `subdivision.js`) — higher weight
   targets a larger rectangle.
-- **Bookshelf** uses `weight` as the normalized editorial signal but
-  still renders card size via its own `span` field (`c4`/`c5`/`c6`/`c7`/
-  `c8`/`c12`, a 12-column grid width) — `span` is Bookshelf-specific
-  layout plumbing, not a shared field, and is not derived from `weight`
-  automatically. Unifying the two (deriving `span` from `weight`) is
-  deferred — see TODOs below.
+- **Bookshelf does not have a `weight` field yet** — card size is set
+  directly via its own `span` field (`c4`/`c5`/`c6`/`c7`/`c8`/`c12`, a
+  12-column grid width), with no editorial-importance signal behind it.
+  Adding `weight` and deriving `span` from it is deferred — see TODOs
+  below. (Corrected 2026-06-30: this section previously claimed
+  Bookshelf already carried `weight` as a normalized signal alongside
+  `span` — checked the actual data file, it doesn't exist there.)
 
 ## Homepage rule
 
@@ -238,12 +237,48 @@ start; no change needed there.
 - **Bookshelf: migrate `docs/index.md` → standalone `docs/index.html`.**
   Real architectural change (drop the header-hiding CSS/JS, restructure
   how the page mounts), not attempted here.
-- **Review and prune world-specific extra attributes** — fffx's `era`
-  field and Bookshelf's `cat`/`ghost`/`titleVariant` and similar are
-  unreviewed; some may be worth promoting to shared fields, some may be
-  dead. Left alone this pass.
+- ~~Review fffx's extra attributes~~ — done 2026-06-30: removed `era`
+  (unused in render, redundant with `kind`/`tags`) and `sourceFolder`
+  (a working/migration note, not real IA) from all entries; renamed
+  `image` → `thumbnail` (consumed by `layout.js`'s `--thumb` property —
+  the only one of the four that's actually rendered). Removed
+  `relatedLinks`/`notes` outright — confirmed with the repo owner these
+  were leftover auto-populated content from an earlier AI-assisted pass,
+  not deliberately curated IA, so the one real value each (a related-link
+  pointer on `code-to-fabrication`, a note on `legacy-processing-archive`)
+  was dropped along with the fields. `location` and `repo` reviewed and
+  kept: `repo` is genuine data (an actual GitHub repo pointer, used once);
+  `location` has no immediate use but costs nothing idle and is the
+  strongest shared-fields candidate of the unused ones (the "does this
+  entry link outside its own repo" question applies to all three worlds,
+  not just fffx).
+- **Review Bookshelf's extra attributes** — `cat`/`ghost`/`titleVariant`
+  and similar still unreviewed; some may be worth promoting to shared
+  fields, some may be dead. Not started.
+- **Bookshelf: rename `cards` → `entries`** to match fffx's terminology
+  — cross-world vocabulary alignment, touches the renderer's `.cards`
+  references and prose throughout Bookshelf's docs. Not started.
+- **Bookshelf: replace `live` with `status` in active use, drop `live`**
+  — `live`/`status` currently duplicate each other (`live` is what the
+  renderer reads, `status` is hand-maintained alongside it per the
+  documented `live:true`→`status:true`, `live:false`→`status:"wip"`
+  mapping). Needs a decision on what `status: false` should mean for a
+  card before the renderer can switch to reading `status` directly —
+  today every card always renders (live or dormant placeholder), there's
+  no "card hidden entirely" state. Not started.
+- **Bookshelf: split `sections[]`/`cards[]` into two flat top-level
+  arrays** (section metadata only vs. entries referencing their section
+  by id), matching fffx's actual shape (`sections[]` + `entries[]`,
+  joined by `entry.section`/`primarySection`) instead of nesting cards
+  inside each section object. The most invasive of the open Bookshelf
+  items — touches `bookshelf-gallery.js`'s core render loop, not just
+  field names. Natural to pair with the `cards`→`entries` rename rather
+  than do as two separate passes. Not started.
 - **Bookshelf: derive `span` from `weight`** instead of maintaining both
-  independently, if/when Bookshelf's card grid is revisited.
+  independently, if/when Bookshelf's card grid is revisited — note
+  Bookshelf doesn't actually have a `weight` field yet (despite the
+  "`weight` vs. world-specific layout fields" section above implying it
+  does); this would need to be added first.
 - ~~Bookshelf: move `docs/js/`, `docs/images/` under `docs/assets/`~~ —
   done 2026-06-30: `docs/assets/js/`, `docs/assets/images/`, all
   references updated.

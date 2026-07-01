@@ -137,7 +137,7 @@ function renderTile(entry, rect) {
   tile.style.top = `${rect.y}px`;
   tile.style.width = `${rect.width}px`;
   tile.style.height = `${rect.height}px`;
-  tile.style.setProperty("--thumb", entry.image ? `url("${entry.image}")` : "none");
+  tile.style.setProperty("--thumb", entry.thumbnail ? `url("${entry.thumbnail}")` : "none");
 
   // Font sizes scaled to *this tile's own* rect, not the viewport — a
   // fixed clamp(…vw…) gives a 180px tile and a 600px tile the same

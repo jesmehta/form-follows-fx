@@ -125,19 +125,14 @@ entries = [{
   weight,                    // 1 = small/archive, 2 = regular, 3 = important collection/study, 4 = major feature — target-area multiplier for rect scoring
   status,                    // true | false | "wip" — see "status" below; one field, both visibility and "is this finished"
   tags: [...],               // rendered as chips, revealed on tile hover/focus
-  era,                       // current-web | p5-archive | processing-legacy | other-code — where the source actually lives
   location,                  // internal | internal-plus-repo | external — how this portal is hosted
 
   // optional
-  image, years, repo: { name, url },
-  relatedLinks: [{ label, href }],
-  sourceFolder,               // free-text note on where the original sketch/material lives, if known
-  notes,
-  children, themeTags          // reserved — not yet read by layout.js
+  thumbnail, repo: { name, url }
 }]
 ```
 
-To add a portal: append to `entries` with all twelve required fields
+To add a portal: append to `entries` with all eleven required fields
 filled in, pick `order` relative to existing entries, pick `weight` 1–4
 per the rule above (`circle-packing-library` is currently the only
 weight-4 feature entry). `href` must be **relative, no leading slash**

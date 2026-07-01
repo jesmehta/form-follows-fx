@@ -110,7 +110,8 @@ export const sections = [
   { id: "sketch-families", title: "Sketch Families", order: 70, status: true },
   { id: "plotter-fabrication", title: "Plotter & Fabrication", order: 80, status: true },
   { id: "code-to-objects", title: "Code to Objects", order: 90, status: true },
-  { id: "legacy-processing", title: "Legacy Processing", order: 100, status: true }
+  { id: "legacy-processing", title: "Legacy Processing", order: 100, status: true },
+  { id: "studentWork", title: "Student Work", order: 100, status: true }
 ];
 
 // Each entry is a *portal*, not a sketch — a collection, study, tool, or
@@ -128,7 +129,6 @@ export const sections = [
 //   entirely) | "wip" (renders, but muted — quieter line weight, lower
 //   opacity, a "wip" tag in the meta line). One field, one job: this is
 //   both the visibility switch and the "is this actually finished" flag.
-// era: "current-web" | "p5-archive" | "processing-legacy" | "other-code".
 export const entries = [
   {
     id: "genuary",
@@ -141,9 +141,7 @@ export const entries = [
     weight: 4,
     status: "wip",
     tags: ["p5", "genuary", "daily-prompts"],
-    era: "p5-archive",
     location: "internal",
-    sourceFolder: "not yet catalogued"
   },
   {
     id: "100-gradients",
@@ -156,9 +154,7 @@ export const entries = [
     weight: 3,
     status: "wip",
     tags: ["gradients", "colour", "generative"],
-    era: "p5-archive",
     location: "internal",
-    sourceFolder: "not yet catalogued"
   },
   {
     id: "particle-systems",
@@ -171,9 +167,7 @@ export const entries = [
     weight: 3,
     status: "wip",
     tags: ["p5", "particles", "motion"],
-    era: "p5-archive",
     location: "internal",
-    sourceFolder: "not yet catalogued"
   },
   {
     id: "vera-molnar",
@@ -186,7 +180,6 @@ export const entries = [
     weight: 4,
     status: true,
     tags: ["artist-study", "geometry"],
-    era: "p5-archive",
     location: "internal"
   },
   {
@@ -194,14 +187,13 @@ export const entries = [
     title: "Circle Packing Library",
     subtitle: "From Bookclubs to Libraries — circle packing with code.",
     href: "tools-and-libraries/circle-packing-library/",
-    image: "assets/thumbs/circle-packing.jpg",
+    thumbnail: "assets/thumbs/circle-packing.jpg",
     section: "tools-and-libraries",
     kind: "library",
     order: 10,
     weight: 4,
     status: true,
     tags: ["p5", "circle-packing", "library"],
-    era: "current-web",
     location: "internal-plus-repo",
     repo: {
       name: "p5-circle-packing",
@@ -219,9 +211,7 @@ export const entries = [
     weight: 4,
     status: "wip",
     tags: ["p5", "mandala", "tool"],
-    era: "p5-archive",
     location: "internal",
-    sourceFolder: "DotMandalaGenerator/, DotMandalaTool/"
   },
   {
     id: "lenticular-image-generator",
@@ -234,9 +224,7 @@ export const entries = [
     weight: 2,
     status: "wip",
     tags: ["image", "lenticular", "tool"],
-    era: "other-code",
     location: "internal",
-    sourceFolder: "not yet catalogued"
   },
   {
     id: "harmonics-dance-of-planets",
@@ -249,9 +237,7 @@ export const entries = [
     weight: 2,
     status: "wip",
     tags: ["orbits", "harmonics", "visualization"],
-    era: "other-code",
     location: "internal",
-    sourceFolder: "DanceOfPlanets/"
   },
   {
     id: "windows-of-berlin",
@@ -264,9 +250,7 @@ export const entries = [
     weight: 3,
     status: "wip",
     tags: ["p5", "generative", "architecture"],
-    era: "p5-archive",
     location: "internal",
-    sourceFolder: "not yet catalogued"
   },
   {
     id: "image-filters",
@@ -279,9 +263,7 @@ export const entries = [
     weight: 1,
     status: "wip",
     tags: ["image", "filters", "pixels"],
-    era: "p5-archive",
     location: "internal",
-    sourceFolder: "not yet catalogued"
   },
   {
     id: "flow-fields",
@@ -294,9 +276,7 @@ export const entries = [
     weight: 2,
     status: "wip",
     tags: ["p5", "flow-fields", "vectors"],
-    era: "p5-archive",
     location: "internal",
-    sourceFolder: "not yet catalogued"
   },
   {
     id: "perlin-noise",
@@ -309,9 +289,7 @@ export const entries = [
     weight: 2,
     status: "wip",
     tags: ["p5", "perlin-noise", "texture"],
-    era: "p5-archive",
     location: "internal",
-    sourceFolder: "not yet catalogued"
   },
   {
     id: "plotter-work",
@@ -324,9 +302,7 @@ export const entries = [
     weight: 3,
     status: "wip",
     tags: ["plotter", "line-art", "fabrication"],
-    era: "other-code",
     location: "internal",
-    sourceFolder: "not yet catalogued"
   },
   {
     id: "code-to-fabrication",
@@ -339,12 +315,7 @@ export const entries = [
     weight: 2,
     status: "wip",
     tags: ["fabrication", "laser-cut", "3d-print"],
-    era: "other-code",
-    location: "internal",
-    sourceFolder: "not yet catalogued",
-    relatedLinks: [
-      { label: "Circle Packing Library", href: "tools-and-libraries/circle-packing-library/" }
-    ]
+    location: "internal"
   },
   {
     id: "legacy-processing-archive",
@@ -357,9 +328,45 @@ export const entries = [
     weight: 1,
     status: "wip",
     tags: ["processing", "archive", "legacy"],
-    era: "processing-legacy",
-    location: "internal",
-    sourceFolder: "not yet catalogued",
-    notes: "Acknowledged deliberately, not migrated. Do not touch the source .pde files yet."
+    location: "internal"
+  },
+  {
+    id: "student-work",
+    title: "SSD Creative Coding Class highlights",
+    subtitle: "Selected student work from the batch of 2025-26",
+    href: "https://jesmehta.github.io/SSD_CreativeCodingPage/",
+    section: "studentWork",
+    kind: "archive",
+    order: 150,
+    weight: 3,
+    status: "live",
+    tags: ["p5js", "studentWork", "interactive"],
+    location: "external"
+  },
+  {
+    id: "prompt-generator",
+    title: "Prompt Generator for SSD students",
+    subtitle: "A prompt generator I created to help my students with some inspiration and direction",
+    href: "https://jesmehta.github.io/PromptGenerator/",
+    section: "tools-and-libraries",
+    kind: "digital-tool",
+    order: 150,
+    weight: 2,
+    status: "live",
+    tags: ["p5js", "studentWork", "interactive"],
+    location: "external"
+  },
+  {
+    id: "oblique-strategies",
+    title: "Brian Eno's Oblique Strategy randomizer",
+    subtitle: "A random instruction based on Brian Eno's Oblique Strategy cards",
+    href: "https://jesmehta.github.io/ObliqueStrategies/",
+    section: "tools-and-libraries",
+    kind: "digital-tool",
+    order: 160,
+    weight: 2,
+    status: "live",
+    tags: ["p5js", "studentWork", "interactive"],
+    location: "external"
   }
 ];

@@ -19,6 +19,8 @@ nav:
       - Vera Molnar: recreating-the-past/vera-molnar.md
   - Tools & Libraries:
       - Circle Packing Library: tools-and-libraries/circle-packing-library.md
+      - Prompt Generator: https://jesmehta.github.io/PromptGenerator/
+      - Brian Eno's Oblique Strategies: https://jesmehta.github.io/ObliqueStrategies/
       # - Mandala Generator: tools-and-libraries/mandala-generator.md
       # - Lenticular Image Generator: tools-and-libraries/lenticular-image-generator.md
       # - Harmonics / Dance of Planets: tools-and-libraries/harmonics-dance-of-planets.md
@@ -34,6 +36,8 @@ nav:
   #     - Code to Fabrication: physical-outputs/code-to-fabrication.md
   # - Archives:
   #     - Legacy Processing Archive: archives/legacy-processing-archive.md
+  - Student Work:
+      - Class of 2025-26: https://jesmehta.github.io/SSD_CreativeCodingPage/
 
 extra:
   # Set your own social media below (or remove)

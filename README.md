@@ -97,9 +97,8 @@ important it is; the subdivision algorithm in `subdivision.js` decides
 where it lives visually — these are deliberately separate concerns.
 
 Required fields: `id`, `title`, `subtitle`, `href`, `section`, `kind`,
-`order`, `weight`, `status`, `tags`, `era`, `location`. Optional: `image`,
-`years`, `repo`, `relatedLinks`, `sourceFolder`, `notes`, `children`,
-`themeTags`.
+`order`, `weight`, `status`, `tags`, `location`. Optional: `thumbnail`,
+`repo`.
 
 - `order` controls placement priority (lower = placed first, gets first
   pick of well-fitting rectangles).
@@ -113,9 +112,6 @@ Required fields: `id`, `title`, `subtitle`, `href`, `section`, `kind`,
   border, lower opacity, a `wip` tag in the meta line). This is how a real
   portal can exist and be linkable on day one without looking finished
   before it is.
-- `era` (`current-web` / `p5-archive` / `processing-legacy` / `other-code`)
-  records where the underlying sketch/tool actually lives, independent of
-  how the portal currently renders.
 - If the portal has its own write-up page, add the `.md` file under the
   matching `docs/<section-folder>/` and reference it in `mkdocs.yml`'s
   `nav:` — but only once it has real content. Placeholder pages
@@ -330,3 +326,47 @@ touched or migrated yet.
 - **2026-06-30** — Cross-world normalization pass (see new `WORLD-SYSTEMS.md`, shared with the Bookshelf sibling repo): renamed `docs/assets/css/tokens.css` -> `fffx-tokens.css` and `landing.css` -> `fffx-landing.css` to match the new world-prefixed CSS naming convention (Bookshelf's equivalent files got the matching treatment in its own repo). Updated every reference — `index.html`'s `<link>` tags, `mkdocs.yml`'s `extra_css`, and prose throughout this file/`DESIGN-SYSTEM.md`/`README.md` — except inside already-dated changelog entries describing earlier states, which correctly still say `tokens.css`/`landing.css` (what was true at the time).
 - **2026-06-30** — Added a `docs/index.md` guard: a step in `.github/workflows/deploy.yml` (before `mkdocs build`) that fails the build if `docs/index.md` exists, plus an explicit note in `README.md`'s repository-structure section and `LANDING-PAGE-NOTES.md`'s architecture/MkDocs-integration sections — this site's homepage is `docs/index.html`, and a stray `docs/index.md` (e.g. copied out of habit from the Bookshelf sibling repo, which does use one) would collide with it. See `WORLD-SYSTEMS.md`'s "Homepage rule."
 - **2026-06-30** — Moved `docs/images/` -> `docs/assets/images/`, matching the preferred asset layout documented in `WORLD-SYSTEMS.md` (`docs/assets/js/`/`docs/assets/css/` already lived there). Updated every reference — `mkdocs.yml`'s `favicon`, `circle-packing-library.md`'s six `![]()` image paths, and prose in this file/`LANDING-PAGE-NOTES.md` — except inside already-dated changelog entries above, which correctly still say `docs/images/` (what was true at the time). `theme.favicon` pointing at a file that doesn't actually exist is a separate, still-open bug (see the 2026-06-29 entry above) — only the path prefix moved, the missing-file problem wasn't fixed. Verified via `git mv` (history-preserving rename) and a clean `mkdocs build`.
+- **2026-06-30** — Attribute review pass on `entries[]` (first cross-world
+  attribute review, see `WORLD-SYSTEMS.md`'s TODOs). Removed `era`
+  (never read by any renderer code; redundant with `kind`/`tags` for
+  classifying an entry) and `sourceFolder` (a free-text migration note
+  to self, not real IA — the "where's the original sketch" question
+  belongs in a commit message or a personal note, not shipped data)
+  from all fifteen entries. Renamed `image` → `thumbnail` (the one
+  optional field of the four under review that's actually consumed —
+  `layout.js`'s `--thumb` CSS property reads it — so it kept its
+  function, just got a clearer name; `circle-packing-library`'s the
+  only entry currently using it). `repo`/`relatedLinks`/`notes` reviewed
+  and kept as-is — each is genuinely populated on at least one entry,
+  costs nothing when absent, and nothing renders from them yet to
+  break. `location` (`internal`/`internal-plus-repo`, `external`
+  documented but unused) is **left as an open question, not yet
+  decided**: it's not read by any renderer either, but the field's
+  intended scope is bigger than fffx alone — Bookshelf and any future
+  sibling site would have the same "does this entry link out to
+  something hosted elsewhere" question, so it's a stronger
+  shared-fields candidate than `era`/`sourceFolder` were even though
+  it's equally unused today. Also dropped `years`/`children`/
+  `themeTags` from this file's "optional fields" documentation — those
+  were never implemented in `data.js` at all (confirmed via grep, zero
+  occurrences), just speculatively reserved in the docs; the docs now
+  describe only fields that actually exist. Corrected a separate
+  doc/reality mismatch found while doing this pass: `WORLD-SYSTEMS.md`'s
+  "`weight` vs. world-specific layout fields" section had claimed
+  Bookshelf already carries a `weight` field — it doesn't; corrected in
+  both repos' copies. See `WORLD-SYSTEMS.md`'s TODOs for the
+  Bookshelf-side equivalent of this review (not started: `cat`/`ghost`/
+  `titleVariant` and similar, plus three newly-added Bookshelf-specific
+  items — `live`→`status`, `cards`→`entries`, and splitting
+  `sections[]`/`cards[]` into two flat arrays).
+- **2026-06-30** — Removed `relatedLinks`/`notes` from `entries[]`
+  outright (not just left alone as "reviewed and kept", per the
+  attribute-review entry directly above) — these turned out to be
+  leftover auto-populated content from an earlier AI-assisted data pass
+  rather than deliberately curated IA. Dropped from `code-to-fabrication`
+  (had one `relatedLinks` entry pointing at `circle-packing-library`) and
+  `legacy-processing-archive` (had one `notes` string), and from the
+  field documentation in this file/`LANDING-PAGE-NOTES.md`/
+  `WORLD-SYSTEMS.md` (both repos). `location` and `repo` were reviewed
+  in the same pass and kept — `repo` is genuine, `location` has no
+  immediate use but costs nothing idle.
