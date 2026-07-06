@@ -129,6 +129,10 @@ export const sections = [
 //   entirely) | "wip" (renders, but muted — quieter line weight, lower
 //   opacity, a "wip" tag in the meta line). One field, one job: this is
 //   both the visibility switch and the "is this actually finished" flag.
+//
+// location: "internal-md" | "internal-html" | "external" | "external-repo".
+//   `href` is always the main destination. Use `relatedLinks` for any
+//   secondary repository/source links rather than a dedicated `repo` field.
 export const entries = [
   {
     id: "genuary",
@@ -141,7 +145,7 @@ export const entries = [
     weight: 4,
     status: "wip",
     tags: ["p5", "genuary", "daily-prompts"],
-    location: "internal",
+    location: "internal-md",
   },
   {
     id: "100-gradients",
@@ -154,7 +158,7 @@ export const entries = [
     weight: 3,
     status: "wip",
     tags: ["gradients", "colour", "generative"],
-    location: "internal",
+    location: "internal-md",
   },
   {
     id: "particle-systems",
@@ -167,7 +171,7 @@ export const entries = [
     weight: 3,
     status: "wip",
     tags: ["p5", "particles", "motion"],
-    location: "internal",
+    location: "internal-md",
   },
   {
     id: "vera-molnar",
@@ -180,7 +184,7 @@ export const entries = [
     weight: 4,
     status: true,
     tags: ["artist-study", "geometry"],
-    location: "internal"
+    location: "internal-md"
   },
   {
     id: "circle-packing-library",
@@ -194,11 +198,13 @@ export const entries = [
     weight: 4,
     status: true,
     tags: ["p5", "circle-packing", "library"],
-    location: "internal-plus-repo",
-    repo: {
-      name: "p5-circle-packing",
-      url: "https://github.com/jesmehta/p5-circle-packing"
-    }
+    location: "internal-md",
+    relatedLinks: [
+      {
+        label: "GitHub repository",
+        href: "https://github.com/jesmehta/p5-circle-packing"
+      }
+    ]
   },
   {
     id: "mandala-generator",
@@ -211,7 +217,7 @@ export const entries = [
     weight: 4,
     status: "wip",
     tags: ["p5", "mandala", "tool"],
-    location: "internal",
+    location: "internal-md",
   },
   {
     id: "lenticular-image-generator",
@@ -224,7 +230,7 @@ export const entries = [
     weight: 2,
     status: "wip",
     tags: ["image", "lenticular", "tool"],
-    location: "internal",
+    location: "internal-md",
   },
   {
     id: "harmonics-dance-of-planets",
@@ -237,7 +243,7 @@ export const entries = [
     weight: 2,
     status: "wip",
     tags: ["orbits", "harmonics", "visualization"],
-    location: "internal",
+    location: "internal-md",
   },
   {
     id: "windows-of-berlin",
@@ -250,7 +256,7 @@ export const entries = [
     weight: 3,
     status: "wip",
     tags: ["p5", "generative", "architecture"],
-    location: "internal",
+    location: "internal-md",
   },
   {
     id: "image-filters",
@@ -263,7 +269,7 @@ export const entries = [
     weight: 1,
     status: "wip",
     tags: ["image", "filters", "pixels"],
-    location: "internal",
+    location: "internal-md",
   },
   {
     id: "flow-fields",
@@ -276,7 +282,7 @@ export const entries = [
     weight: 2,
     status: "wip",
     tags: ["p5", "flow-fields", "vectors"],
-    location: "internal",
+    location: "internal-md",
   },
   {
     id: "perlin-noise",
@@ -289,7 +295,7 @@ export const entries = [
     weight: 2,
     status: "wip",
     tags: ["p5", "perlin-noise", "texture"],
-    location: "internal",
+    location: "internal-md",
   },
   {
     id: "plotter-work",
@@ -302,7 +308,7 @@ export const entries = [
     weight: 3,
     status: "wip",
     tags: ["plotter", "line-art", "fabrication"],
-    location: "internal",
+    location: "internal-md",
   },
   {
     id: "code-to-fabrication",
@@ -315,7 +321,7 @@ export const entries = [
     weight: 2,
     status: "wip",
     tags: ["fabrication", "laser-cut", "3d-print"],
-    location: "internal"
+    location: "internal-md"
   },
   {
     id: "legacy-processing-archive",
@@ -328,7 +334,7 @@ export const entries = [
     weight: 1,
     status: "wip",
     tags: ["processing", "archive", "legacy"],
-    location: "internal"
+    location: "internal-md"
   },
   {
     id: "student-work",
@@ -339,7 +345,7 @@ export const entries = [
     kind: "archive",
     order: 150,
     weight: 3,
-    status: "live",
+    status: true,
     tags: ["p5js", "studentWork", "interactive"],
     location: "external"
   },
@@ -352,7 +358,7 @@ export const entries = [
     kind: "digital-tool",
     order: 150,
     weight: 2,
-    status: "live",
+    status: true,
     tags: ["p5js", "studentWork", "interactive"],
     location: "external"
   },
@@ -365,7 +371,7 @@ export const entries = [
     kind: "digital-tool",
     order: 160,
     weight: 2,
-    status: "live",
+    status: true,
     tags: ["p5js", "studentWork", "interactive"],
     location: "external"
   }

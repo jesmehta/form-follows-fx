@@ -461,7 +461,7 @@ different parameters, orchestrated entirely from `layout.js`.
   every visual line is now an actual rect from the subdivision tree,
   inset and tinted per `structInset`/`structAlpha`). Added the
   `.fffx-tile--muted` treatment for portals whose content isn't migrated
-  yet, now that `data.js` carries fifteen real portal entries spanning
+  yet, now that `data.js` carries eighteen real portal entries spanning
   live, to-migrate, and do-not-touch-yet content.
 - **2026-06-29** — Added the colour system: ten per-section accent hues
   (`--accent-<section>`, table above) wired to `--tile-accent` via

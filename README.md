@@ -98,7 +98,7 @@ where it lives visually — these are deliberately separate concerns.
 
 Required fields: `id`, `title`, `subtitle`, `href`, `section`, `kind`,
 `order`, `weight`, `status`, `tags`, `location`. Optional: `thumbnail`,
-`repo`.
+`sourceFolder`, `relatedLinks`, `notes`.
 
 - `order` controls placement priority (lower = placed first, gets first
   pick of well-fitting rectangles).
@@ -108,10 +108,15 @@ Required fields: `id`, `title`, `subtitle`, `href`, `section`, `kind`,
   `LANDING-PAGE-NOTES.md` for the scoring formula.
 - `status` is one field doing one job — both the visibility switch and the
   "is this actually finished" flag: `true` renders normally, `false` is
-  excluded from the field entirely, `"wip"` renders but muted (dashed
-  border, lower opacity, a `wip` tag in the meta line). This is how a real
+  excluded from the field entirely, `"wip"` renders but muted (quieter
+  line weight, lower opacity, a `wip` tag in the meta line). This is how a real
   portal can exist and be linkable on day one without looking finished
   before it is.
+- `location` describes where the primary `href` points:
+  `internal-md`, `internal-html`, `external`, or `external-repo`. If a
+  repository is only a secondary source link, keep the page `href` as the
+  primary destination and put the repository in `relatedLinks`; do not add
+  a dedicated `repo` field.
 - If the portal has its own write-up page, add the `.md` file under the
   matching `docs/<section-folder>/` and reference it in `mkdocs.yml`'s
   `nav:` — but only once it has real content. Placeholder pages
@@ -121,14 +126,15 @@ Required fields: `id`, `title`, `subtitle`, `href`, `section`, `kind`,
 
 ## Status
 
-Active development. Fifteen portal entries exist in `docs/assets/js/data.js`,
+Active development. Eighteen portal entries exist in `docs/assets/js/data.js`,
 covering all major sections (prompt collections, deep studies, recreating
 the past, tools & libraries, generative projects, image experiments,
 sketch families, physical outputs, archives). Two have real, finished-enough
 write-ups and are listed in `mkdocs.yml`'s `nav:`: **Vera Molnar**
 (`recreating-the-past/vera-molnar.md`) and **Circle Packing Library**
 (`tools-and-libraries/circle-packing-library.md`, weight 4, feature tile,
-`p5-circle-packing` repo). The other thirteen are intentionally minimal
+with the `p5-circle-packing` repo recorded as a `relatedLinks` item). The
+other unfinished entries are intentionally minimal
 placeholder pages — title, status, source material, a note that content
 is pending — and render muted on the landing page via `status: "wip"`.
 **Legacy Processing Archive** is one of them: acknowledged on the landing
@@ -137,6 +143,14 @@ touched or migrated yet.
 
 ## Changelog
 
+- **2026-07-06** — Aligned `entries[]` with the shared Cabinet entry
+  schema: removed the dedicated `repo` attribute, moved the Circle
+  Packing GitHub URL into `relatedLinks`, normalized internal page
+  locations to `internal-md`, and converted external live entries from
+  `status: "live"` to `status: true`. No renderer behavior changed:
+  `href` remains the primary destination, `weight`/`order` still drive
+  subdivision assignment, and `status: "wip"`/`false` keep their existing
+  muted/hidden behavior.
 - **2026-06-28** — Initial recursive-subdivision landing page built
   (`index.html`, `css/style.css`, `js/data.js`, `js/layout.js`). Fixed a
   latent bug where the mobile candidate-rect filter referenced an undefined

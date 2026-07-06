@@ -55,7 +55,7 @@ the cross-world version of this guidance.
 | `docs/assets/css/fffx-tokens.css` | Single source of truth for colour/font values (`--fffx-*` custom properties, `:root`-scoped) — shared between `fffx-landing.css` (loaded by `index.html` directly) and `docs/stylesheets/fffx-material.css` (loaded by every other, Material-rendered page via `mkdocs.yml`'s `extra_css`). See `DESIGN-SYSTEM.md`'s "Colour tokens" for the full rationale. |
 | `docs/assets/css/fffx-landing.css` | All landing CSS, every rule scoped under `.fffx-landing` on `<body>`. Colour/font custom properties are mapped from `fffx-tokens.css`'s `--fffx-*` names, not hardcoded. |
 | `docs/stylesheets/fffx-material.css` | Maps the same `fffx-tokens.css` values onto Material's own `--md-*` variables, scoped to `[data-md-color-scheme="slate"]`, so every Material-rendered page matches the landing page's palette. Not part of the landing page proper — listed here because it shares fffx-tokens.css with it. |
-| `docs/assets/js/data.js` | Source of truth — `landingConfig` (seed, layout tuning) + `sections[]` (the section registry — id/label/order/enabled) + `entries[]` (project content). Pure data, no DOM/logic. |
+| `docs/assets/js/data.js` | Source of truth — `landingConfig` (seed, layout tuning) + `sections[]` (the section registry — id/title/order/status) + `entries[]` (project content). Pure data, no DOM/logic. |
 | `docs/assets/js/random.js` | Seeded PRNG (`seededRandom`) + `pickFromId`, a deterministic per-rect-id picker used for filler-cell variety. No DOM, no knowledge of rects or entries — purely a randomness utility. |
 | `docs/assets/js/subdivision.js` | Pure logic: `buildRectTree` (recursive split), `getCandidateRects` (size/aspect/depth filtering), `scoreRectForEntry` + `assignEntries` (entry-to-rectangle matching and blocking). No DOM access at all — this file could run in a non-browser JS environment unchanged. |
 | `docs/assets/js/layout.js` | Orchestration + rendering only: calls into `data.js`/`random.js`/`subdivision.js`, builds the actual `<a>`/`<div>` DOM nodes, owns the resize listener. Imports the others as ES modules (`<script type="module">`, so this requires being served over HTTP — `file://` will block the module import in most browsers; use `mkdocs serve` or any static server for local preview, not double-clicking the HTML file). |
@@ -125,10 +125,10 @@ entries = [{
   weight,                    // 1 = small/archive, 2 = regular, 3 = important collection/study, 4 = major feature — target-area multiplier for rect scoring
   status,                    // true | false | "wip" — see "status" below; one field, both visibility and "is this finished"
   tags: [...],               // rendered as chips, revealed on tile hover/focus
-  location,                  // internal | internal-plus-repo | external — how this portal is hosted
+  location,                  // internal-md | internal-html | external | external-repo
 
   // optional
-  thumbnail, repo: { name, url }
+  thumbnail, sourceFolder, relatedLinks: [{ label, href }], notes
 }]
 ```
 
@@ -159,7 +159,7 @@ independently):
   only value that can make a portal disappear. Nothing currently uses it
   — every existing portal is real and linkable, just not always finished.
 - **`"wip"`** — renders, but `renderTile()` adds the `.fffx-tile--muted`
-  class: dashed border, reduced opacity, and the literal text `wip`
+  class: quieter line weight, reduced opacity, and the literal text `wip`
   appended to the tile's meta line. The portal is real, present, and
   clickable; it just doesn't pretend to be finished. `circle-packing-library`
   and `vera-molnar` are the only two entries currently `status: true` —
