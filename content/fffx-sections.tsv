@@ -1,0 +1,12 @@
+id	title	order	status
+prompt-collections	Prompt Collections	10	true
+deep-studies	Deep Studies	20	true
+recreating-the-past	Recreating the Past	30	true
+tools-and-libraries	Tools & Libraries	40	true
+generative-projects	Generative Projects	50	true
+image-experiments	Image Experiments	60	true
+sketch-families	Sketch Families	70	true
+plotter-fabrication	Plotter & Fabrication	80	true
+code-to-objects	Code to Objects	90	true
+legacy-processing	Legacy Processing	100	true
+studentWork	Student Work	100	true

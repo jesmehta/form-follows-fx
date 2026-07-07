@@ -1,6 +1,7 @@
-import { landingConfig, entries, sections } from "./data.js";
-import { seededRandom, pickFromId } from "./random.js";
-import { buildRectTree, getCandidateRects, assignEntries } from "./subdivision.js";
+import { landingConfig } from "./fffx-data.js";
+import { entries, sections } from "./fffx-generated-content.js";
+import { seededRandom, pickFromId } from "./fffx-random.js";
+import { buildRectTree, getCandidateRects, assignEntries } from "./fffx-subdivision.js";
 
 const field = document.querySelector("#subdivision-field");
 const sectionMenu = document.querySelector("#section-menu");
@@ -65,7 +66,7 @@ function fillerContent(treatment, rect, rng) {
 }
 
 // v2.0 phase 4: every rect carries a `sectionId` (inherited from its
-// section's root — see buildRectTree() in subdivision.js), so the
+// section's root — see buildRectTree() in fffx-subdivision.js), so the
 // structure layer now tints by section instead of the old warm/cool
 // placeholder. These are the same ten hues as fffx-landing.css's
 // `--accent-<section>` custom properties (hsl(H, 58%, 62%) each,
@@ -104,7 +105,7 @@ function tintForRect(rect) {
 //
 // No inset math here — rect.x/y/width/height are already the inset
 // geometry, baked in by buildRectTree() at split time (see insetRect()
-// in subdivision.js). This is what makes the gaps land correctly: each
+// in fffx-subdivision.js). This is what makes the gaps land correctly: each
 // rect is inset relative to where its own parent was actually drawn,
 // not recomputed independently against raw, never-inset bounds.
 function renderStruct(rect, layoutConfig) {
@@ -213,7 +214,7 @@ function render() {
 
   // The root partitions into one region per enabled section before any
   // ordinary subdivision happens (see buildRectTree() in
-  // subdivision.js) — so section weight has to be known up front. A
+  // fffx-subdivision.js) — so section weight has to be known up front. A
   // section's weight is the sum of its own visible entries' weights;
   // sections with none get zero weight and are dropped entirely (no
   // region reserved for a section with nothing to show).

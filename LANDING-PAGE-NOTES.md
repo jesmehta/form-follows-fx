@@ -51,27 +51,28 @@ the cross-world version of this guidance.
 
 | File | Responsibility |
 | --- | --- |
-| `docs/index.html` | Static shell: `<head>` (Google Fonts `<link>`s, then `fffx-tokens.css`, then `fffx-landing.css`), hero header markup (including `#section-menu`), one `<main id="subdivision-field">` mount point, `<script type="module" src="assets/js/layout.js">`. No content data, no logic. |
+| `docs/index.html` | Static shell: `<head>` (Google Fonts `<link>`s, then `fffx-tokens.css`, then `fffx-landing.css`), hero header markup (including `#section-menu`), one `<main id="subdivision-field">` mount point, `<script type="module" src="assets/js/fffx-layout.js">`. No content data, no logic. |
 | `docs/assets/css/fffx-tokens.css` | Single source of truth for colour/font values (`--fffx-*` custom properties, `:root`-scoped) — shared between `fffx-landing.css` (loaded by `index.html` directly) and `docs/stylesheets/fffx-material.css` (loaded by every other, Material-rendered page via `mkdocs.yml`'s `extra_css`). See `DESIGN-SYSTEM.md`'s "Colour tokens" for the full rationale. |
 | `docs/assets/css/fffx-landing.css` | All landing CSS, every rule scoped under `.fffx-landing` on `<body>`. Colour/font custom properties are mapped from `fffx-tokens.css`'s `--fffx-*` names, not hardcoded. |
 | `docs/stylesheets/fffx-material.css` | Maps the same `fffx-tokens.css` values onto Material's own `--md-*` variables, scoped to `[data-md-color-scheme="slate"]`, so every Material-rendered page matches the landing page's palette. Not part of the landing page proper — listed here because it shares fffx-tokens.css with it. |
-| `docs/assets/js/data.js` | Source of truth — `landingConfig` (seed, layout tuning) + `sections[]` (the section registry — id/title/order/status) + `entries[]` (project content). Pure data, no DOM/logic. |
-| `docs/assets/js/random.js` | Seeded PRNG (`seededRandom`) + `pickFromId`, a deterministic per-rect-id picker used for filler-cell variety. No DOM, no knowledge of rects or entries — purely a randomness utility. |
-| `docs/assets/js/subdivision.js` | Pure logic: `buildRectTree` (recursive split), `getCandidateRects` (size/aspect/depth filtering), `scoreRectForEntry` + `assignEntries` (entry-to-rectangle matching and blocking). No DOM access at all — this file could run in a non-browser JS environment unchanged. |
-| `docs/assets/js/layout.js` | Orchestration + rendering only: calls into `data.js`/`random.js`/`subdivision.js`, builds the actual `<a>`/`<div>` DOM nodes, owns the resize listener. Imports the others as ES modules (`<script type="module">`, so this requires being served over HTTP — `file://` will block the module import in most browsers; use `mkdocs serve` or any static server for local preview, not double-clicking the HTML file). |
+| `docs/assets/js/fffx-data.js` | Hand-edited stable config — `landingConfig` (seed, layout tuning). Pure data, no DOM/logic. |
+| `docs/assets/js/fffx-generated-content.js` | Auto-generated `sections[]` and `entries[]` from `content/fffx-sections.tsv` and `content/fffx-entries.tsv`. Do not edit directly; run `node tools/build-fffx-content.js`. |
+| `docs/assets/js/fffx-random.js` | Seeded PRNG (`seededRandom`) + `pickFromId`, a deterministic per-rect-id picker used for filler-cell variety. No DOM, no knowledge of rects or entries — purely a randomness utility. |
+| `docs/assets/js/fffx-subdivision.js` | Pure logic: `buildRectTree` (recursive split), `getCandidateRects` (size/aspect/depth filtering), `scoreRectForEntry` + `assignEntries` (entry-to-rectangle matching and blocking). No DOM access at all — this file could run in a non-browser JS environment unchanged. |
+| `docs/assets/js/fffx-layout.js` | Orchestration + rendering only: calls into `fffx-data.js`/`fffx-random.js`/`fffx-subdivision.js`, builds the actual `<a>`/`<div>` DOM nodes, owns the resize listener. Imports the others as ES modules (`<script type="module">`, so this requires being served over HTTP — `file://` will block the module import in most browsers; use `mkdocs serve` or any static server for local preview, not double-clicking the HTML file). |
 
 `docs/assets/` exists specifically so the landing page's own CSS/JS never
 collides with the per-section content folders (`prompt-collections/`,
 `deep-studies/`, etc.) sitting alongside it at `docs/` root.
 
-The three-way split between `data.js` (content) / `random.js` +
-`subdivision.js` (pure layout logic) / `layout.js` (DOM) means the
+The split between `fffx-data.js`/`fffx-generated-content.js` (config/content) / `fffx-random.js` +
+`fffx-subdivision.js` (pure layout logic) / `fffx-layout.js` (DOM) means the
 subdivision algorithm itself has zero dependency on the browser — useful
 if it's ever worth unit-testing the scoring/assignment logic directly, or
 reusing it for a different rendering target (e.g. an SVG export of the
 field) without touching DOM-construction code.
 
-## Data model (`docs/assets/js/data.js`)
+## Data model (`docs/assets/js/fffx-data.js` + generated content)
 
 ```js
 landingConfig = {
@@ -132,8 +133,17 @@ entries = [{
 }]
 ```
 
-To add a portal: append to `entries` with all eleven required fields
-filled in, pick `order` relative to existing entries, pick `weight` 1–4
+TSV workflow details: keep `content/fffx-sections.tsv` and
+`content/fffx-entries.tsv` ASCII-safe where practical, especially if Excel
+is part of the editing loop. Use ` / ` in compact display labels where the
+page should render a middle dot, and `...` where the page should render an
+ellipsis. `tools/build-fffx-content.js` restores those display characters
+only in selected rendered text fields, not in URLs/IDs/tags/locations.
+`status` parsing is case-insensitive, so Excel's `TRUE`/`FALSE` output is
+accepted alongside `true`/`false`; `WIP` is accepted as `"wip"` too.
+
+To add a portal: append a row to `content/fffx-entries.tsv` with all
+required fields filled in, pick `order` relative to existing entries, pick `weight` 1–4
 per the rule above (`circle-packing-library` is currently the only
 weight-4 feature entry). `href` must be **relative, no leading slash**
 (`tools-and-libraries/mandala-generator/`, not
@@ -593,10 +603,10 @@ in place and nothing needs retrofitting.
 
 ## Local preview
 
-`docs/assets/js/layout.js` is loaded as `<script type="module">`, which means
+`docs/assets/js/fffx-layout.js` is loaded as `<script type="module">`, which means
 `fetch`/import resolution is subject to CORS restrictions under the
 `file://` protocol in most browsers — opening `docs/index.html` directly
-by double-clicking it will likely fail to load `data.js` silently or with
+by double-clicking it will likely fail to load `fffx-data.js` silently or with
 a console CORS error. Preview locally either via `mkdocs serve` (serves
 the whole site, including this page, over `http://`) or any plain static
 server pointed at `docs/` (e.g. `python -m http.server` from inside
@@ -623,18 +633,28 @@ GitHub Pages serves the build from its default project URL instead —
 than the domain root the `entries[]` hrefs were originally written
 assuming.
 
-Every `href` in `data.js` is root-relative — `recreating-the-past/
+Every `href` in generated content is root-relative — `recreating-the-past/
 vera-molnar/`, no leading slash — specifically so this doesn't matter.
 `index.html` always sits at whatever the actual site root is, custom
 domain or GitHub Pages subpath, so a relative href resolves correctly
 either way: append it to the current document's directory. **Never**
 write a leading-slash href like `/recreating-the-past/vera-molnar/` — sed
 hint at the time this was caught (it's an easy regression to reintroduce
-one entry at a time): `grep -n 'href: "/' docs/assets/js/data.js` should
+one entry at a time): `grep -n 'href: "/' docs/assets/js/fffx-generated-content.js` should
 always return nothing.
 
 ## Changelog
 
+- **2026-07-07** — Extended the world-prefix convention from CSS into FFFX's
+  landing JS, TSV, and generator workflow. The live landing modules are now
+  `fffx-data.js`, `fffx-generated-content.js`, `fffx-random.js`,
+  `fffx-subdivision.js`, and `fffx-layout.js`; the spreadsheet sources are
+  `content/fffx-sections.tsv` and `content/fffx-entries.tsv`; and the
+  generator is `tools/build-fffx-content.js`. Rendering behavior is unchanged.
+- **2026-07-07** — Hardened the spreadsheet workflow for Excel: status cells
+  are now parsed case-insensitively (`TRUE`/`WIP`/`FALSE` are fine), TSVs can
+  stay ASCII-safe, and the generator restores display punctuation aliases
+  (` / ` -> middle dot, `...` -> ellipsis) in selected rendered text fields.
 - **2026-06-28** — Initial implementation notes written alongside the
   first working version of the recursive-subdivision landing page. Fixed
   the mobile candidate-filter bug (see above). Moved `style.css`,

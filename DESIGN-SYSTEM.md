@@ -123,15 +123,15 @@ here for telling sections apart visually, not just decorative.
 ### Per-section accent hues
 
 A second colour layer sits on top of the base dark/cyan palette: each
-`section` value from `data.js` gets its own hue, set as a `--tile-accent`
+`section` value from `fffx-generated-content.js` gets its own hue, set as a `--tile-accent`
 custom property via a `data-section` attribute selector on `.fffx-tile`
 (no JS colour logic for *tiles* — that mapping lives entirely in
 `fffx-landing.css`). `--tile-accent` drives the `.fffx-tile-meta` text colour
 and the `.fffx-tile-tab` corner mark. The **structure layer** also tints
-by section now (`tintForRect()` in `layout.js`) — see "Structure layer"
+by section now (`tintForRect()` in `fffx-layout.js`) — see "Structure layer"
 below — using the same ten hues, duplicated there as plain RGB triples
 since inline `rgba()` strings need actual numbers, not a CSS var lookup;
-if a hue changes here, the matching triple in `layout.js` needs updating
+if a hue changes here, the matching triple in `fffx-layout.js` needs updating
 to stay in sync (no shared source of truth between the two files for
 this conversion, by design — same as v1.0's warm/cool constants before
 it).
@@ -461,7 +461,7 @@ different parameters, orchestrated entirely from `layout.js`.
   every visual line is now an actual rect from the subdivision tree,
   inset and tinted per `structInset`/`structAlpha`). Added the
   `.fffx-tile--muted` treatment for portals whose content isn't migrated
-  yet, now that `data.js` carries eighteen real portal entries spanning
+  yet, now that generated content carries eighteen real portal entries spanning
   live, to-migrate, and do-not-touch-yet content.
 - **2026-06-29** — Added the colour system: ten per-section accent hues
   (`--accent-<section>`, table above) wired to `--tile-accent` via

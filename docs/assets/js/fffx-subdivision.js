@@ -1,5 +1,5 @@
 // Rectangle tree generation, candidate filtering, scoring, and entry
-// assignment. No DOM access in this file — layout.js owns rendering.
+// assignment. No DOM access in this file — fffx-layout.js owns rendering.
 
 // Each rect's id encodes its path from the root ("0", "0.0", "0.1",
 // "0.0.1", ...). That makes ancestor/descendant checks a string-prefix
@@ -97,7 +97,7 @@ function splitRectSquarified(rect, ratio, depth) {
 //
 // `sections` here is the already-filtered, already-weighted list: each
 // entry is `{ id, weight }` where weight is the sum of that section's
-// own visible entries' weights (computed in layout.js). Sections with
+// own visible entries' weights (computed in fffx-layout.js). Sections with
 // zero visible entries should already be excluded by the caller — they
 // have no weight to claim a region with.
 export function buildRectTree(rootRect, sections, depthConfig, rng) {

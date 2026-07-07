@@ -38,10 +38,11 @@ form-follows-fx/
     │   ├── css/
     │   │   └── fffx-landing.css        All landing-page CSS, scoped under .fffx-landing
     │   ├── js/
-    │   │   ├── data.js            Source of truth: landingConfig + sections[] + entries[] (the portal IA)
-    │   │   ├── random.js          Seeded PRNG + deterministic filler-variant picker
-    │   │   ├── subdivision.js     Rectangle tree, candidate filtering, scoring, assignment (no DOM)
-    │   │   └── layout.js          DOM rendering, resize handling — orchestrates the above
+    │   │   ├── fffx-data.js       Stable landing/layout config (landingConfig only)
+    │   │   ├── fffx-generated-content.js  Generated sections[] + entries[] (do not hand-edit)
+    │   │   ├── fffx-random.js     Seeded PRNG + deterministic filler-variant picker
+    │   │   ├── fffx-subdivision.js  Rectangle tree, candidate filtering, scoring, assignment (no DOM)
+    │   │   └── fffx-layout.js     DOM rendering, resize handling — orchestrates the above
     │   └── images/CirclePacking/  Images for the Circle Packing writeup
     ├── recreating-the-past/
     │   └── vera-molnar.md         Vera Molnar study writeup — real content
@@ -80,25 +81,52 @@ form-follows-fx/
   see `status` below) — they're just commented out of the nav so they
   don't bury the few pages worth reading. Uncomment a page's nav line once
   it has real content.
-- `docs/assets/js/data.js` is the single source of truth for the landing
-  page's information architecture — every portal's title, href, taxonomy,
-  and importance lives there as one entry in `entries[]`. Editing the
-  landing page's content means editing this file, not the HTML or the
-  layout engine. See "Adding a project" below for the full field
-  reference.
+- `docs/assets/js/fffx-data.js` contains stable hand-edited configuration:
+  `landingConfig`, layout parameters, subdivision parameters, and scoring
+  parameters.
+- `content/fffx-sections.tsv` and `content/fffx-entries.tsv` are the editable source
+  for the landing page's information architecture.
+  `docs/assets/js/fffx-generated-content.js` is generated from those TSV files
+  and should not be manually edited. Editing landing content means editing
+  TSV, then running `node tools/build-fffx-content.js`.
 
 ## Adding a portal to the landing page
 
-Each entry in `docs/assets/js/data.js`'s `entries[]` is a **portal** — a
+Each row in `content/fffx-entries.tsv` becomes one `entries[]` portal — a
 collection, study, tool, project, or archive grouping. Never add one entry
 per tiny sketch version; group related sketches under one portal and link
 out from its write-up page instead. The data decides what exists and how
-important it is; the subdivision algorithm in `subdivision.js` decides
+important it is; the subdivision algorithm in `fffx-subdivision.js` decides
 where it lives visually — these are deliberately separate concerns.
 
 Required fields: `id`, `title`, `subtitle`, `href`, `section`, `kind`,
 `order`, `weight`, `status`, `tags`, `location`. Optional: `thumbnail`,
 `sourceFolder`, `relatedLinks`, `notes`.
+
+Spreadsheet workflow:
+
+```text
+Edit:
+content/fffx-sections.tsv
+content/fffx-entries.tsv
+
+Run:
+node tools/build-fffx-content.js
+
+Commit both:
+content/*.tsv
+docs/assets/js/fffx-generated-content.js
+```
+
+`tags` are semicolon-separated in TSV and become arrays. `relatedLinks`
+uses `label|href` pairs, separated by semicolons if more than one is ever
+needed.
+
+Spreadsheet/Excel notes:
+
+- Keep TSV source text ASCII-safe where practical. Use ` / ` in compact display labels and `...` for ellipses; this avoids Excel reopening UTF-8 punctuation as mojibake such as `Â` or `â€¦`.
+- The generator restores display typography in generated JS for selected rendered text fields: ` / ` becomes a middle dot separator and `...` becomes an ellipsis.
+- `status` is case-insensitive in TSV (`true`/`TRUE`, `wip`/`WIP`, `false`/`FALSE`) and is normalized to `true`, `"wip"`, or `false` in generated JS.
 
 - `order` controls placement priority (lower = placed first, gets first
   pick of well-fitting rectangles).
@@ -126,7 +154,7 @@ Required fields: `id`, `title`, `subtitle`, `href`, `section`, `kind`,
 
 ## Status
 
-Active development. Eighteen portal entries exist in `docs/assets/js/data.js`,
+Active development. Eighteen portal entries exist in `content/fffx-entries.tsv`,
 covering all major sections (prompt collections, deep studies, recreating
 the past, tools & libraries, generative projects, image experiments,
 sketch families, physical outputs, archives). Two have real, finished-enough
@@ -143,6 +171,27 @@ touched or migrated yet.
 
 ## Changelog
 
+- **2026-07-07** — Extended the world-prefix convention from CSS into FFFX's
+  landing JS, TSV, and generator workflow: `data.js` -> `fffx-data.js`,
+  `generated-content.js` -> `fffx-generated-content.js`, `layout.js` ->
+  `fffx-layout.js`, `random.js` -> `fffx-random.js`, `subdivision.js` ->
+  `fffx-subdivision.js`, `content/sections.tsv` -> `content/fffx-sections.tsv`,
+  `content/entries.tsv` -> `content/fffx-entries.tsv`, and
+  `tools/build-content.js` -> `tools/build-fffx-content.js`. Updated imports,
+  script tags, generator paths, and current docs without changing rendering
+  behavior.
+- **2026-07-07** — Hardened the spreadsheet workflow after Excel surfaced
+  two practical bugs: uppercase boolean cells (`TRUE`/`FALSE`) now parse
+  correctly, and TSV source can stay ASCII-safe while
+  `tools/build-fffx-content.js` restores display punctuation aliases
+  (` / ` -> middle dot, `...` -> ellipsis) in generated JS.
+- **2026-07-07** — Added a spreadsheet-friendly TSV workflow for landing
+  content. `content/fffx-sections.tsv` and `content/fffx-entries.tsv` are now the
+  editable source for `sections[]` and `entries[]`; `tools/build-fffx-content.js`
+  generates `docs/assets/js/fffx-generated-content.js`; `docs/assets/js/fffx-data.js`
+  now keeps only stable hand-edited `landingConfig`; and `fffx-layout.js`
+  imports generated content separately. Verified the generated data is
+  identical to the previous manually-written `sections` and `entries`.
 - **2026-07-06** — Aligned `entries[]` with the shared Cabinet entry
   schema: removed the dedicated `repo` attribute, moved the Circle
   Packing GitHub URL into `relatedLinks`, normalized internal page

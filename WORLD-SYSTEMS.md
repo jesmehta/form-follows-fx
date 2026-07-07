@@ -37,9 +37,12 @@ Every Level 1 world in this ecosystem:
   (bypasses Material entirely); Bookshelf's is `docs/index.md` (rendered
   through Material with the header/nav hidden). See "Homepage rule"
   below for which pattern new worlds should use.
-- Is driven by **one data file** as the editable IA/content source — no
-  content strings or entry data live in the renderer. fffx:
-  `docs/assets/js/data.js`. Bookshelf: `docs/assets/js/bookshelf-data.js`.
+- Is driven by **world-prefixed data files** as the editable IA/content
+  source — no content strings or entry data live in the renderer. fffx:
+  `docs/assets/js/fffx-data.js` plus generated
+  `docs/assets/js/fffx-generated-content.js`. Bookshelf:
+  `docs/assets/js/bookshelf-data.js` plus generated
+  `docs/assets/js/bookshelf-generated-content.js`.
 - Maps **CSS tokens into MkDocs Material pages** — a `*-tokens.css` file
   (raw colour/font values, `:root`-scoped, single source of truth) feeds
   both the landing page's own stylesheet and a `*-material.css` file
@@ -181,8 +184,8 @@ docs/assets/thumbs/
 docs/stylesheets/        # Material-facing CSS only (tokens + material override)
 ```
 
-World-prefixed CSS filenames, so it's unambiguous which world a
-stylesheet belongs to even out of context:
+World-prefixed filenames, so it's unambiguous which world an asset belongs
+to even out of context:
 
 ```text
 fffx-tokens.css
@@ -193,6 +196,44 @@ bookshelf-tokens.css
 bookshelf-landing.css
 bookshelf-material.css
 ```
+
+Browser-facing JS follows the same world prefix:
+
+```text
+fffx-data.js
+fffx-generated-content.js
+fffx-layout.js
+fffx-random.js
+fffx-subdivision.js
+
+bookshelf-data.js
+bookshelf-generated-content.js
+bookshelf-gallery.js
+```
+
+Spreadsheet sources and content generators use the same prefix:
+
+```text
+content/fffx-sections.tsv
+content/fffx-entries.tsv
+tools/build-fffx-content.js
+
+content/bookshelf-sections.tsv
+content/bookshelf-entries.tsv
+tools/build-bookshelf-content.js
+```
+
+Spreadsheet TSV convention:
+
+- Prefer ASCII-safe source values for content that will be edited in Excel.
+  Use ` / ` for compact display separators and `...` for ellipses in TSV;
+  generators may restore those aliases to middle dots and ellipses in
+  selected rendered text fields.
+- Do not apply display prettification globally. Never transform URLs, IDs,
+  tags, locations, or machine-readable fields.
+- Parse `status` case-insensitively so Excel's `TRUE`/`FALSE` cells and
+  human-entered `WIP` normalize to the shared JS values `true`, `false`,
+  and `"wip"`.
 
 Both worlds' `*-tokens.css` and `*-material.css` files already follow
 this. Both worlds' landing stylesheet has been renamed to
