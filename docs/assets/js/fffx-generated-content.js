@@ -340,7 +340,7 @@ export const entries = [
     "id": "student-work",
     "title": "SSD Creative Coding Class highlights",
     "subtitle": "Selected student work from the batch of 2025-26",
-    "href": "https://jesmehta.github.io/SSD_CreativeCodingPage/",
+    "href": "https://jesmehta.github.io/SSD_Student_Work/ssd-creative-coding-2025-26/",
     "section": "studentWork",
     "kind": "archive",
     "order": 150,
