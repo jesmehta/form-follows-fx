@@ -118,24 +118,41 @@ which follow the same repo-wide convention Cabinet's own
 name, not by relative path, regardless of the referencing doc's own
 location).
 
-**No tier-3 (conversation-log) doc was created for either move.** Cabinet's
-`landing-v3-notes/` and `cabinet-editor/` each carry a `conversation-*.md`
-alongside their tier-2 doc; FFFX has no such narrative doc for its
-landing page's development history, and per Cabinet's own
-`documentation/DOCUMENTATION-GUIDE.md` (the convention this repo borrows,
-not one it hosts a copy of) one shouldn't be fabricated after the fact.
-Left as a known, flagged gap rather than invented.
+**Update, 2026-09-05, later the same day**: both open points below were
+revisited and reversed on direct instruction — see the conversation log's
+Part 1 for the actual exchange.
 
-**No `FILE-MANIFEST.md`/`DOCUMENTATION-GUIDE.md`/`CONTENT-INVENTORY.md`
-suite was created.** Cabinet's `documentation/` root also carries those,
-plus an AI-dependency audit and a meta-analysis doc — artifacts from a
-much larger, longer-running project. At FFFX's current scale (two
-feature folders, three doc files total) an index into `documentation/`
-buys nothing a directory listing doesn't already show; skipped rather
-than building ceremony nobody will maintain. Revisit if `documentation/`
-grows enough that navigating it needs an index.
+**Tier-3 (conversation-log) docs were written after all** —
+`conversation-fffx-editor.md` and this file's own
+`conversation-backend-and-deploy.md`, both from this session's real
+transcript (real quotes, not reconstructed), not backfilled for older
+work that has no available transcript. The landing page's own
+`landing-page-notes/` pair still has no conversation-log companion — no
+real narrative history is available for it, so none was fabricated;
+that gap is still open.
+
+**`FILE-MANIFEST.md` was created, scoped like Cabinet's own** — not just
+an index of `documentation/`'s own contents, but every code/config file
+across the repo (`tools/`, `content/`, `docs/`, root-level files),
+organized by subsystem, so someone hunting for a specific file's role has
+one place to check. `DOCUMENTATION-GUIDE.md`/`CONTENT-INVENTORY.md`/an
+AI-dependency audit/a meta-analysis doc were still not built — those
+remain judged as scale-driven artifacts from Cabinet's much larger,
+longer-running project, not something FFFX's current four-doc
+`documentation/` tree needs yet.
 
 ## Changelog
+
+### 2026-09-05 — conversation-log docs + `FILE-MANIFEST.md` added
+
+Reversed both of the reorg's own "deliberately not built" calls, on
+direct instruction (see the conversation log's Part 1): wrote
+`conversation-fffx-editor.md` and this file's own conversation-log from
+this session's real transcript; wrote `documentation/FILE-MANIFEST.md`
+covering the whole repo's code/config files, not just `documentation/`
+itself, matching Cabinet's actual scope once checked directly against it.
+`README.md`'s repository-structure tree and Changelog updated to point at
+both.
 
 ### 2026-09-05 — `docs/` content-vs-system split + `documentation/` per-feature reorg
 
@@ -156,6 +173,10 @@ the files this reorg had to update.
 
 ## Todo / watch-out-for
 
+- **`landing-page-notes/` still has no conversation-log companion** —
+  unlike `fffx-editor/` and this folder, which both got one 2026-09-05.
+  No real transcript of the landing page's own development history is
+  available to this repo to write one from; not fabricated, left open.
 - **WORLD-SYSTEMS.md reconciliation is still open** — its fffx-specific
   path descriptions (`docs/assets/js/...`) are now stale, same as
   Cabinet's own copy already is for Cabinet's paths. A synchronized pass

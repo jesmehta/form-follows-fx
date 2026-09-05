@@ -43,13 +43,16 @@ form-follows-fx/
 │   └── fffx-editor-ui/             The Admin Dash's browser UI
 ├── run-fffx-editor.bat      Double-click launcher for the Admin Dash
 ├── documentation/           Technical-reference docs, one folder per feature
+│   ├── FILE-MANIFEST.md         Exhaustive map of every code/config file in the repo
 │   ├── landing-page-notes/
 │   │   ├── DESIGN-SYSTEM.md         Visual language / interaction rules
 │   │   └── LANDING-PAGE-NOTES.md    Implementation architecture, rendering pipeline
 │   ├── fffx-editor/
-│   │   └── FFFX-EDITOR.md           Admin Dash design decisions, as-built notes
+│   │   ├── FFFX-EDITOR.md               Admin Dash design decisions, as-built notes
+│   │   └── conversation-fffx-editor.md  Real conversation log behind those decisions
 │   └── backend-and-deploy/
-│       └── BACKEND-AND-DEPLOY.md    Repo-wide/deploy-pipeline work with no single owning page
+│       ├── BACKEND-AND-DEPLOY.md               Repo-wide/deploy-pipeline work with no single owning page
+│       └── conversation-backend-and-deploy.md  Real conversation log for the same
 └── docs/                    MkDocs docs_dir
     ├── index.html           Standalone landing page (NOT index.md — see notes)
     ├── _assets/                   Supporting files, not browsable pages (leading underscore
@@ -200,6 +203,14 @@ touched or migrated yet.
 
 ## Changelog
 
+- **2026-09-05** — Reorganized `docs/` into content-vs-system folders
+  (`_assets/backend`, `_assets/material`, `_images`, matching Cabinet's
+  own convention) and `documentation/` into one folder per feature
+  (`landing-page-notes/`, `fffx-editor/`, `backend-and-deploy/`), then
+  added `documentation/FILE-MANIFEST.md` (every code/config file in the
+  repo, not just documentation) and real conversation-log docs for the
+  Admin Dash and the reorg itself. Full record in
+  `documentation/backend-and-deploy/BACKEND-AND-DEPLOY.md`.
 - **2026-09-05** — Added a local browser Admin Dash for editing
   `content/fffx-sections.tsv`/`fffx-entries.tsv` and running the build/
   mkdocs-check scripts by button instead of the CLI
