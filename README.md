@@ -88,7 +88,11 @@ form-follows-fx/
   for the landing page's information architecture.
   `docs/assets/js/fffx-generated-content.js` is generated from those TSV files
   and should not be manually edited. Editing landing content means editing
-  TSV, then running `node tools/build-fffx-content.js`.
+  TSV, then running `node tools/build-fffx-content.js` — or use the local
+  Admin Dash (`run-fffx-editor.bat`, `http://127.0.0.1:6858/admin/`) to
+  edit both TSVs in a browser and run that build (plus an mkdocs strict
+  check) with a button instead. See `FFFX-EDITOR.md` for the full design
+  notes.
 
 ## Adding a portal to the landing page
 
@@ -171,6 +175,12 @@ touched or migrated yet.
 
 ## Changelog
 
+- **2026-09-05** — Added a local browser Admin Dash for editing
+  `content/fffx-sections.tsv`/`fffx-entries.tsv` and running the build/
+  mkdocs-check scripts by button instead of the CLI
+  (`tools/fffx-tsv.js`/`fffx-editor.js`/`fffx-editor-ui/`,
+  `run-fffx-editor.bat`). Modeled on Cabinet's equivalent editor. Full
+  design notes and verification in `FFFX-EDITOR.md`.
 - **2026-07-07** — Extended the world-prefix convention from CSS into FFFX's
   landing JS, TSV, and generator workflow: `data.js` -> `fffx-data.js`,
   `generated-content.js` -> `fffx-generated-content.js`, `layout.js` ->

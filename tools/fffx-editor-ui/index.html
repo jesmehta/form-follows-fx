@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FFFX — Admin Dash</title>
+<link rel="stylesheet" href="editor.css">
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>FFFX — Admin Dash</h1>
+    <div class="sub">Local editor for content/fffx-sections.tsv &amp; content/fffx-entries.tsv — reads and writes the real files directly.</div>
+  </div>
+  <div class="header-actions">
+    <span class="compass">jesmehta / form-follows-fx</span>
+  </div>
+</header>
+
+<div id="status-banner" class="status-banner" hidden></div>
+
+<nav class="tabs">
+  <button data-tab="sections" class="active">Sections</button>
+  <button data-tab="entries">Entries</button>
+  <button data-tab="build">Build</button>
+</nav>
+
+<main>
+
+  <section class="panel active" id="panel-sections">
+    <div class="toolbar">
+      <input type="text" id="search-sections" placeholder="Filter sections by id, title…">
+      <span class="count-pill" id="count-sections">0 sections</span>
+      <button class="btn" id="expand-sections">⇕ Expand text</button>
+      <button class="btn primary" id="add-section">+ Add section</button>
+    </div>
+    <div class="table-wrap"><div id="table-sections"></div></div>
+    <footer class="hint">
+      <strong>id</strong> must be unique — it's what entries reference in their <strong>section</strong> column.
+      <strong>order</strong> controls draw sequence. Use ▲▼ to reorder — order values renumber automatically in steps of 10.
+      There's no layout/weight column here — the subdivision that arranges entries on the page is computed live in the browser from each entry's own <strong>weight</strong> (see the Entries tab), not stored per-section.
+    </footer>
+  </section>
+
+  <section class="panel" id="panel-entries">
+    <div class="toolbar">
+      <input type="text" id="search-entries" placeholder="Filter entries by id, title, section, tag…">
+      <span class="count-pill" id="count-entries">0 entries</span>
+      <button class="btn" id="expand-entries">⇕ Expand text</button>
+      <button class="btn primary" id="add-entry">+ Add entry</button>
+    </div>
+    <div class="table-wrap"><div id="table-entries"></div></div>
+    <footer class="hint">
+      <strong>section</strong> is validated live against the Sections tab — rows in red reference a section id that doesn't exist there, or duplicate another row's id.
+      ▲▼ reorders and renumbers <strong>order</strong> within that entry's section only.
+      <strong>weight</strong> is the subdivision tile-area scoring multiplier — higher weight targets a larger rectangle on the live page. <strong>thumbnail</strong>, <strong>sourceFolder</strong>, <strong>relatedLinks</strong>, and <strong>notes</strong> are all optional; leave blank to omit them from the generated content.
+    </footer>
+  </section>
+
+  <section class="panel" id="panel-build">
+    <div class="build-actions">
+      <div class="build-card">
+        <h3>Rebuild content</h3>
+        <p>Validates both TSVs, then runs <code>node tools/build-fffx-content.js</code>, regenerating <code>docs/assets/js/fffx-generated-content.js</code>.</p>
+        <button class="btn primary" id="run-rebuild-content">Rebuild content</button>
+      </div>
+      <div class="build-card">
+        <h3>mkdocs --strict check</h3>
+        <p>Runs <code>mkdocs build --strict</code> against a throwaway site-dir (outside the repo) as a sanity check — nothing here is committed or left behind.</p>
+        <button class="btn primary" id="run-mkdocs-check">mkdocs check</button>
+      </div>
+    </div>
+    <div class="table-wrap build-output-wrap">
+      <pre id="build-output" class="build-output">Run an action above to see its output here.</pre>
+    </div>
+  </section>
+
+</main>
+
+<dialog id="confirm-dialog">
+  <h2 id="confirm-dialog-title">Are you sure?</h2>
+  <div class="body"><p id="confirm-dialog-body"></p></div>
+  <div class="actions">
+    <button class="btn" id="confirm-cancel">Cancel</button>
+    <button class="btn danger" id="confirm-ok">Delete</button>
+  </div>
+</dialog>
+
+<script src="editor.js"></script>
+</body>
+</html>
