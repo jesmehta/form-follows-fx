@@ -23,7 +23,6 @@ the other two repos.
 |---|---|
 | `README.md` | Practical guide: structure, running locally, editing content, deploy pipeline, changelog. Start here. |
 | `WORLD-SYSTEMS.md` | Conventions shared across Cabinet/Bookshelf/fffx (data schema, status model, homepage rule). Hand-synced identically across all three repos — don't edit without also updating the other two. |
-| `FFFX-CLAUDE-CODE-PROMPT.md` | Untracked (never committed) — a grounding-prompt-style spec covering design system, colour palette, typography, and ticker spec, framed as a prompt for an AI session building/editing the landing page. Overlaps in subject with `documentation/landing-page-notes/DESIGN-SYSTEM.md`; not diffed against it or reconciled as part of this manifest's creation — flagged here rather than silently omitted since it's a real file on disk. |
 | `mkdocs.yml` | MkDocs site config: nav tree, theme (Space Grotesk/IBM Plex Mono, slate scheme only), plugins, `extra_css`. |
 | `requirements.txt` | Python deps for `mkdocs build`/`mkdocs serve`. |
 | `.github/workflows/deploy.yml` | CI: `mkdocs build --site-dir public`, official `actions/configure-pages` → `upload-pages-artifact` → `deploy-pages` pipeline, guards against a stray `docs/index.md` colliding with the standalone `docs/index.html` landing page. |
@@ -43,15 +42,24 @@ this manifest.
 
 ### `landing-page-notes/` — the landing page's visual + implementation design
 
+Current, maintained docs:
+
 | File | Role |
 |---|---|
 | `DESIGN-SYSTEM.md` | Visual language: typography, colour tokens, structure-layer rendering, per-section accent hues, filler-cell variety. Own changelog, v1.0–v2.0 phases. |
 | `LANDING-PAGE-NOTES.md` | Implementation architecture: file responsibilities, data model, rendering pipeline, local preview, deployment, `entries[].href` relative-path rule. Own changelog covering the same version history from the code side. |
+| `conversation-landing-page-notes.md` | Conversation log recovered from two saved chat exports (ChatGPT, then Claude) that predate this repo's own git history — the actual origin of the page concept, including a visual direction that was tried and abandoned before the shipped design. |
 
-No conversation-log companion exists for this pair — flagged as a known
-gap in `backend-and-deploy/BACKEND-AND-DEPLOY.md` rather than fabricated,
-since no real narrative transcript of the landing page's own development
-history is available to this repo.
+Archival — frozen output of Part 2's conversation, **not maintained, not
+authoritative for current behavior**. Kept for historical record only;
+don't consult these for how the site works today, and don't update them
+to match current behavior — that would misrepresent what they actually
+were at the time:
+
+| File | Role |
+|---|---|
+| `FFFX-CLAUDE-CODE-PROMPT.md` | The design-system grounding prompt as drafted 2026-06-29, meant to be pasted into a fresh Claude Code session. Superseded by `DESIGN-SYSTEM.md`, which has evolved through v1.0–v2.0 since. Still untracked in git (moved here from repo root 2026-09-05, was untracked there too). |
+| `Claude-convo-README.md` | The original project README as drafted the same day, describing a `data.js`-driven architecture (no MkDocs, no TSV pipeline, no Admin Dash) that was fully replaced roughly a week later — see the current `README.md`'s 2026-07-06/07/07 changelog entries. Kept as a record of the v1.0 concept before that rebuild, not as an alternate README. |
 
 ### `fffx-editor/` — the Admin Dash
 

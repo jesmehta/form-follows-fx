@@ -126,10 +126,22 @@ Part 1 for the actual exchange.
 `conversation-fffx-editor.md` and this file's own
 `conversation-backend-and-deploy.md`, both from this session's real
 transcript (real quotes, not reconstructed), not backfilled for older
-work that has no available transcript. The landing page's own
-`landing-page-notes/` pair still has no conversation-log companion — no
-real narrative history is available for it, so none was fabricated;
-that gap is still open.
+work that has no available transcript.
+
+**Update, same day, later still**: the `landing-page-notes/` gap noted
+just above closed on its own — two saved chat exports predating this
+repo's git history (`FFFX_PageDesign_2_Claude.html`, a ChatGPT export)
+turned out to be sitting in `documentation/` already, found when
+the user pointed at them directly. Both are static "complete webpage"
+saves with their DOM
+already rendered, so their real conversation text was recoverable
+directly (unlike two live `claude.ai/share/...` links tried earlier in
+this same session, which render client-side and came back empty).
+`landing-page-notes/conversation-landing-page-notes.md` was written from
+that recovered text — real quotes, two parts (the original ChatGPT brief,
+then the Claude build session that actually produced the shipped
+design), same as the other two conversation logs, just recovered rather
+than recorded live.
 
 **`FILE-MANIFEST.md` was created, scoped like Cabinet's own** — not just
 an index of `documentation/`'s own contents, but every code/config file
@@ -142,6 +154,61 @@ longer-running project, not something FFFX's current four-doc
 `documentation/` tree needs yet.
 
 ## Changelog
+
+### 2026-09-05 — saved chat export files renamed again, one real content gap found
+
+The first rename (below) broke the Claude file's own rendering: Windows
+Explorer's paired rename moved its `_files` folder to match the new
+name, but the HTML's internal `<script src=...>` references still
+pointed at the literal old folder name, so every asset 404'd. Rather
+than hand-edit a 200KB+ single-line generated file, both pages were
+re-saved fresh from the browser as `FFFX_PageDesign_2_Claude.html` and
+`FFFX_PageDesign_1_ChatGPT.html` (plus matching `_files` folders, no
+spaces or special characters, folder name matching file name in both
+cases). The first fresh ChatGPT resave was missing its opening exchange
+in the rendered page — a real gap this time (unlike the false alarm
+below), traced to the page not having been scrolled to the top before
+saving; the user rescrolled and re-saved, and the result is now the most
+complete of all three ChatGPT exports found across this repo's history,
+including one short closing offer from ChatGPT that neither earlier
+export had. All superseded files (`Claude.html`,
+`Claude - FFFX page design 2.html`, `Claude_files/`,
+`WebTech Projects - FFFX Page Design.htm`,
+`ChatGPT - FFFX Page Design 1.html`, and an orphaned
+`FFFX Page Design_files/`) were deleted by the user once the final two
+were verified. `conversation-landing-page-notes.md` and this file
+updated to the final names.
+
+### 2026-09-05 — saved chat export files renamed/swapped
+
+`Claude.html` → `Claude - FFFX page design 2.html` (renamed only); the
+ChatGPT export was swapped for a cleaner shared-link version of the same
+conversation, `WebTech Projects - FFFX Page Design.htm` →
+`ChatGPT - FFFX Page Design 1.html`. Re-verified by extraction that the
+new ChatGPT export contains the same full conversation (including the
+opening exchange) before treating the old file as safe to retire — a
+first extraction pass had appeared to show that exchange missing, traced
+to a transient read glitch rather than real content loss.
+`conversation-landing-page-notes.md` and this file updated to the new
+names; the dated entry below is left with the original names, since
+that's what the files were called at the time it describes.
+
+### 2026-09-05 — `landing-page-notes/` conversation log recovered
+
+Two saved chat exports (`Claude.html`, a ChatGPT `.htm` export) already
+sitting in `documentation/`, predating this repo's own git history, were
+found and read at the user's prompting. Both are static "complete
+webpage" saves with their DOM already rendered — unlike two
+`claude.ai/share/...` links tried earlier the same session, which render
+client-side and returned empty pages, these were recoverable directly by
+stripping `<script>`/`<style>` and remaining tags. Wrote
+`landing-page-notes/conversation-landing-page-notes.md` from the
+recovered text: Part 1 (ChatGPT, the original brief — including a
+white/graph-paper visual direction that was tried and abandoned), Part 2
+(Claude, the next day — where the recursive-subdivision engine that
+actually shipped was designed and debugged through five rounds of
+iteration). Closes the gap this file itself flagged as open in the entry
+below.
 
 ### 2026-09-05 — conversation-log docs + `FILE-MANIFEST.md` added
 
@@ -173,10 +240,11 @@ the files this reorg had to update.
 
 ## Todo / watch-out-for
 
-- **`landing-page-notes/` still has no conversation-log companion** —
-  unlike `fffx-editor/` and this folder, which both got one 2026-09-05.
-  No real transcript of the landing page's own development history is
-  available to this repo to write one from; not fabricated, left open.
+- ~~`landing-page-notes/` still has no conversation-log companion~~ —
+  resolved 2026-09-05: two saved chat exports predating this repo were
+  found in `documentation/` and used to write
+  `conversation-landing-page-notes.md`. See the Changelog and this file's
+  "Update, same day, later still" note above.
 - **WORLD-SYSTEMS.md reconciliation is still open** — its fffx-specific
   path descriptions (`docs/assets/js/...`) are now stale, same as
   Cabinet's own copy already is for Cabinet's paths. A synchronized pass
