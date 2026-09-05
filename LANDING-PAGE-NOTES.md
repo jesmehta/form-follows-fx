@@ -51,19 +51,24 @@ the cross-world version of this guidance.
 
 | File | Responsibility |
 | --- | --- |
-| `docs/index.html` | Static shell: `<head>` (Google Fonts `<link>`s, then `fffx-tokens.css`, then `fffx-landing.css`), hero header markup (including `#section-menu`), one `<main id="subdivision-field">` mount point, `<script type="module" src="assets/js/fffx-layout.js">`. No content data, no logic. |
-| `docs/assets/css/fffx-tokens.css` | Single source of truth for colour/font values (`--fffx-*` custom properties, `:root`-scoped) — shared between `fffx-landing.css` (loaded by `index.html` directly) and `docs/stylesheets/fffx-material.css` (loaded by every other, Material-rendered page via `mkdocs.yml`'s `extra_css`). See `DESIGN-SYSTEM.md`'s "Colour tokens" for the full rationale. |
-| `docs/assets/css/fffx-landing.css` | All landing CSS, every rule scoped under `.fffx-landing` on `<body>`. Colour/font custom properties are mapped from `fffx-tokens.css`'s `--fffx-*` names, not hardcoded. |
-| `docs/stylesheets/fffx-material.css` | Maps the same `fffx-tokens.css` values onto Material's own `--md-*` variables, scoped to `[data-md-color-scheme="slate"]`, so every Material-rendered page matches the landing page's palette. Not part of the landing page proper — listed here because it shares fffx-tokens.css with it. |
-| `docs/assets/js/fffx-data.js` | Hand-edited stable config — `landingConfig` (seed, layout tuning). Pure data, no DOM/logic. |
-| `docs/assets/js/fffx-generated-content.js` | Auto-generated `sections[]` and `entries[]` from `content/fffx-sections.tsv` and `content/fffx-entries.tsv`. Do not edit directly; run `node tools/build-fffx-content.js`. |
-| `docs/assets/js/fffx-random.js` | Seeded PRNG (`seededRandom`) + `pickFromId`, a deterministic per-rect-id picker used for filler-cell variety. No DOM, no knowledge of rects or entries — purely a randomness utility. |
-| `docs/assets/js/fffx-subdivision.js` | Pure logic: `buildRectTree` (recursive split), `getCandidateRects` (size/aspect/depth filtering), `scoreRectForEntry` + `assignEntries` (entry-to-rectangle matching and blocking). No DOM access at all — this file could run in a non-browser JS environment unchanged. |
-| `docs/assets/js/fffx-layout.js` | Orchestration + rendering only: calls into `fffx-data.js`/`fffx-random.js`/`fffx-subdivision.js`, builds the actual `<a>`/`<div>` DOM nodes, owns the resize listener. Imports the others as ES modules (`<script type="module">`, so this requires being served over HTTP — `file://` will block the module import in most browsers; use `mkdocs serve` or any static server for local preview, not double-clicking the HTML file). |
+| `docs/index.html` | Static shell: `<head>` (Google Fonts `<link>`s, then `fffx-tokens.css`, then `fffx-landing.css`), hero header markup (including `#section-menu`), one `<main id="subdivision-field">` mount point, `<script type="module" src="_assets/backend/js/fffx-layout.js">`. No content data, no logic. |
+| `docs/_assets/backend/css/fffx-tokens.css` | Single source of truth for colour/font values (`--fffx-*` custom properties, `:root`-scoped) — shared between `fffx-landing.css` (loaded by `index.html` directly) and `docs/_assets/material/css/fffx-material.css` (loaded by every other, Material-rendered page via `mkdocs.yml`'s `extra_css`). See `DESIGN-SYSTEM.md`'s "Colour tokens" for the full rationale. |
+| `docs/_assets/backend/css/fffx-landing.css` | All landing CSS, every rule scoped under `.fffx-landing` on `<body>`. Colour/font custom properties are mapped from `fffx-tokens.css`'s `--fffx-*` names, not hardcoded. |
+| `docs/_assets/material/css/fffx-material.css` | Maps the same `fffx-tokens.css` values onto Material's own `--md-*` variables, scoped to `[data-md-color-scheme="slate"]`, so every Material-rendered page matches the landing page's palette. Not part of the landing page proper — listed here because it shares fffx-tokens.css with it. |
+| `docs/_assets/backend/js/fffx-data.js` | Hand-edited stable config — `landingConfig` (seed, layout tuning). Pure data, no DOM/logic. |
+| `docs/_assets/backend/js/fffx-generated-content.js` | Auto-generated `sections[]` and `entries[]` from `content/fffx-sections.tsv` and `content/fffx-entries.tsv`. Do not edit directly; run `node tools/build-fffx-content.js`. |
+| `docs/_assets/backend/js/fffx-random.js` | Seeded PRNG (`seededRandom`) + `pickFromId`, a deterministic per-rect-id picker used for filler-cell variety. No DOM, no knowledge of rects or entries — purely a randomness utility. |
+| `docs/_assets/backend/js/fffx-subdivision.js` | Pure logic: `buildRectTree` (recursive split), `getCandidateRects` (size/aspect/depth filtering), `scoreRectForEntry` + `assignEntries` (entry-to-rectangle matching and blocking). No DOM access at all — this file could run in a non-browser JS environment unchanged. |
+| `docs/_assets/backend/js/fffx-layout.js` | Orchestration + rendering only: calls into `fffx-data.js`/`fffx-random.js`/`fffx-subdivision.js`, builds the actual `<a>`/`<div>` DOM nodes, owns the resize listener. Imports the others as ES modules (`<script type="module">`, so this requires being served over HTTP — `file://` will block the module import in most browsers; use `mkdocs serve` or any static server for local preview, not double-clicking the HTML file). |
 
-`docs/assets/` exists specifically so the landing page's own CSS/JS never
+`docs/_assets/` exists specifically so the landing page's own CSS/JS never
 collides with the per-section content folders (`prompt-collections/`,
-`deep-studies/`, etc.) sitting alongside it at `docs/` root.
+`deep-studies/`, etc.) sitting alongside it at `docs/` root — the leading
+underscore marks it (and `_images/`) as supporting files, not browsable
+pages, matching the convention Cabinet's `docs/` uses. `backend/` holds
+the landing page's own machinery (hand-written and generated together);
+`material/` holds only files that customize MkDocs Material's own theme
+chrome for every other page.
 
 The split between `fffx-data.js`/`fffx-generated-content.js` (config/content) / `fffx-random.js` +
 `fffx-subdivision.js` (pure layout logic) / `fffx-layout.js` (DOM) means the
@@ -72,7 +77,7 @@ if it's ever worth unit-testing the scoring/assignment logic directly, or
 reusing it for a different rendering target (e.g. an SVG export of the
 field) without touching DOM-construction code.
 
-## Data model (`docs/assets/js/fffx-data.js` + generated content)
+## Data model (`docs/_assets/backend/js/fffx-data.js` + generated content)
 
 ```js
 landingConfig = {
@@ -575,8 +580,8 @@ in place and nothing needs retrofitting.
   uncommented nav listing every placeholder buries the two pages worth
   reading in a sidebar mostly full of stubs. Uncomment a page's nav line
   exactly when it stops being a stub.
-- `extra_css` now lists `assets/css/fffx-tokens.css` and
-  `stylesheets/fffx-material.css`, in that order (order matters — the
+- `extra_css` now lists `_assets/backend/css/fffx-tokens.css` and
+  `_assets/material/css/fffx-material.css`, in that order (order matters — the
   second file reads `--fffx-*` variables the first one defines). This
   is the *real* mechanism now, not the dead reference an earlier version
   of this file had: that one pointed at `stylesheets/bookshelf.css`,
@@ -593,8 +598,8 @@ in place and nothing needs retrofitting.
   font values *by hand*, since YAML can't reference a CSS custom
   property), and `material/mushroom-outline` (was `material/tortoise`, a
   Bookshelf-era leftover). `theme.favicon` still points at
-  `assets/images/favicon.svg`, which doesn't exist in
-  `docs/assets/images/` — a pre-existing, separate bug, not yet fixed.
+  `_images/favicon.svg`, which doesn't exist in
+  `docs/_images/` — a pre-existing, separate bug, not yet fixed.
 - `requirements.txt` mirrors the Bookshelf/Cabinet-of-Curiosities Python
   dependency set (`mkdocs-material`, `mkdocs-video`,
   `mkdocs-git-revision-date-localized-plugin`, etc.) for consistency
@@ -603,7 +608,7 @@ in place and nothing needs retrofitting.
 
 ## Local preview
 
-`docs/assets/js/fffx-layout.js` is loaded as `<script type="module">`, which means
+`docs/_assets/backend/js/fffx-layout.js` is loaded as `<script type="module">`, which means
 `fetch`/import resolution is subject to CORS restrictions under the
 `file://` protocol in most browsers — opening `docs/index.html` directly
 by double-clicking it will likely fail to load `fffx-data.js` silently or with
@@ -640,7 +645,7 @@ domain or GitHub Pages subpath, so a relative href resolves correctly
 either way: append it to the current document's directory. **Never**
 write a leading-slash href like `/recreating-the-past/vera-molnar/` — sed
 hint at the time this was caught (it's an easy regression to reintroduce
-one entry at a time): `grep -n 'href: "/' docs/assets/js/fffx-generated-content.js` should
+one entry at a time): `grep -n 'href: "/' docs/_assets/backend/js/fffx-generated-content.js` should
 always return nothing.
 
 ## Changelog

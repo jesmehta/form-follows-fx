@@ -33,17 +33,21 @@ form-follows-fx/
 ├── LANDING-PAGE-NOTES.md    Implementation architecture, rendering pipeline
 └── docs/                    MkDocs docs_dir
     ├── index.html           Standalone landing page (NOT index.md — see notes)
-    ├── assets/                    All landing-page CSS/JS lives here, kept out of the
-    │   │                          section folders below so nothing collides with them
-    │   ├── css/
-    │   │   └── fffx-landing.css        All landing-page CSS, scoped under .fffx-landing
-    │   ├── js/
-    │   │   ├── fffx-data.js       Stable landing/layout config (landingConfig only)
-    │   │   ├── fffx-generated-content.js  Generated sections[] + entries[] (do not hand-edit)
-    │   │   ├── fffx-random.js     Seeded PRNG + deterministic filler-variant picker
-    │   │   ├── fffx-subdivision.js  Rectangle tree, candidate filtering, scoring, assignment (no DOM)
-    │   │   └── fffx-layout.js     DOM rendering, resize handling — orchestrates the above
-    │   └── images/CirclePacking/  Images for the Circle Packing writeup
+    ├── _assets/                   Supporting files, not browsable pages (leading underscore
+    │   │                          marks "system", matching Cabinet's docs/ convention)
+    │   ├── backend/                    The landing page's own machinery — hand-written and generated together
+    │   │   ├── css/
+    │   │   │   ├── fffx-tokens.css        Shared --fffx-* colour/font custom properties
+    │   │   │   └── fffx-landing.css       All landing-page CSS, scoped under .fffx-landing
+    │   │   └── js/
+    │   │       ├── fffx-data.js       Stable landing/layout config (landingConfig only)
+    │   │       ├── fffx-generated-content.js  Generated sections[] + entries[] (do not hand-edit)
+    │   │       ├── fffx-random.js     Seeded PRNG + deterministic filler-variant picker
+    │   │       ├── fffx-subdivision.js  Rectangle tree, candidate filtering, scoring, assignment (no DOM)
+    │   │       └── fffx-layout.js     DOM rendering, resize handling — orchestrates the above
+    │   └── material/css/
+    │       └── fffx-material.css      Maps fffx-tokens.css onto Material's own --md-* variables
+    ├── _images/CirclePacking/     Images for the Circle Packing writeup
     ├── recreating-the-past/
     │   └── vera-molnar.md         Vera Molnar study writeup — real content
     ├── tools-and-libraries/
@@ -81,12 +85,12 @@ form-follows-fx/
   see `status` below) — they're just commented out of the nav so they
   don't bury the few pages worth reading. Uncomment a page's nav line once
   it has real content.
-- `docs/assets/js/fffx-data.js` contains stable hand-edited configuration:
+- `docs/_assets/backend/js/fffx-data.js` contains stable hand-edited configuration:
   `landingConfig`, layout parameters, subdivision parameters, and scoring
   parameters.
 - `content/fffx-sections.tsv` and `content/fffx-entries.tsv` are the editable source
   for the landing page's information architecture.
-  `docs/assets/js/fffx-generated-content.js` is generated from those TSV files
+  `docs/_assets/backend/js/fffx-generated-content.js` is generated from those TSV files
   and should not be manually edited. Editing landing content means editing
   TSV, then running `node tools/build-fffx-content.js` — or use the local
   Admin Dash (`run-fffx-editor.bat`, `http://127.0.0.1:6858/admin/`) to
@@ -119,7 +123,7 @@ node tools/build-fffx-content.js
 
 Commit both:
 content/*.tsv
-docs/assets/js/fffx-generated-content.js
+docs/_assets/backend/js/fffx-generated-content.js
 ```
 
 `tags` are semicolon-separated in TSV and become arrays. `relatedLinks`

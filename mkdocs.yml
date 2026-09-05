@@ -53,8 +53,8 @@ theme:
   palette:
     # Built-in scheme/colour names get us close to the landing page's
     # dark + cyan palette out of the box; exact hex values come from
-    # extra_css below (docs/assets/css/fffx-tokens.css ->
-    # docs/stylesheets/fffx-material.css), which overrides Material's
+    # extra_css below (docs/_assets/backend/css/fffx-tokens.css ->
+    # docs/_assets/material/css/fffx-material.css), which overrides Material's
     # --md-* variables to match fffx-landing.css precisely. No light/dark
     # toggle — slate is the only scheme on this site, to match the
     # landing page being dark-only.
@@ -62,7 +62,7 @@ theme:
     primary: black
     accent: cyan
   font:
-    # Matches docs/assets/css/fffx-tokens.css's --fffx-font-display/
+    # Matches docs/_assets/backend/css/fffx-tokens.css's --fffx-font-display/
     # --fffx-font-mono — kept in sync by hand since mkdocs.yml is plain
     # YAML and can't reference a CSS custom property.
     text: Space Grotesk
@@ -71,7 +71,7 @@ theme:
     # Bookshelf-era tortoise replaced — fffx isn't that site. Second
     # preference, for the record: material/snowflake-variant.
     logo: material/mushroom-outline
-  favicon: assets/images/favicon.svg
+  favicon: _images/favicon.svg
   features:
     # - navigation.tabs
     # - navigation.instant
@@ -79,8 +79,8 @@ theme:
     # - navigation.sections
 
 extra_css:
-  - assets/css/fffx-tokens.css
-  - stylesheets/fffx-material.css
+  - _assets/backend/css/fffx-tokens.css
+  - _assets/material/css/fffx-material.css
 
 markdown_extensions:
   - extra

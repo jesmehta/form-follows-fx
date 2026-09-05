@@ -4,7 +4,7 @@ const path = require("path");
 const root = path.resolve(__dirname, "..");
 const sectionsPath = path.join(root, "content", "fffx-sections.tsv");
 const entriesPath = path.join(root, "content", "fffx-entries.tsv");
-const outputPath = path.join(root, "docs", "assets", "js", "fffx-generated-content.js");
+const outputPath = path.join(root, "docs", "_assets", "backend", "js", "fffx-generated-content.js");
 
 function readTsv(filePath) {
   const raw = fs.readFileSync(filePath, "utf8").replace(/^\uFEFF/, "");

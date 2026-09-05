@@ -45,7 +45,7 @@ a templated shell instead of served standalone.
 **v2.0**: two Google Fonts, loaded via `<link>` tags in `index.html`'s
 `<head>` (the landing page bypasses Material, so it can't use
 `mkdocs.yml`'s `theme.font` — see "Site architecture" above). The actual
-font-family strings live in `docs/assets/css/fffx-tokens.css` as
+font-family strings live in `docs/_assets/backend/css/fffx-tokens.css` as
 `--fffx-font-display`/`--fffx-font-mono`, mapped to local `--font-display`/
 `--font-mono` names in `fffx-landing.css` — see "Colour tokens" below for why
 fffx-tokens.css exists and what else it covers.
@@ -84,11 +84,11 @@ Serif pairing: geometric/grotesk, not serif.
 
 ## Colour tokens
 
-Raw values live in `docs/assets/css/fffx-tokens.css` as `--fffx-*` custom
+Raw values live in `docs/_assets/backend/css/fffx-tokens.css` as `--fffx-*` custom
 properties (`:root`, no element scoping — it's loaded on every page,
 landing and Material alike). `fffx-landing.css` maps those onto the
 `.fffx-landing`-scoped names below (`--bg: var(--fffx-bg)`, etc.); a
-second file, `docs/stylesheets/fffx-material.css`, maps the *same*
+second file, `docs/_assets/material/css/fffx-material.css`, maps the *same*
 `--fffx-*` tokens onto Material's own `--md-*` variables for every other
 page, loaded via `mkdocs.yml`'s `extra_css`. Change a value once in
 fffx-tokens.css; both flows pick it up — never hardcode a hex value directly
