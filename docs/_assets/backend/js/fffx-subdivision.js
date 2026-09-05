@@ -73,7 +73,7 @@ function aspectDistortion(rect) {
 // fraction off it — so every early section in the chain got sliced from
 // the same axis regardless of how little area it actually needed,
 // producing thin vertical slivers (see the bug writeup in
-// LANDING-PAGE-NOTES.md: a low-weight section landing third in the
+// documentation/landing-page-notes/LANDING-PAGE-NOTES.md: a low-weight section landing third in the
 // chain ended up ~160px wide × full field height, well under
 // minThumbWidth, even though its *area* share was perfectly reasonable).
 function splitRectSquarified(rect, ratio, depth) {

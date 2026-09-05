@@ -248,7 +248,7 @@ function render() {
   // desktop equivalent at all, which is exactly how a low-weight
   // section (e.g. one with a single entry) could end up narrower than
   // minThumbWidth without anything ever growing the field to compensate
-  // — see the bug writeup in LANDING-PAGE-NOTES.md.
+  // — see the bug writeup in documentation/landing-page-notes/LANDING-PAGE-NOTES.md.
   const totalSectionWeight = sectionWeights.reduce((sum, s) => sum + s.weight, 0) || 1;
   const requiredFieldArea = sectionWeights.reduce((max, s) => {
     const minSectionArea = s.entryCount * minThumbWidth * minThumbHeight * layoutConfig.sectionAreaBuffer;

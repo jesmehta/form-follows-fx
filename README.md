@@ -16,11 +16,13 @@ of. The medium of the index page is the same as the medium of the work it
 indexes.
 
 This is a sibling site to **The Bookshelf of Curiosities**, sharing its
-MkDocs + custom-landing-page architecture (see `LANDING-PAGE-NOTES.md`),
-but with its own visual language — no gallery-wall metaphor, no serif/sepia
-palette, no ghost-letter system. fffx's metaphor is computational: grid
-paper, monospace coordinates, depth labels, a field of rectangles. See
-`DESIGN-SYSTEM.md` for the full visual spec.
+MkDocs + custom-landing-page architecture (see
+`documentation/landing-page-notes/LANDING-PAGE-NOTES.md`), but with its
+own visual language — no gallery-wall metaphor, no serif/sepia palette, no
+ghost-letter system. fffx's metaphor is computational: grid paper,
+monospace coordinates, depth labels, a field of rectangles. See
+`documentation/landing-page-notes/DESIGN-SYSTEM.md` for the full visual
+spec.
 
 ## Repository structure
 
@@ -29,8 +31,25 @@ form-follows-fx/
 ├── mkdocs.yml              MkDocs Material config for the rest of the site
 ├── requirements.txt        Python deps for `mkdocs build` / `mkdocs serve`
 ├── README.md               This file
-├── DESIGN-SYSTEM.md         Visual language / interaction rules
-├── LANDING-PAGE-NOTES.md    Implementation architecture, rendering pipeline
+├── WORLD-SYSTEMS.md         Cross-repo shared schema/convention doc (hand-synced
+│                            byte-for-byte with Cabinet's and Bookshelf's own copies)
+├── content/
+│   ├── fffx-sections.tsv    Section registry — editable source, see "Adding a portal" below
+│   └── fffx-entries.tsv     Entry/portal registry — editable source
+├── tools/
+│   ├── build-fffx-content.js       CLI build: TSV -> docs/_assets/backend/js/fffx-generated-content.js
+│   ├── fffx-tsv.js                 Shared TSV parse/serialize/validate (used by the Admin Dash)
+│   ├── fffx-editor.js              Local Admin Dash server (Sections/Entries/Build tabs)
+│   └── fffx-editor-ui/             The Admin Dash's browser UI
+├── run-fffx-editor.bat      Double-click launcher for the Admin Dash
+├── documentation/           Technical-reference docs, one folder per feature
+│   ├── landing-page-notes/
+│   │   ├── DESIGN-SYSTEM.md         Visual language / interaction rules
+│   │   └── LANDING-PAGE-NOTES.md    Implementation architecture, rendering pipeline
+│   ├── fffx-editor/
+│   │   └── FFFX-EDITOR.md           Admin Dash design decisions, as-built notes
+│   └── backend-and-deploy/
+│       └── BACKEND-AND-DEPLOY.md    Repo-wide/deploy-pipeline work with no single owning page
 └── docs/                    MkDocs docs_dir
     ├── index.html           Standalone landing page (NOT index.md — see notes)
     ├── _assets/                   Supporting files, not browsable pages (leading underscore
@@ -76,7 +95,8 @@ form-follows-fx/
   the standalone Level 1 landing page; a `docs/index.md` would collide
   with the generated `/index.html` output. CI guards against this (see
   `.github/workflows/deploy.yml`'s "Guard against docs/index.md" step) —
-  see `LANDING-PAGE-NOTES.md` for the full reasoning.
+  see `documentation/landing-page-notes/LANDING-PAGE-NOTES.md` for the
+  full reasoning.
 - Every other page under `docs/` is normal MkDocs Material content with
   the standard sidebar/nav — but `mkdocs.yml`'s `nav:` currently lists only
   the two pages with real, finished-enough content (Vera Molnar, Circle
@@ -95,8 +115,8 @@ form-follows-fx/
   TSV, then running `node tools/build-fffx-content.js` — or use the local
   Admin Dash (`run-fffx-editor.bat`, `http://127.0.0.1:6858/admin/`) to
   edit both TSVs in a browser and run that build (plus an mkdocs strict
-  check) with a button instead. See `FFFX-EDITOR.md` for the full design
-  notes.
+  check) with a button instead. See
+  `documentation/fffx-editor/FFFX-EDITOR.md` for the full design notes.
 
 ## Adding a portal to the landing page
 
@@ -141,7 +161,8 @@ Spreadsheet/Excel notes:
 - `weight` is `1`–`4`: `1` archive/secondary, `2` regular, `3` important
   collection/study, `4` major feature portal. Controls the target
   rectangle area the layout engine scores candidates against — see
-  `LANDING-PAGE-NOTES.md` for the scoring formula.
+  `documentation/landing-page-notes/LANDING-PAGE-NOTES.md` for the scoring
+  formula.
 - `status` is one field doing one job — both the visibility switch and the
   "is this actually finished" flag: `true` renders normally, `false` is
   excluded from the field entirely, `"wip"` renders but muted (quieter
