@@ -153,7 +153,36 @@ remain judged as scale-driven artifacts from Cabinet's much larger,
 longer-running project, not something FFFX's current four-doc
 `documentation/` tree needs yet.
 
+## `mkdocs-section-index` plugin (2026-09-08)
+
+Added to `plugins:` in `mkdocs.yml` and to `requirements.txt`, ported
+over (alongside the same change in Cabinet) from Bookshelf's own fix
+(commit `7e5c1f3`, 2026-09-06): a plain MkDocs nav section can't be both
+a page and a section, so a section whose first child is its own
+unlabeled index page shows that page's title duplicated in the sidebar
+-- once as the (non-clickable) section header, once as a normal,
+separately-clickable child directly beneath it. The plugin merges that
+first child into the section header itself instead.
+
+No fffx section currently has an `index.md` child to merge, though --
+`mkdocs.yml`'s own comment block explains why: unfinished sections
+(Prompt Collections, Deep Studies, Generative Projects, Image
+Experiments, Sketch Families, Physical Outputs, Archives) are
+deliberately commented out of the nav entirely rather than linked via a
+hub page, until each has real content. So this is installed ahead of
+need, not fixing a live duplicate-row problem the way Cabinet's three
+sections had -- revisit once any fffx section actually grows a real
+`index.md` hub page wired into the nav. See Cabinet's own
+`documentation/backend-and-deploy/BACKEND-AND-DEPLOY.md` ("Sidebar
+section headers become clickable") for the fuller writeup, since that
+repo's three affected sections make the mechanism concrete in a way
+fffx's own config doesn't yet.
+
 ## Changelog
+
+### 2026-09-08 — `mkdocs-section-index` plugin added
+
+See "`mkdocs-section-index` plugin" above.
 
 ### 2026-09-05 — saved chat export files renamed again, one real content gap found
 
@@ -258,6 +287,9 @@ the files this reorg had to update.
   `../../` should be `../` (one level too many) — deliberately not fixed
   in this pass; fixing it is an unrelated content-bug commit, not a reorg
   step.
+- **`mkdocs-section-index` is installed but nothing uses it yet** (see
+  "`mkdocs-section-index` plugin" above) — revisit once any fffx section
+  gets a real `index.md` hub page wired into the nav.
 - **Section-folder content reorg (Cabinet's later, separate move) was not
   attempted here** — Cabinet's `docs/` content-folder reorganization
   (2026-09-03, moving actual `.md` pages into new section groupings) is a

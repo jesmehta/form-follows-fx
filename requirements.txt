@@ -9,6 +9,7 @@ mkdocs-mermaid2-plugin
 mkdocs-video
 mkdocs-git-revision-date-localized-plugin
 markdown-captions
+mkdocs-section-index
 
 
 

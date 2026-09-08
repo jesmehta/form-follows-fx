@@ -95,4 +95,5 @@ markdown_extensions:
 
 plugins:
   - mkdocs-video
+  - section-index
 
