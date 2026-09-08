@@ -9,7 +9,12 @@ mkdocs-mermaid2-plugin
 mkdocs-video
 mkdocs-git-revision-date-localized-plugin
 markdown-captions
-mkdocs-section-index
+# Pinned to 0.3.10: 0.3.11+ added a hard dependency on a package called
+# "properdocs" that prints FUD urging a switch away from MkDocs and
+# ships dormant sys.modules-hijacking code (unused unless imported, but
+# still shipped) -- see CabinetOfCuriosities/documentation/backend-and-deploy/
+# three-world-launch-phases-ToDo.md #142.
+mkdocs-section-index==0.3.10
 
 
 
