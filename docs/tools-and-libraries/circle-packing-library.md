@@ -2,7 +2,7 @@
 
 *[Find the CirclePacking Library here, with examples and applications](https://jesmehta.github.io/p5-circle-packing/)*
 
-![](../../_images/CirclePacking/CuriousIncident_Bookmark2.jpg)
+![](../_images/CirclePacking/CuriousIncident_Bookmark2.jpg)
 
 Back in the early 20-teens, I was part of a rather fun book club. We used to have a book-of-the-month chosen by that month's person, and when it fell to me, the book I chose was Mark Haddon's amazing "[The Curious Incident of the Dog in the Nighttime](https://www.goodreads.com/book/show/1618.The_Curious_Incident_of_the_Dog_in_the_Night_Time)".
 
@@ -10,12 +10,12 @@ One of the traditions that evolved was that alongwith choosing the book, the per
 
 So I set about designing my bookmark, which involved a lot of prime numbers and a car (read the book !)
 
-![](../../_images/CirclePacking/CuriousIncident_Bookmark.jpg)  
+![](../_images/CirclePacking/CuriousIncident_Bookmark.jpg)  
 *(2015 cellphone cameras... <shrugs\>)*
 
 That's when I first came across the concept of packing shapes together - dense, touching, but not overlapping. I used an Adobe Illustrator script I found online for this (which has been lost to time and multiple laptop changes.)
 
-Sometime in 2018, I found Processing, and [Dan Shiffman](https://thecodingtrain.com/), and all the rest of that amazing, wonderful world, and I was hooked. I used [Dan's Circle Packing coding challenge]((https://youtu.be/QHEQuoIKgNE)) to mess with packings and played with those for a while.
+Sometime in 2018, I found Processing, and [Dan Shiffman](https://thecodingtrain.com/), and all the rest of that amazing, wonderful world, and I was hooked. I used [Dan's Circle Packing coding challenge](https://youtu.be/QHEQuoIKgNE) to mess with packings and played with those for a while.
 
 Having access to a lasercutter at [Maker's Asylum](https://www.instagram.com/makersasylum/), and having figured how to export SVGs from Processing, it was only a matter of time before I decided to go from code to material. 
 
@@ -29,17 +29,17 @@ Unfortunately, I did not think of going back to the code to get smaller circles,
 
 The result was one of my personal favourites.
 
-![](../../_images/CirclePacking/Koi.jpg)
+![](../_images/CirclePacking/Koi.jpg)
 
 Later, I used the same process, but diversified from circles to other shapes to create a [notebook cover](https://www.jesalmehta.com/cabinet-of-curiosities/notebook-covers) for myself, as well as got comissioned to do a gift for the [Mom&Co webseries](https://www.imdb.com/title/tt9752814/).
 
-![](../../_images/CirclePacking/TreeNotebook.jpg)  
+![](../_images/CirclePacking/TreeNotebook.jpg)  
 
-![](../../_images/CirclePacking/MomAndCo.jpg)
+![](../_images/CirclePacking/MomAndCo.jpg)
 
 I also used the same process to make lasercut stencils as well, using the different circle sizes to layer the colours.
 
-![](../../_images/CirclePacking/koi_stencilArt.jpg)
+![](../_images/CirclePacking/koi_stencilArt.jpg)
 
 Eventually, in about 2021, I started rewriting the Circle Packing code from scratch, since I realised I did not need it to animate and grow, etc, like in Dan's example, but just needed a field of shapes to do further work with. Based on my file dates, I seem to have worked on this in 2021 and come back in 2023.
 
