@@ -41,14 +41,6 @@ jobs:
     - name: Build MkDocs Site
       run: mkdocs build --site-dir public
 
-    - name: Copy static interactive projects
-      run: |
-        for proj in scifi asimov; do
-          if [ -d "$proj" ]; then
-            cp -r "$proj" "public/$proj"
-          fi
-        done
-
     - name: Setup Pages
       uses: actions/configure-pages@v5
 
