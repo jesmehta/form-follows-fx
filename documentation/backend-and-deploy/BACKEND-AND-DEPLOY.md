@@ -178,7 +178,21 @@ section headers become clickable") for the fuller writeup, since that
 repo's three affected sections make the mechanism concrete in a way
 fffx's own config doesn't yet.
 
+## Cloudflare Web Analytics (2026-09-24)
+
+Rollout of Cabinet's own beacon (`CabinetOfCuriosities/documentation/backend-and-deploy/cloudflare-web-analytics-setup.md`, `#135`) to this sibling world, same two-part pattern: `mkdocs.yml` gained `theme.custom_dir: overrides`, and a new `overrides/main.html` extends Material's `base.html`, injecting the beacon into the `extrahead` block so every MkDocs-generated page gets it from one place; the standalone `docs/index.html` landing page (not MkDocs-templated, so the override doesn't reach it) got the same script tag added directly, before `</body>`.
+
+**Token decision**: reuses Cabinet's own token (`16664b6ab6d449a799db2dbcfb97c6ce`) rather than registering fffx.cabinetofcuriosities.in as a separate Cloudflare Web Analytics property — direct decision, 2026-09-24: this is a personal site, one combined dashboard across Cabinet/Bookshelf/fffx (and the externally-assembled repos, `#136`) was judged simpler than juggling eight separate properties. The beacon still had to be added by hand to this repo either way — Cloudflare doesn't auto-inject across subdomains just because they share a zone/proxy.
+
+**Verification**: local `mkdocs build` — clean, same 6 pre-existing warnings as before (unrelated to this change), beacon present in 17 of the built output's HTML files including `index.html` and every content page. Live-site confirmation (beacon firing, data reaching the Cloudflare dashboard) not yet done from this session.
+
+**Known limitation, surfaced by direct question 2026-09-24**: Cloudflare's "Top Paths" dashboard table should still separate this site's traffic from Cabinet's/Bookshelf's in practice, since almost every page here has a distinct path (`/recreating-the-past/vera-molnar/`, etc.). The one soft spot is the homepage itself — Cabinet's, Bookshelf's, and this site's root all report as `/`, and whether the dashboard distinguishes them by hostname when one token spans multiple hostnames (vs. collapsing all three into one `/` row) hasn't been confirmed. See Cabinet's own `cloudflare-web-analytics-setup.md` for the full writeup.
+
 ## Changelog
+
+### 2026-09-24 — Cloudflare Web Analytics beacon added
+
+See "Cloudflare Web Analytics" above.
 
 ### 2026-09-08 — `mkdocs-section-index` plugin added
 
