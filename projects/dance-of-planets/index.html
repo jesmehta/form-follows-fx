@@ -3,186 +3,204 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dance of Planets v2.0 — Jesal Mehta</title>
+  <title>Dance of Planets — Form follows f(x)</title>
+  <meta name="description" content="Two planets, one line every few days. Watch the ratio of their orbits draw a rose, a trefoil, a lace ring — and make your own.">
   <link rel="stylesheet" href="dance_of_planets.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
 </head>
 <body>
-<div class="app">
 
-  <!-- ── HEADER ── -->
-  <header>
+<div id="canvas-container"></div>
+
+<div class="hud" id="hud">
+
+  <!-- ── TITLE ── -->
+  <header class="hud-title">
+    <a class="back" href="../">← Form follows f(x)</a>
     <h1>Dance of Planets</h1>
-    <span class="version">v2.0</span>
-    <span class="copy">© Jesal Mehta &nbsp;·&nbsp; @cabofcuriosity</span>
+    <p class="caption" id="caption">&nbsp;</p>
+    <button class="pill" id="btn-about" type="button">What am I looking at?</button>
   </header>
 
-  <!-- ── LEFT PANEL ── -->
-  <aside class="panel left">
-
-    <div class="panel-section">
-      <div class="panel-label">Planet Pair</div>
-      <label class="field"><span>Planet 1</span>
-        <select id="sel-p1" class="setting">
-          <option value="1">Mercury</option>
-          <option value="2">Venus</option>
-          <option value="3" selected>Earth</option>
-          <option value="4">Mars</option>
-          <option value="5">Jupiter</option>
-          <option value="6">Saturn</option>
-          <option value="7">Uranus</option>
-          <option value="8">Neptune</option>
-          <option value="9">Pluto</option>
-        </select>
-      </label>
-      <label class="field"><span>Planet 2</span>
-        <select id="sel-p2" class="setting">
-          <option value="1">Mercury</option>
-          <option value="2" selected>Venus</option>
-          <option value="3">Earth</option>
-          <option value="4">Mars</option>
-          <option value="5">Jupiter</option>
-          <option value="6">Saturn</option>
-          <option value="7">Uranus</option>
-          <option value="8">Neptune</option>
-          <option value="9">Pluto</option>
-        </select>
-      </label>
+  <!-- ── CONTROLS (left) ── -->
+  <aside class="panel left" id="panel-controls" aria-label="Controls">
+    <div class="panel-head">
+      <span>Controls</span>
+      <button class="icon" type="button" data-collapse="controls" title="Hide controls">‹</button>
     </div>
+    <div class="panel-body">
 
-    <div class="panel-section">
-      <div class="panel-label">Draw Mode</div>
-      <div class="radio-group">
-        <label><input type="radio" name="mode" value="1" checked class="setting"> Inter-planet line</label>
-        <label><input type="radio" name="mode" value="2" class="setting"> Midpoint trail</label>
-      </div>
-      <label><input type="checkbox" id="chk-classic" class="setting"> Classic v2 speeds (swapped)</label>
+      <section>
+        <h2>Start from</h2>
+        <div class="presets" id="presets"></div>
+      </section>
+
+      <section>
+        <h2>Planets</h2>
+        <div class="pair-row">
+          <select id="sel-a" aria-label="First planet"></select>
+          <button class="icon swap" id="btn-swap" type="button" title="Swap">⇄</button>
+          <select id="sel-b" aria-label="Second planet"></select>
+        </div>
+        <label class="field"><span>Cycle</span>
+          <select id="sel-cycle"></select>
+        </label>
+        <p class="hint">How long to draw before the pattern repeats. Longer cycles close more exactly; ★ is the suggested one.</p>
+      </section>
+
+      <section>
+        <h2>Drawing</h2>
+        <div class="seg" data-key="style">
+          <button type="button" data-value="lines">Lines</button>
+          <button type="button" data-value="trail">Trail</button>
+        </div>
+        <p class="hint" id="hint-style"></p>
+        <div class="slider">
+          <div class="slider-head"><span>Detail</span><output id="out-detail"></output></div>
+          <input type="range" id="sl-detail" min="0" max="1000" step="1">
+        </div>
+      </section>
+
+      <section>
+        <h2>Colour</h2>
+        <div class="seg" data-key="colorMode">
+          <button type="button" data-value="single">Single</button>
+          <button type="button" data-value="gradient">Over time</button>
+        </div>
+        <div class="swatches">
+          <label class="swatch only-single" title="Line colour"><input type="color" id="col-single"></label>
+          <label class="swatch only-gradient" title="Start colour"><input type="color" id="col-g1"></label>
+          <span class="only-gradient grad-arrow">→</span>
+          <label class="swatch only-gradient" title="End colour"><input type="color" id="col-g2"></label>
+        </div>
+        <div class="slider">
+          <div class="slider-head"><span>Opacity</span><output id="out-opacity"></output></div>
+          <input type="range" id="sl-opacity" min="5" max="100" step="1">
+        </div>
+        <div class="slider">
+          <div class="slider-head"><span>Line weight</span><output id="out-weight"></output></div>
+          <input type="range" id="sl-weight" min="0" max="1000" step="1">
+        </div>
+      </section>
+
+      <section>
+        <h2>Motion</h2>
+        <div class="slider">
+          <div class="slider-head"><span>Speed</span><output id="out-speed"></output></div>
+          <input type="range" id="sl-speed" min="0" max="1000" step="1">
+        </div>
+        <div class="seg" data-key="loop">
+          <button type="button" data-value="once">Draw once</button>
+          <button type="button" data-value="cont">Keep drawing</button>
+        </div>
+        <div class="slider only-cont">
+          <div class="slider-head"><span>Old lines fade</span><output id="out-fade"></output></div>
+          <input type="range" id="sl-fade" min="0" max="1000" step="1">
+        </div>
+      </section>
+
+      <section>
+        <h2>Show</h2>
+        <label class="toggle"><input type="checkbox" id="chk-planets"><span>Planets &amp; Sun</span></label>
+        <label class="toggle"><input type="checkbox" id="chk-orbits"><span>Orbits</span></label>
+        <div class="slider">
+          <div class="slider-head"><span>Zoom</span><output id="out-zoom"></output></div>
+          <div class="slider-with-btn">
+            <input type="range" id="sl-zoom" min="0" max="1000" step="1">
+            <button class="icon" id="btn-fit" type="button" title="Fit to view">fit</button>
+          </div>
+        </div>
+      </section>
+
+      <details class="advanced">
+        <summary>Advanced</summary>
+        <label class="toggle"><input type="checkbox" id="chk-classic"><span>Classic v2 speeds</span></label>
+        <p class="hint">Versions 2.0–2.2 moved outer planets <em>faster</em> than inner ones — the reverse of real orbits. Same symmetry, different shape. Kept for comparison.</p>
+      </details>
+
     </div>
-
-    <div class="panel-section">
-      <div class="panel-label">Loop Mode</div>
-      <div class="radio-group">
-        <label><input type="radio" name="loop" value="once" checked class="setting"> Draw once &amp; stop</label>
-        <label><input type="radio" name="loop" value="cont" class="setting"> Continuous + fade</label>
-      </div>
-    </div>
-
-    <div class="panel-section">
-      <div class="panel-label">Zoom / Scale (% of canvas radius)</div>
-      <div class="ctrl-row">
-        <input type="range"  id="sl-scl" min="0.5" max="100" value="8" step="0.5" class="setting">
-        <input type="number" id="tx-scl" min="0.5" max="100" value="8" step="0.5" class="setting">
-      </div>
-      <div class="hint">↕ scroll on canvas · applies live without reset</div>
-    </div>
-
-    <div class="panel-section">
-      <div class="panel-label">Step Size (°/frame)</div>
-      <div class="ctrl-row">
-        <input type="range"  id="sl-stp" min="0.1" max="10" value="0.5" step="0.1" class="setting">
-        <input type="number" id="tx-stp" min="0.1" max="10" value="0.5" step="0.1" class="setting">
-      </div>
-    </div>
-
-    <div class="panel-section">
-      <div class="panel-label">Fade Alpha (continuous mode, 0.1–10)</div>
-      <div class="ctrl-row">
-        <input type="range"  id="sl-fade" min="0.1" max="10" value="1.5" step="0.1" class="setting">
-        <input type="number" id="tx-fade" min="0.1" max="10" value="1.5" step="0.1" class="setting">
-      </div>
-      <div class="hint">direct p5 alpha · lower = slower fade</div>
-    </div>
-
-    <span class="pending-note" id="pending-note">⚠ settings changed — reset to apply</span>
-
-    <hr>
-
-    <div class="panel-section">
-      <div class="btn-group">
-        <button class="primary" id="btn-reset">↺ Reset &amp; Draw</button>
-        <button class="accent2" id="btn-playpause">⏸ Pause</button>
-        <button id="btn-save">⬇ Save PNG</button>
-        <button class="danger"  id="btn-clear">✕ Clear Canvas</button>
-      </div>
-    </div>
-
   </aside>
 
-  <!-- ── CANVAS ── -->
-  <main class="canvas-wrap">
-    <div id="canvas-container"></div>
-  </main>
-
-  <!-- ── RIGHT PANEL ── -->
-  <aside class="panel right">
-
-    <div class="panel-section">
-      <div class="panel-label">Status</div>
-      <div class="status-bar">
-        <div class="status-dot running" id="status-dot"></div>
-        <span id="status-text">Running</span>
-      </div>
-      <div class="progress-wrap">
-        <div class="progress-fill" id="progress-fill"></div>
-      </div>
-      <div class="info-block">
-        <div class="info-row"><span class="k">Progress</span><span class="v" id="info-pct">0%</span></div>
-        <div class="info-row"><span class="k">Deg</span><span class="v" id="info-deg">0°</span></div>
-        <div class="info-row"><span class="k">Cycle end</span><span class="v" id="info-target">—</span></div>
-        <div class="info-row"><span class="k">P1 orbits</span><span class="v" id="info-o1">—</span></div>
-        <div class="info-row"><span class="k">P2 orbits</span><span class="v" id="info-o2">—</span></div>
-      </div>
+  <!-- ── INFO (right) ── -->
+  <aside class="panel right" id="panel-info" aria-label="About this pair">
+    <div class="panel-head">
+      <span>This pair</span>
+      <button class="icon" type="button" data-collapse="info" title="Hide info">›</button>
     </div>
+    <div class="panel-body">
 
-    <div class="panel-section">
-      <div class="panel-label">Active — Planet 1</div>
-      <div class="info-block">
-        <div class="info-row"><span class="k">Name</span><span class="v" id="p1-name">—</span></div>
-        <div class="info-row"><span class="k">Period</span><span class="v" id="p1-ov">—</span></div>
-        <div class="info-row"><span class="k">Distance</span><span class="v" id="p1-au">—</span></div>
-      </div>
+      <section class="planets-info" id="planets-info"></section>
+
+      <section class="rhythm">
+        <h2>The rhythm</h2>
+        <div class="ratio" id="ratio"></div>
+        <p class="rhythm-text" id="rhythm-text"></p>
+        <dl class="facts" id="facts"></dl>
+        <p class="classic-badge" id="classic-badge" hidden>Classic v2 speeds — the drawing uses swapped speeds; the facts above are for the real orbits.</p>
+      </section>
+
+      <details class="raw">
+        <summary>Under the hood</summary>
+        <dl class="facts small" id="raw"></dl>
+      </details>
+
     </div>
-
-    <div class="panel-section">
-      <div class="panel-label">Active — Planet 2</div>
-      <div class="info-block">
-        <div class="info-row"><span class="k">Name</span><span class="v" id="p2-name">—</span></div>
-        <div class="info-row"><span class="k">Period</span><span class="v" id="p2-ov">—</span></div>
-        <div class="info-row"><span class="k">Distance</span><span class="v" id="p2-au">—</span></div>
-      </div>
-    </div>
-
-    <div class="panel-section">
-      <div class="panel-label">Resonance</div>
-      <div class="info-block">
-        <div class="info-row"><span class="k">Approx ratio</span><span class="v" id="res-ratio">—</span></div>
-        <div class="info-row"><span class="k">Cycle length</span><span class="v" id="res-lcm">—</span></div>
-      </div>
-    </div>
-
-    <div class="panel-section">
-      <div class="panel-label">Save filename</div>
-      <div class="info-block">
-        <div class="filename-display" id="info-filename">—</div>
-      </div>
-    </div>
-
   </aside>
 
-  <!-- ── FOOTER ── -->
-  <footer>
-    <span>Dance of Planets v2.0 · Based on Dance of Venus v1.45</span>
-    <span>
-      Data:
-      <a href="http://hyperphysics.phy-astr.gsu.edu/hbase/kepler.html" target="_blank">Hyperphysics</a>
-      ·
-      <a href="https://www.jpl.nasa.gov/edu/pdfs/scaless_reference.pdf" target="_blank">JPL</a>
-    </span>
-    <span>© Jesal Mehta · @cabofcuriosity</span>
-  </footer>
+  <!-- tabs to reopen collapsed panels -->
+  <button class="edge-tab left" id="tab-controls" type="button" hidden>Controls ›</button>
+  <button class="edge-tab right" id="tab-info" type="button" hidden>‹ This pair</button>
 
+  <!-- ── TRANSPORT (bottom) ── -->
+  <div class="transport" id="transport">
+    <button class="icon mobile-only" id="m-controls" type="button">Controls</button>
+    <button class="icon play" id="btn-play" type="button" title="Play / pause (space)">❚❚</button>
+    <button class="icon" id="btn-restart" type="button" title="Start again (R)">↺</button>
+    <input type="range" id="scrub" min="0" max="1000" step="1" value="0" aria-label="Progress through the cycle">
+    <span class="time" id="time"></span>
+    <span class="sep"></span>
+    <div class="menu-wrap">
+      <button class="icon" id="btn-png" type="button" title="Save as PNG">PNG ▾</button>
+      <div class="menu" id="menu-png" hidden>
+        <button type="button" data-size="screen">Screen size</button>
+        <button type="button" data-size="2048">2048 px</button>
+        <button type="button" data-size="4096">4096 px · print</button>
+        <button type="button" class="mobile-only" data-action="svg">SVG</button>
+        <button type="button" class="mobile-only" data-action="link">Copy link</button>
+      </div>
+    </div>
+    <button class="icon" id="btn-svg" type="button" title="Save as SVG">SVG</button>
+    <button class="icon" id="btn-link" type="button" title="Copy a link to exactly this">Link</button>
+    <button class="icon mobile-only" id="m-info" type="button">Info</button>
+  </div>
+
+  <div class="credit">© Jesal Mehta · @cabofcuriosity</div>
 </div>
 
+<button class="hud-restore" id="hud-restore" type="button" hidden>Show interface (H)</button>
+
+<!-- ── EXPLAINER ── -->
+<div class="modal" id="about" hidden>
+  <div class="modal-card" role="dialog" aria-labelledby="about-title">
+    <button class="icon close" type="button" data-close title="Close">✕</button>
+    <h2 id="about-title">What you're looking at</h2>
+    <p>Two planets go around the Sun, each at its own speed. Every so often — a few days, in planet time — a line is drawn between them. That's all. Nothing else decides the picture except <strong>how long each planet takes to go around</strong>.</p>
+    <p>If one planet's year fits neatly into the other's, the pattern closes on itself and repeats. The closer the fit, the cleaner the shape.</p>
+    <h3>The Dance of Venus</h3>
+    <p>In 8 years, Earth goes around the Sun 8 times and Venus goes around 13 times — almost exactly. 13 − 8 = 5, so the pattern has <strong>five-fold symmetry</strong>. Because the fit is so nearly exact (Venus falls short by about 2°), the rose closes on itself and turns only very slowly, cycle after cycle.</p>
+    <p>Every pair has its own ratio. Jupiter and Saturn meet every 20 years in three places — a triangle. Neptune and Pluto are locked at exactly 3 : 2.</p>
+    <h3>Lines and Trail</h3>
+    <p><strong>Lines</strong> draws the line between the two planets. <strong>Trail</strong> follows the point halfway between them instead — which for Earth and Venus traces the same shape as Venus's path as seen from Earth.</p>
+    <h3>Keys</h3>
+    <p class="keys"><kbd>Space</kbd> play / pause · <kbd>R</kbd> start again · <kbd>H</kbd> hide the interface · scroll to zoom</p>
+    <p class="small">Orbits are simplified to circles in one plane, all planets starting in line. Sketch and page by Jesal Mehta (@cabofcuriosity), based on Dance of Venus v1.45. Orbital data: <a href="http://hyperphysics.phy-astr.gsu.edu/hbase/kepler.html" target="_blank" rel="noopener">Hyperphysics</a> · <a href="https://www.jpl.nasa.gov/edu/pdfs/scaless_reference.pdf" target="_blank" rel="noopener">JPL</a>. Dance of Planets v3.0.</p>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="model.js"></script>
+<script src="ui.js"></script>
 <script src="dance_of_planets.js"></script>
 </body>
 </html>
