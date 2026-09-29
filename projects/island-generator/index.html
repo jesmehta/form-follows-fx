@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Island Generator — Form follows f(x)</title>
+  <meta name="description" content="Perlin noise, cut into contour bands. Slide from a single island to an archipelago, a coastline, a mainland or a mountain range — and export it as an image or as vectors.">
+  <link rel="stylesheet" href="island_generator.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+</head>
+<body>
+
+<div id="canvas-container"></div>
+
+<div class="hud" id="hud">
+
+  <!-- ── TITLE ── -->
+  <header class="hud-title">
+    <a class="back" href="../">← Form follows f(x)</a>
+    <h1>Island Generator</h1>
+    <p class="caption" id="caption">&nbsp;</p>
+    <button class="pill" id="btn-about" type="button">What am I looking at?</button>
+  </header>
+
+  <!-- ── CONTROLS (left) ── -->
+  <aside class="panel left" id="panel-controls" aria-label="Controls">
+    <div class="panel-head">
+      <span>Landscape</span>
+      <button class="icon" type="button" data-collapse="controls" title="Hide controls">‹</button>
+    </div>
+    <div class="panel-body">
+
+      <section>
+        <h2>Start from</h2>
+        <div class="presets" id="presets"></div>
+      </section>
+
+      <section>
+        <h2>Where the land gathers</h2>
+        <div class="slider">
+          <div class="slider-head"><span>Land focus</span><output id="out-focus"></output></div>
+          <input type="range" id="sl-focus" min="0" max="1000" step="1">
+        </div>
+        <p class="hint only-focus-off">At 0 the noise runs to every edge — a mainland. Raise it to pull land towards island centres.</p>
+        <div class="only-focus-on">
+          <div class="seg" data-key="shape">
+            <button type="button" data-value="points">Islands</button>
+            <button type="button" data-value="edge">Coast</button>
+            <button type="button" data-value="line">Spine</button>
+          </div>
+          <p class="hint shape-hint only-points">Land rises around each centre; with many, the nearest one counts.</p>
+          <p class="hint shape-hint only-edge">Land rises towards one side of the page. Drag the marker to choose which.</p>
+          <p class="hint shape-hint only-line">Land rises along a line through the centres — a range, or a long island.</p>
+          <div class="slider not-edge">
+            <div class="slider-head"><span>Islands</span><output id="out-count"></output></div>
+            <input type="range" id="sl-count" min="0" max="1000" step="1">
+          </div>
+          <div class="slider">
+            <div class="slider-head"><span>Island size</span><output id="out-size"></output></div>
+            <input type="range" id="sl-size" min="0" max="1000" step="1">
+          </div>
+          <p class="hint">Click the map to add a centre · drag a marker to move it · double-click to remove.
+            <button class="linkish" id="btn-reset-markers" type="button">Reset centres</button></p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Terrain</h2>
+        <div class="slider">
+          <div class="slider-head"><span>Feature scale</span><output id="out-scale"></output></div>
+          <input type="range" id="sl-scale" min="0" max="1000" step="1">
+        </div>
+        <div class="slider">
+          <div class="slider-head"><span>Roughness</span><output id="out-rough"></output></div>
+          <input type="range" id="sl-rough" min="0" max="1000" step="1">
+        </div>
+        <div class="slider">
+          <div class="slider-head"><span>Ridges</span><output id="out-ridges"></output></div>
+          <input type="range" id="sl-ridges" min="0" max="1000" step="1">
+        </div>
+        <div class="slider">
+          <div class="slider-head"><span>Coast warp</span><output id="out-warp"></output></div>
+          <input type="range" id="sl-warp" min="0" max="1000" step="1">
+        </div>
+        <div class="slider">
+          <div class="slider-head"><span>Peakiness</span><output id="out-peak"></output></div>
+          <input type="range" id="sl-peak" min="0" max="1000" step="1">
+        </div>
+      </section>
+
+      <section>
+        <h2>Sea &amp; contours</h2>
+        <div class="slider">
+          <div class="slider-head"><span>Sea level</span><output id="out-sea"></output></div>
+          <input type="range" id="sl-sea" min="0" max="1000" step="1">
+        </div>
+        <div class="slider">
+          <div class="slider-head"><span>Contour bands</span><output id="out-bands"></output></div>
+          <input type="range" id="sl-bands" min="0" max="1000" step="1">
+        </div>
+        <label class="toggle"><input type="checkbox" id="chk-depth"><span>Depth contours under the sea</span></label>
+      </section>
+
+      <section>
+        <h2>Drawing</h2>
+        <div class="seg" data-key="style">
+          <button type="button" data-value="grey">Grey</button>
+          <button type="button" data-value="thermal">Thermal</button>
+          <button type="button" data-value="lines">Lines</button>
+        </div>
+        <p class="hint" id="hint-style"></p>
+      </section>
+
+      <details class="advanced">
+        <summary>Advanced</summary>
+        <label class="toggle"><input type="checkbox" id="chk-markers"><span>Show island centres</span></label>
+        <label class="toggle"><input type="checkbox" id="chk-classic"><span>2020 colours</span></label>
+        <p class="hint">The 2020 sketches drew bands across the whole height range with no sea, and in grey clipped the top third to white (a colour-mode quirk). Kept for comparison.</p>
+      </details>
+
+    </div>
+  </aside>
+
+  <!-- ── PAGE & EXPORT (right) ── -->
+  <aside class="panel right" id="panel-page" aria-label="Page and export">
+    <div class="panel-head">
+      <span>Page</span>
+      <button class="icon" type="button" data-collapse="page" title="Hide page panel">›</button>
+    </div>
+    <div class="panel-body">
+
+      <section>
+        <h2>Sheet</h2>
+        <div class="seg small" data-key="page" id="seg-page"></div>
+        <div class="seg" data-key="orient">
+          <button type="button" data-value="portrait">Portrait</button>
+          <button type="button" data-value="landscape">Landscape</button>
+        </div>
+        <div class="seg" data-key="dpi">
+          <button type="button" data-value="150">150 dpi</button>
+          <button type="button" data-value="300">300 dpi</button>
+        </div>
+        <p class="hint mono" id="out-page"></p>
+        <div class="slider">
+          <div class="slider-head"><span>Zoom</span><output id="out-zoom"></output></div>
+          <div class="slider-with-btn">
+            <input type="range" id="sl-zoom" min="0" max="1000" step="1">
+            <button class="icon" id="btn-fit" type="button" title="Fit the page (F)">fit</button>
+          </div>
+        </div>
+        <p class="hint">The framed sheet is what exports. Drag to pan, scroll to zoom — the view never changes the map.</p>
+      </section>
+
+      <section>
+        <h2>Export the sheet</h2>
+        <div class="export-grid">
+          <button class="export" id="btn-png" type="button"><b>PNG</b><small>as drawn, print resolution</small></button>
+          <button class="export" id="btn-height" type="button"><b>Heightmap</b><small>16-bit grey PNG</small></button>
+          <button class="export" id="btn-svg-lines" type="button"><b>SVG lines</b><small>contours, a layer each</small></button>
+          <button class="export" id="btn-svg-layers" type="button"><b>SVG layers</b><small>filled slices, stacked</small></button>
+        </div>
+      </section>
+
+      <section>
+        <h2>This map</h2>
+        <dl class="facts" id="facts"></dl>
+      </section>
+
+      <details class="raw">
+        <summary>Under the hood</summary>
+        <dl class="facts small" id="raw"></dl>
+      </details>
+
+    </div>
+  </aside>
+
+  <button class="edge-tab left" id="tab-controls" type="button" hidden>Landscape ›</button>
+  <button class="edge-tab right" id="tab-page" type="button" hidden>‹ Page</button>
+
+  <!-- ── BAR (bottom) ── -->
+  <div class="transport" id="transport">
+    <button class="icon mobile-only" id="m-controls" type="button">Landscape</button>
+    <button class="icon play" id="btn-new" type="button" title="New landscape (N)">⟳ New landscape</button>
+    <label class="seed"><span>seed</span><input type="number" id="inp-seed" min="0" max="999999" step="1" aria-label="Seed"></label>
+    <span class="sep"></span>
+    <span class="bar-hint">click: add island · drag: pan · scroll: zoom</span>
+    <button class="icon" id="btn-link" type="button" title="Copy a link to exactly this map">Link</button>
+    <button class="icon mobile-only" id="m-page" type="button">Page</button>
+  </div>
+
+  <div class="credit">© Jesal Mehta · @cabofcuriosity</div>
+</div>
+
+<button class="hud-restore" id="hud-restore" type="button" hidden>Show interface (H)</button>
+
+<!-- ── EXPLAINER ── -->
+<div class="modal" id="about" hidden>
+  <div class="modal-card" role="dialog" aria-labelledby="about-title">
+    <button class="icon close" type="button" data-close title="Close">✕</button>
+    <h2 id="about-title">What you're looking at</h2>
+    <p>Every point on the page gets a height from <strong>Perlin noise</strong>, a smooth random function that looks like terrain. Heights are then cut into steps, so each step reads as a <strong>contour band</strong>, and everything below the <strong>sea level</strong> is water.</p>
+    <p>That's the whole landscape. The same few sliders take it anywhere:</p>
+    <h3>From island to mainland</h3>
+    <p><strong>Land focus</strong> blends the noise with the distance to one or more <em>island centres</em>. Near a centre the land is lifted, far away it sinks. At 0 the noise runs off every edge (a mainland); high, with one centre, it gathers into one island; with many small ones, an archipelago. <strong>Coast</strong> lifts one side of the page instead; <strong>Spine</strong> lifts a line — with <strong>Ridges</strong> up, a mountain range.</p>
+    <h3>The texture</h3>
+    <p><strong>Feature scale</strong> is how many hills fit across the page. <strong>Roughness</strong> adds finer layers of noise on top. <strong>Ridges</strong> folds the noise into sharp crests. <strong>Coast warp</strong> bends the whole field so coastlines wander. <strong>Peakiness</strong> raises heights to a power: low gives plateaus, high gives spires, and the coast stays put.</p>
+    <h3>Sea level</h3>
+    <p>Sea level is set as how much of the sheet is under water, so it means the same thing whatever the other sliders do.</p>
+    <h3>Keys</h3>
+    <p class="keys"><kbd>N</kbd> new landscape · <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> grey / thermal / lines · <kbd>F</kbd> fit the page · <kbd>H</kbd> hide the interface</p>
+    <p class="small">Sketch and page by Jesal Mehta (@cabofcuriosity), grown from the Perlin Contour sketches of February–March 2020. The island blend is the <em>(1 + e − d) / 2</em> from those sketches, after Red Blob Games' <a href="https://www.redblobgames.com/maps/terrain-from-noise/" target="_blank" rel="noopener">Making maps with noise</a>. Island Generator v5.0.</p>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="model.js"></script>
+<script src="ui.js"></script>
+<script src="island_generator.js"></script>
+</body>
+</html>
