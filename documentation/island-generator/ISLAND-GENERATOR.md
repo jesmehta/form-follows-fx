@@ -90,10 +90,10 @@ canvas, controls float above, like DoP, but controls for export for page
 dimensions and zoom"**. So this is the Dance of Planets shell with the
 right-hand panel reassigned to the **page**:
 
-- The terrain is infinite. The sheet (A5, A4, A3, Square, Custom in mm,
-  or None; portrait or landscape; 150/300 dpi) is a gold frame over it,
-  and everything outside is dimmed. What's inside the frame is what every
-  export produces.
+- **Superseded in v5.5** (see "v5.5: the frame" below). The first model
+  tied the landscape to the sheet, 1 sheet width = 1 unit, with zoom and
+  pan moving only the screen view. The sheet was A5–A1 or square, then
+  in v5.1 A5 / A4 / A3 / Square / Custom mm / None.
 - **None** hides the frame to look at the whole landscape (v5.1, see
   below). The map stays laid out on the last sheet, so nothing moves.
   Exports then capture the window as shown, at 2× screen resolution.
@@ -387,6 +387,73 @@ Known limits:
 - The ridge field is also one of the two warp fields, at a different
   scale, which is a small correlation to separate (see TODO).
 
+## v5.5: the frame (2026-09-30)
+
+> **Sheet should not be locked in to a pixel:mm ratio, this makes all the
+> A4, A3, square a fixed size, no way to zoom in or out to the viewers
+> choice proportional to the page - instead have - A-series, square, 4:3,
+> 16:9, custom aspect ratio, and zoom+pan controls what sits in that
+> boundary**
+
+What changed:
+
+- **The landscape has its own coordinates.** Its unit square holds the
+  generated centres and is the sea-level reference, so nothing about the
+  landscape depends on the sheet any more.
+- **The sheet is a frame of a ratio,** fitted and fixed in the middle of
+  the free area. At zoom 100% the unit square just fits inside it.
+- **Zoom and pan move the landscape under the frame.** The frame's
+  contents are the map: they are exported, described in "This map",
+  and stored in the URL (`z`, `x`, `y`).
+- **Ratio changes only re-frame.** Changing ratio or orientation never
+  rebuilds the landscape.
+- **Sheet: None** uses the whole free area as an invisible frame.
+
+> **I am not sure what dpi is adding to here currently, likely just the
+> export resolution literally and i guess that can continue for the new
+> scheme**
+
+Resolution is now **print size × dpi**, both in the Export section:
+
+- **Print size** is the long edge: 210, 297 or 420 mm. For A-series these
+  are labelled A5, A4 and A3, since the short edge then comes out at A
+  proportions.
+- **dpi** is 150 or 300.
+- **Line weights** stay in mm of print, so the screen preview is scaled to
+  the print size.
+- **SVGs** are in those mm.
+
+> **this map and under the hood texts have very bad contrast against the
+> grey panel - make the font much lighter / under the hood text - also
+> rewrite where possible in my old notation**
+
+- **Contrast:** lightened, with the labels in the accent colour.
+- **Under the hood** now uses the 2020 terms:
+  - `seed`
+  - `t` (the noise step per pixel if this frame were drawn on the 2020
+    400 px canvas)
+  - `noiseDetail(octaves, falloff)`
+  - `elev`
+  - `isleFac`
+  - `isl` with its weight
+  - `b`
+  - sea, step and range
+  - ridges and warp, flagged as having no 2020 term
+
+> **a toggle for No Contours beside Depth Contours - or when Contour slider
+> moved to 0 (current min is 2) - a smooth unbanded noise of whatever
+> resolution - will it be too much processing or too complex a change ?**
+
+Neither. Smooth shading is marginally *cheaper* than banding, because
+each pixel maps straight to a colour (through a 256-step table) with no
+rounding into a band. The slider option was taken, so Contour bands now
+runs 0–30:
+
+- **0 = smooth,** for every colour style and for the sea's depth shading.
+- **Contour lines** then draw only the coast, plus depth lines when those
+  are on.
+- The **SVG exports** follow the same rule.
+
 ## Architecture
 
 ```text
@@ -517,6 +584,19 @@ window at 2×. Shape buttons always show, and picking one turns Land
 focus on. Panels run full height with a "more below" hint. Depth
 contours fixed: own step, visible sea shades. Details under "v5.1: first
 review round".
+
+### v5.5: the frame, print size, smooth shading, readable facts (2026-09-30)
+
+The sheet is now an aspect-ratio frame fixed on screen: A-series, Square,
+4:3, 16:9, Custom W:H or None. Zoom and pan choose what sits in it, and
+that is what exports. The landscape has its own space (the unit square
+anchors centres and sea level), so changing the ratio never rebuilds it.
+Export resolution is a print size (long edge 210 / 297 / 420 mm, named
+A5 / A4 / A3 for A-series) × dpi. Zoom and pan are in the URL. "This map"
+facts describe the frame's contents. Contour bands go down to 0 = smooth,
+unbanded shading. Facts and Under the hood text are lighter, and Under
+the hood uses the 2020 sketches' notation (`t`, `noiseDetail`, `elev`,
+`isleFac`, `isl`, `b`).
 
 ### v5.4: Topographic, toggle kept in Lines (2026-09-30)
 

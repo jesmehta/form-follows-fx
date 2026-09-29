@@ -309,3 +309,33 @@ asked.
 Built as v5.4. In Lines style the toggle shows as on (lines are always
 drawn there) and disabled, and the viewer's own choice returns when they
 switch back to a filled style.
+
+## Part 8: the frame, and smooth shading (2026-09-30)
+
+> **RHS panel :
+> - Sheet should not be locked in to a pixel:mm ratio, this makes all the
+> A4, A3, square a fixed size, no way to zoom in or out to the viewers
+> choice proportional to the page - instead have - A-series, square, 4:3,
+> 16:9, custom aspect ratio, and zoom+pan controls what sits in that
+> boundary
+> - I am not sure what dpi is adding to here currently, likely just the
+> export resolution literally and i guess that can continue for the new
+> scheme I have outlined above
+> - this map and under the hood texts have very bad contrast against the
+> grey panel - make the font much lighter
+> - under the hood text - also rewrite where possible in my old notation**
+
+The reply laid out the model before building: the landscape gets its own
+space, the frame is fixed on screen, zoom and pan pick its contents, the
+ratio only re-frames, print size × dpi sets resolution, and the URL
+carries zoom and pan.
+
+Mid-build, the user added:
+
+> **a toggle for No Contours beside Depth Contours - or when Contour slider
+> moved to 0 (current min is 2) - a smooth unbanded noise of whatever
+> resolution - will it be too much processing or too complex a change ?**
+
+Answered as neither: smooth is slightly cheaper than banded. It was built
+as Contour bands = 0. Both landed as v5.5; details are in
+`ISLAND-GENERATOR.md`, "v5.5: the frame".

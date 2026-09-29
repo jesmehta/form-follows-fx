@@ -66,6 +66,19 @@ land and are never deleted. The design intent behind each item is in
 - [x] v5.4: Topology → Topographic; Contour lines toggle greyed out (not
       hidden) in Lines style (2026-09-30)
 
+## v5.5
+
+- [x] Sheet as a ratio frame (A-series, Square, 4:3, 16:9, Custom, None);
+      zoom and pan choose its contents; landscape independent of the
+      sheet (2026-09-30)
+- [x] Export resolution = print size (long edge) × dpi (2026-09-30)
+- [x] Zoom and pan in the URL; "This map" describes the frame (2026-09-30)
+- [x] Contour bands 0 = smooth shading (2026-09-30)
+- [x] Lighter facts / Under the hood text; Under the hood in 2020
+      notation (2026-09-30)
+- [ ] Check the frame model on a phone (pinch-zoom isn't wired; wheel and
+      slider only)
+
 - [ ] **User review of v5.0 look and feel**, and of the build-time
       decisions listed in `ISLAND-GENERATOR.md`
 - [ ] Real-device check: phone (sheets, touch drag of markers), HiDPI
