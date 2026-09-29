@@ -219,17 +219,127 @@ discussion into a todo for later."** and **"keep toggle for now, will help
 me understand the difference"** — so a **Classic (v2) speeds** toggle
 reproduces the old behaviour, and images already posted stay reproducible.
 
+### Decisions made during the v3.0 build
+
+These weren't put to the user in advance. They are defaults or mechanisms
+chosen while building, and are listed here so they can be revisited.
+
+- **Default density: 120 lines per orbit at 60% opacity.** The first build
+  used v2's density (720 per orbit, full opacity). With correct speeds that
+  saturated into a solid white disc: 9,360 overlapping white lines. Four
+  density/opacity pairs were rendered side by side for Earth–Venus and
+  Jupiter–Saturn. 120 @ 60% was the one where the mandala reads *and* the
+  individual lines still show. For Earth–Venus that works out to a line
+  every 1.9 days.
+- **Speed is "orbits of the faster planet per second"** (default 0.5). It
+  started as lines per frame, but then changing Detail also changed how
+  long a cycle took to draw, which is the same coupling v2's "step size"
+  had. Now Detail changes only the picture and Speed changes only the
+  timing. The readout translates it into years per second.
+- **Cycle options are continued-fraction convergents** of the speed ratio
+  (see above). The default (★) is the first convergent that closes within
+  10° and fits the line budget. Presets pin a specific one (Jupiter–Saturn
+  5 : 2, Neptune–Pluto 3 : 2).
+- **Keep drawing never resets the clock.** v2 reset `deg` to 0 at each
+  cycle end, so the pattern repeated exactly. v3 lets time run on, so the
+  near-miss shows: Earth–Venus's rose turns by 1.8° per cycle. Under
+  Classic this is the one intentional difference from v2's behaviour.
+- **Correct orbits run counter-clockwise** (seen from above the Sun's north
+  pole). Classic keeps v2's on-screen direction, which is clockwise
+  because screen y points down. This is a mirror image only.
+- **Planet data is v2's table, unchanged**, from the user's own sources
+  (Hyperphysics/JPL). Refining it would silently change every pattern, so
+  it's left as a TODO for discussion.
+- **The drawing centres in the free area** between the panels and above
+  the transport bar, and re-centres when a panel collapses or the HUD
+  hides. Export always renders a square at the same zoom relative to fit,
+  whatever the window shape.
+- **Line weight scales with export size**, so a 4096 px PNG looks like the
+  screen view, only sharper. For finer lines in print, lower Line weight
+  before exporting.
+- **The caption says what is being drawn**, live: "A line between Earth
+  and Venus every 1.9 days, for 8.0 years." This answers "nothing on the
+  page says what is being drawn" without needing a modal. The modal
+  ("What am I looking at?") holds the longer explanation and credits and
+  never opens by itself, so people arriving from social links see the
+  drawing first.
+- **Finding worth keeping for the writeup:** the Trail style (the midpoint
+  of the two planets) traces the same shape as Venus's path *as seen from
+  Earth*, rotated and at half scale. Mathematically V+E and V−E differ only
+  by a phase, which is a time shift plus a rotation. So corrected Trail
+  mode draws Venus's five retrograde loops, the famous pentagram rose. With
+  Classic speeds those loops disappear (see
+  [`screenshots/speed-bug-comparison.png`](screenshots/speed-bug-comparison.png)).
+
 ## Architecture
 
-*(filled in as v3.0 is built)*
+```text
+index.html
+  p5 (cdnjs 1.9.0) -> model.js -> ui.js -> dance_of_planets.js
+```
+
+Plain scripts sharing one `window.DOP` namespace, not ES modules. That way
+the page still works opened straight from disk (`file://` blocks module
+imports).
+
+- **`model.js` → `DOP.model`**: pure maths, no DOM, no p5. Holds the
+  planet table, presets and `LINE_BUDGET` (150k lines per cycle).
+  `makePair(a, b, {classic, detail, cycleKey})` returns everything about a
+  pair that doesn't depend on the look:
+  - angular rates (correct: 360/period per year; classic: period)
+  - the convergent cycle list and the chosen cycle
+  - the step grid: `N` steps per cycle, and detail clamped to the budget
+  - `positions(k)`, `orbitsAt(k)`
+  - real-orbit facts: synodic period, closest/farthest distance
+- **`ui.js` → `DOP.settings`, `DOP.ui`**: owns the settings object, wires
+  every control, and fills the info panel and caption. It syncs the URL
+  (short keys, non-defaults only, `history.replaceState`, debounced) and
+  decides the free viewport. Every change goes through `changed(tier)`,
+  which maps to the three tiers:
+
+  | Tier | Sketch call | Example settings |
+  |---|---|---|
+  | nothing | — | speed, overlay toggles |
+  | redraw | `redraw()` | style, colour, opacity, weight, zoom |
+  | new step grid, same progress | `regrid()` | detail, classic |
+  | loop | `loopChanged()` | draw once / keep drawing |
+  | new picture | `newPicture()` | pair, cycle, preset |
+
+- **`dance_of_planets.js` → `DOP.sketch`**: the p5 instance.
+  - `trail` is a `p5.Graphics`. `drawRange(ctx, view, k0, k1, width,
+    alphaAt)` is the one renderer, used for live frames, full redraws,
+    PNG export and (as a segment list) SVG export.
+  - Redraws use `redrawPlan()`. In *draw once* that is steps 0..k. In
+    *keep drawing* it is a tail with alpha `(1 − fade/255)^(age in
+    frames)`, approximating the per-frame black-rect fade.
+  - Full-opacity single-colour runs are batched into one path, which gives
+    an identical result because overlaps can't compound at alpha 1.
+    Translucent or gradient lines are stroked one by one so they compound
+    exactly as v2's did.
+  - The overlay is drawn on the main canvas after `image(trail)` each
+    frame: dashed orbits, the Sun, the planets and the gold "drawing arm".
+  - Callbacks to `DOP.ui.onPicture(pair)` (static info) and `onFrame(st)`
+    (progress; DOM writes throttled to every 4th frame).
 
 ## Files
 
 | File | Role |
 |---|---|
-| `projects/dance-of-planets/index.html` | The page |
-| `projects/dance-of-planets/dance_of_planets.css` | Styles |
-| `projects/dance-of-planets/dance_of_planets.js` | The p5 sketch |
+| `projects/dance-of-planets/index.html` | HUD markup, explainer, script order |
+| `projects/dance-of-planets/dance_of_planets.css` | HUD styles; v2.2 tokens + glass panels; ≤900 px bottom sheets |
+| `projects/dance-of-planets/model.js` | Orbital maths, data, presets |
+| `projects/dance-of-planets/ui.js` | Settings, controls, info panel, URL, keys |
+| `projects/dance-of-planets/dance_of_planets.js` | The p5 sketch: layers, renderer, overlay, export |
+| `documentation/dance-of-planets/screenshots/` | `v3.0-desktop.png`, `v3.0-mobile-controls.png`, `speed-bug-comparison.png` |
+
+## Verified
+
+v3.0 was checked headlessly (Playwright/Chromium) at 1600×900 and 390×844:
+no page or console errors; presets, style, colour and opacity changes,
+Classic toggle, *keep drawing*, seek, PNG 2048 and SVG downloads; the URL
+round-trip (settings restored from a copied link); mobile sheets. A full
+redraw of Mercury–Pluto (123k lines, the budget case) took about 30–50 ms.
+**The look and feel has not yet been reviewed by the user.**
 
 ## Todo / watch out for
 
@@ -251,3 +361,23 @@ trail rebased on zoom so it doesn't jump. Commit `f5a66da`.
 
 Split into `.html`/`.css`/`.js`; fade alpha read as a float (0.1–10 direct
 p5 alpha) instead of an integer. Commit `e56623a`.
+
+### v2.2 + speed fix (2026-09-29)
+
+Isolated fix on the v2.2 code so the diff can anchor the later discussion:
+angle = `deg / period` instead of `period * deg`, orbit counts and cycle
+length corrected (Earth–Venus now reads 8 : 13 over 8 years), and a
+"Classic v2 speeds" checkbox restoring the old behaviour exactly. Known
+side effect: outer pairs crawl, because the step is still in Earth-degrees.
+Commit `ce8a5dc`.
+
+### v3.0 — full-bleed HUD rework (2026-09-29)
+
+Rewritten as model / UI / sketch. Full-window canvas with glass HUD panels;
+redraw at the current progress on any change (no Reset); Speed and Detail
+split; convergent cycle choice with a line budget; presets; single/gradient
+colour, opacity, line weight; planets + Sun and orbits overlay; transport
+bar with a scrubber in years; shareable URLs; PNG (screen/2048/4096) and SVG
+export; live caption and explainer; keyboard shortcuts; mobile bottom
+sheets. Commit `5154102`. Details under "Decisions made during the v3.0
+build" and "Architecture".

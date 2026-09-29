@@ -179,3 +179,34 @@ choice. **Answer: `projects/` folder in fffx.**
 Also verified before committing: version order by content rather than file
 timestamps (the v2.2 zip's entries are dated before v2.1, but v2.2 is the
 refinement).
+
+## Part 4 — building v3.0 (same session)
+
+No new user input during the build. It was done against the decisions in
+Part 3. What came up along the way, in order:
+
+1. **The three versions were committed first**, then the docs, then the
+   speed fix as its own small commit on the untouched v2.2 code. That way
+   the later "discussion on my code and this bug" has a single readable
+   diff to look at, not one buried in a rewrite.
+2. **The first render of v3 was a white disc.** v2's density at correct
+   speeds, full opacity, saturated completely. Four density/opacity
+   combinations were rendered side by side for two pairs, and 120 lines
+   per orbit at 60% was picked as the default. This is a judgment call to
+   revisit in review.
+3. **Speed was redefined** from lines per frame to orbits per second once
+   it became clear the former re-coupled speed and detail, the exact v2
+   problem the split was meant to remove.
+4. **The PNG menu refused to close**: a CSS `display` rule overrode the
+   `hidden` attribute. Fixed globally.
+5. **The Trail discovery.** The corrected Trail mode for Earth and Venus
+   drew five small loops. These are Venus's retrograde loops: the midpoint
+   of two circular motions has the same shape as their difference, which
+   is Venus's path seen from Earth. Classic speeds lose them. The
+   side-by-side (`screenshots/speed-bug-comparison.png`) was made for the
+   bug discussion and the writeup.
+6. **Switching to Keep drawing after a finished run** left the page
+   paused; fixed so a finished drawing carries on.
+
+Stopped before the fffx launch steps (deploy loop, entry/README wiring) and
+before any look-and-feel review. Those are the user's next calls.
