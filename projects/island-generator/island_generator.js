@@ -90,7 +90,7 @@ new p5(function (s) {
     };
   }
   const PAPER = [244, 241, 234], INK = '#2a2622', DEPTH_INK = '#6f8aa6';
-  // Topology: hypsometric tints, low green → tan → brown → rock → snow.
+  // Topographic: hypsometric tints, low green → tan → brown → rock → snow.
   const TOPO_LAND = [
     [0.00, [88, 142, 86]], [0.22, [148, 172, 98]], [0.42, [212, 196, 128]],
     [0.62, [176, 128, 82]], [0.80, [140, 124, 114]], [1.00, [246, 246, 244]],

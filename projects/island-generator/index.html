@@ -100,11 +100,11 @@
             <input type="range" id="sl-bands" min="0" max="1000" step="1">
           </div>
           <label class="toggle"><input type="checkbox" id="chk-depth"><span>Depth contours</span></label>
-          <div class="row-head"><span>Colours</span><button class="info" type="button" data-tip="Grey: height as grey bands. Thermal: height as colours, cold to hot. Topology: map colours — sea blues, green lowlands, brown hills, snowy peaks. Lines: contour lines on paper, exactly what the SVG export draws.">ⓘ</button></div>
+          <div class="row-head"><span>Colours</span><button class="info" type="button" data-tip="Grey: height as grey bands. Thermal: height as colours, cold to hot. Topographic: map colours — sea blues, green lowlands, brown hills, snowy peaks. Lines: contour lines on paper, exactly what the SVG export draws.">ⓘ</button></div>
           <div class="seg small" data-key="style">
             <button type="button" data-value="grey">Grey</button>
             <button type="button" data-value="thermal">Thermal</button>
-            <button type="button" data-value="topo">Topology</button>
+            <button type="button" data-value="topo">Topographic</button>
             <button type="button" data-value="lines">Lines</button>
           </div>
           <label class="toggle not-lines"><input type="checkbox" id="chk-lines"><span>Contour lines</span></label>
@@ -210,7 +210,7 @@
     <h3>Terrain details</h3>
     <p><strong>Feature smoothness</strong> sets how broad the landforms are. <strong>Surface roughness</strong> adds finer detail on top. <strong>Ridges</strong> fold the terrain into sharp, branching crests. <strong>Coast warp</strong> bends everything so coastlines wander. <strong>Elevation exponent</strong> raises heights to a power: low gives plateaus, high gives sharp peaks, and the coast stays put.</p>
     <h3>Keys</h3>
-    <p class="keys"><kbd>N</kbd> new landscape · <kbd>1</kbd>–<kbd>4</kbd> grey / thermal / topology / lines · <kbd>F</kbd> fit the page · <kbd>H</kbd> hide the interface</p>
+    <p class="keys"><kbd>N</kbd> new landscape · <kbd>1</kbd>–<kbd>4</kbd> grey / thermal / topographic / lines · <kbd>F</kbd> fit the page · <kbd>H</kbd> hide the interface</p>
     <p class="small">Sketch and page by Jesal Mehta (@cabofcuriosity), grown from the Perlin Contour sketches of February–March 2020. The island blend is the <em>(1 + e − d) / 2</em> from those sketches, after Red Blob Games' <a href="https://www.redblobgames.com/maps/terrain-from-noise/" target="_blank" rel="noopener">Making maps with noise</a>. Island Generator v5.3.</p>
   </div>
 </div>

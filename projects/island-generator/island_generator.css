@@ -406,4 +406,5 @@ details.sec > .sec-body { display: flex; flex-direction: column; gap: 8px; paddi
   box-shadow: 0 6px 24px rgba(0,0,0,0.5); pointer-events: none;
 }
 
-[data-style="lines"] .not-lines { display: none; }
+/* in Lines style the lines are always drawn: toggle shown on, greyed out */
+[data-style="lines"] .not-lines { opacity: 0.4; pointer-events: none; }

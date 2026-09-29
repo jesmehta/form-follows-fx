@@ -397,7 +397,7 @@
     $('seg-page').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.value === pageOn));
     $('inp-cw').value = S.cw; $('inp-ch').value = S.ch;
     document.body.dataset.page = pageOn;
-    $('chk-depth').checked = S.depth; $('chk-markers').checked = S.markers; $('chk-lines').checked = S.contours;
+    $('chk-depth').checked = S.depth; $('chk-markers').checked = S.markers; $('chk-lines').checked = S.contours || S.style === 'lines'; $('chk-lines').disabled = S.style === 'lines';
     $('inp-seed').value = S.seed;
     document.body.dataset.shape = S.shape;
     document.body.dataset.style = S.style;
