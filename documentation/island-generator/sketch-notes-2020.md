@@ -52,13 +52,13 @@ The only long-form note. Quoted in full:
 
 | # | Item (original wording) | Status in the new page |
 |---|---|---|
-| a | Make as many functions as possible | *Planned: model and rendering split* |
-| b | Only re-Draw canvas when updates are needed | *Planned: redraw on change only* |
-| b2 | Some things can be computed in setup and maintained | *Planned: cache the noise field and recompute only when shape params change* |
-| c | Mouse-click to Island focus ? | *Planned* |
-| d | Islanding … using distance from an edge as well, instead of points | *Planned* |
-| e | Multiple islands when clicked, distance from the nearest used in IsleElev | *Planned* |
-| — | Colour/BW switch (from the notes) | *Planned: Thermal render style* |
+| a | Make as many functions as possible | *Done in v5.0: `model.js`* |
+| b | Only re-Draw canvas when updates are needed | *Done: tiered redraw on change* |
+| b2 | Some things can be computed in setup and maintained | *Done: field cached; sea level and bands recolour it* |
+| c | Mouse-click to Island focus ? | *Done: click, drag, double-click* |
+| d | Islanding … using distance from an edge as well, instead of points | *Done: Coast shape (land rises towards one side)* |
+| e | Multiple islands when clicked, distance from the nearest used in IsleElev | *Done: generated + clicked centres, nearest counts* |
+| — | Colour/BW switch (from the notes) | *Done: Thermal style + 2020 colours toggle* |
 
 *Progress on these is tracked in [`TODO.md`](TODO.md).*
 
