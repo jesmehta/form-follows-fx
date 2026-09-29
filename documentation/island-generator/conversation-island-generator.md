@@ -353,3 +353,35 @@ smooth means smooth under the sea too.
 
 Built as v5.5.2. The band count now applies to both sides of the coast,
 each with its own step.
+
+## Part 10: hachures (2026-09-30)
+
+> **pushed.
+>
+> Colours - How difficult would it be to render each contour band as old
+> school hatching - radially outward from higher contour to lower contour,
+> density of hatch maps to height, etc ?**
+
+The reply identified this as Lehmann-style hachures. It outlined the
+method: seed along contours, trace along the gradient, weight the
+strokes. It rated the basic version moderate and even spacing the hard
+part, offered cheap pattern hatching as a fallback, and asked four
+questions: slope vs height weighting, the sea treatment, a theme or an
+overlay, and the scope. It recommended slope, water-lining, a theme, and
+the basic version first.
+
+> **1 - switch between both until I lock one if the other isnt very
+> useful
+> 2 - sea - water lining
+> 3 - i am ok with Hachures being a colour "theme", will consider
+> overlaying it like lines later
+> 4 - pattern fallback is too basic - basic version yes.**
+
+Built as v5.6.
+
+- **The first render was too heavy**, reading as a woodcut, with long
+  wandering strokes on gentle ground. Tuned to a finer pitch, lighter
+  strokes and a 3.5 mm length cap.
+- **The remaining artefacts** (twigs at knolls, gaps on divergent slopes)
+  are the known limit of the basic version. They are left for the user to
+  judge before deciding on the refinement.

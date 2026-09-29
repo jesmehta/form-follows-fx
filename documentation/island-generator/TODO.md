@@ -122,3 +122,16 @@ land and are never deleted. The design intent behind each item is in
   window size and zoom at that moment.
 - Sea level is a quantile. On a map with huge flat areas (very low
   peakiness), small slider moves can jump the coast a lot.
+
+## v5.6: Hachures
+
+- [x] Hachures colour theme: slope/height switch, water-lining, coast,
+      PNG + SVG layers (2026-09-30)
+- [ ] **Lock slope or height** once one proves more useful (user: "switch
+      between both until I lock one")
+- [ ] Decide on the even-spacing refinement (re-seed into gaps, drop
+      converging strokes), which would remove the twig marks at knolls
+      and the gaps on divergent slopes
+- [ ] Hachures as an overlay on the colour themes, like Contour lines
+      ("will consider overlaying it like lines later")
+- [ ] Maybe a hachure density control (pitch is fixed at 0.6 mm of print)

@@ -454,6 +454,66 @@ runs 0–30:
   are on.
 - The **SVG exports** follow the same rule.
 
+## v5.6: Hachures (2026-09-30)
+
+> **Colours - How difficult would it be to render each contour band as old
+> school hatching - radially outward from higher contour to lower contour,
+> density of hatch maps to height, etc ?**
+
+The assessment given: this is *hachures* (Lehmann, 1799; the Swiss
+Dufour map). The basic version was judged moderate work, reusing the
+existing field and contours. The hard part is even spacing, because
+strokes spread apart on convex ground and bunch in hollows. A cheap
+"pattern hatching" fallback was offered too. The user's decisions:
+
+> **1 - switch between both until I lock one if the other isnt very
+> useful / 2 - sea - water lining / 3 - i am ok with Hachures being a
+> colour "theme", will consider overlaying it like lines later / 4 -
+> pattern fallback is too basic - basic version yes.**
+
+**How it works** (`hachures()` in `model.js`):
+
+- **One band at a time.** Strokes are seeded every *pitch* along the
+  band's lower contour, and rows in neighbouring bands are staggered.
+- **Tracing.** Each stroke follows the gradient uphill in small steps and
+  stops at the first of these:
+  - the band's upper contour;
+  - flat ground (the top band runs toward the summit);
+  - a cell another stroke already occupies, via a coarse grid, reset per
+    band;
+  - the length cap.
+- **Weight** is a switch (`hachBy`, URL `hb`):
+  - *By slope*, the classic Lehmann rule "the steeper, the darker": the
+    stroke's average gradient over this landscape's 90th-percentile
+    gradient. Near-flat ground (below 0.12) is left white, as on engraved
+    maps.
+  - *By height*, the user's idea: the band's height sets both weight and
+    density, with higher bands denser.
+- **Water-lining** (`distanceFromLand()`): an exact Euclidean distance
+  transform (Felzenszwalb–Huttenlocher) from land, whose isolines are the
+  lines along the coast. There are 10 lines, the first 0.6 mm out, each
+  gap 30% wider than the last.
+- **Coast** is always drawn (0.35 mm). The Contour lines toggle adds the
+  contours faintly on top.
+
+**Decisions made while building:**
+
+- **All sizes are in mm of print:** pitch 0.6, stroke width 0.05–0.28,
+  length cap 3.5 mm. The screen preview is at print scale, so at the
+  fitted zoom the hachures read as tone and turn into strokes as you
+  zoom in, like the real thing.
+- **The first tuning was too heavy.** It used 0.75 mm pitch and strokes
+  up to 0.42 mm, and read as a bold woodcut. Strokes were also uncapped
+  and wandered as long thin threads on gentle ground. The length cap also
+  made export about 5× faster (A4/300 went from 13.5 s to 2.6 s).
+- **On screen, hachures are only computed once the field reaches half
+  resolution.** The coarse first passes show paper, so dragging a slider
+  stays live.
+- **Known limit of the basic version:** small twig-like marks where
+  strokes from little knolls converge, and white gaps where they diverge.
+  The even-spacing refinement (re-seeding into gaps) would fix both; it
+  is in the TODO, to decide after looking at real output.
+
 ## Architecture
 
 ```text
@@ -584,6 +644,13 @@ window at 2×. Shape buttons always show, and picking one turns Land
 focus on. Panels run full height with a "more below" hint. Depth
 contours fixed: own step, visible sea shades. Details under "v5.1: first
 review round".
+
+### v5.6: Hachures (2026-09-30)
+
+A fifth colour theme: engraved-map hachures on paper, weighted by slope
+or by height (a switch), with water-lining for the sea and the coast
+always drawn. It exports to PNG and to SVG lines, where the hachures and
+water lines are their own layers. Details are under "v5.6: Hachures".
 
 ### v5.5.2: sea bands follow Contour bands (2026-09-30)
 
