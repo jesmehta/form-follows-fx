@@ -51,7 +51,7 @@
             <input type="range" id="sl-count" min="0" max="1000" step="1">
           </div>
           <div class="slider dim-off">
-            <div class="slider-head"><span>Island factor <button class="info" type="button" data-tip="How far each centre's pull reaches, as a share of the sheet's width. For Coast: how far inland the land reaches.">ⓘ</button></span><output id="out-size"></output></div>
+            <div class="slider-head"><span>Island factor <button class="info" type="button" data-tip="How far each centre's pull reaches, as a share of the landscape's width. For Coast: how far inland the land reaches.">ⓘ</button></span><output id="out-size"></output></div>
             <input type="range" id="sl-size" min="0" max="1000" step="1">
           </div>
           <button class="linkish dim-off" id="btn-reset-markers" type="button">Reset centres</button>
@@ -60,7 +60,7 @@
             <input type="range" id="sl-focus" min="0" max="1000" step="1">
           </div>
           <div class="slider">
-            <div class="slider-head"><span>Sea level <button class="info" type="button" data-tip="How much of the sheet is under water.">ⓘ</button></span><output id="out-sea"></output></div>
+            <div class="slider-head"><span>Sea level <button class="info" type="button" data-tip="How much of the landscape is under water.">ⓘ</button></span><output id="out-sea"></output></div>
             <input type="range" id="sl-sea" min="0" max="1000" step="1">
           </div>
         </div>
@@ -96,7 +96,7 @@
         <summary><h2>Visual controls</h2></summary>
         <div class="sec-body">
           <div class="slider">
-            <div class="slider-head"><span>Contour bands <button class="info" type="button" data-tip="How many height steps the land is cut into.">ⓘ</button></span><output id="out-bands"></output></div>
+            <div class="slider-head"><span>Contour bands <button class="info" type="button" data-tip="How many height steps the land is cut into. At 0 the shading is smooth, with no bands; contour lines then show just the coast.">ⓘ</button></span><output id="out-bands"></output></div>
             <input type="range" id="sl-bands" min="0" max="1000" step="1">
           </div>
           <label class="toggle"><input type="checkbox" id="chk-depth"><span>Depth contours</span></label>
@@ -125,22 +125,18 @@
     <div class="panel-body">
 
       <details class="sec" data-sec="sheet" open>
-        <summary><h2>Sheet</h2><button class="info" type="button" data-tip="The framed sheet is what gets exported. Drag to pan and scroll to zoom — the view never changes the map. None hides the frame; exports then capture the window as shown.">ⓘ</button></summary>
+        <summary><h2>Sheet</h2><button class="info" type="button" data-tip="The frame's shape. Zoom and pan choose which part of the landscape sits inside it — that is what gets exported. None removes the frame and uses the whole visible area.">ⓘ</button></summary>
         <div class="sec-body">
           <div class="seg small wrap" id="seg-page"></div>
           <div class="custom-size only-custom">
-            <label>W <input type="number" id="inp-cw" min="20" max="2000" step="1"> mm</label>
-            <label>H <input type="number" id="inp-ch" min="20" max="2000" step="1"> mm</label>
+            <label>W <input type="number" id="inp-ca" min="0.1" max="100" step="0.1"></label>
+            <span>:</span>
+            <label>H <input type="number" id="inp-cb" min="0.1" max="100" step="0.1"></label>
           </div>
           <div class="seg only-orient" data-key="orient">
             <button type="button" data-value="portrait">Portrait</button>
             <button type="button" data-value="landscape">Landscape</button>
           </div>
-          <div class="seg only-sheet" data-key="dpi">
-            <button type="button" data-value="150">150 dpi</button>
-            <button type="button" data-value="300">300 dpi</button>
-          </div>
-          <p class="hint mono" id="out-page"></p>
           <div class="slider">
             <div class="slider-head"><span>Zoom</span><output id="out-zoom"></output></div>
             <div class="slider-with-btn">
@@ -152,8 +148,14 @@
       </details>
 
       <details class="sec" data-sec="export" open>
-        <summary><h2>Export</h2><button class="info" type="button" data-tip="PNG: the sheet as drawn, at print resolution. Heightmap: raw height as 16-bit grey, for 3D or CNC. SVG lines: every contour as a line, one layer per level — for plotters and engraving. SVG layers: every level as a filled shape, stacked — for layered cut models.">ⓘ</button></summary>
+        <summary><h2>Export</h2><button class="info" type="button" data-tip="Print size (long edge) and dpi set the resolution. PNG: the frame as drawn. Heightmap: raw height as 16-bit grey, for 3D or CNC. SVG lines: every contour as a line, one layer per level — for plotters and engraving. SVG layers: every level as a filled shape, stacked — for layered cut models.">ⓘ</button></summary>
         <div class="sec-body">
+          <div class="seg small" data-key="print" id="seg-print"></div>
+          <div class="seg" data-key="dpi">
+            <button type="button" data-value="150">150 dpi</button>
+            <button type="button" data-value="300">300 dpi</button>
+          </div>
+          <p class="hint mono" id="out-page"></p>
           <div class="export-grid">
             <button class="export" id="btn-png" type="button"><b>PNG</b><small>as drawn</small></button>
             <button class="export" id="btn-height" type="button"><b>Heightmap</b><small>16-bit grey</small></button>
@@ -210,8 +212,8 @@
     <h3>Terrain details</h3>
     <p><strong>Feature smoothness</strong> sets how broad the landforms are. <strong>Surface roughness</strong> adds finer detail on top. <strong>Ridges</strong> fold the terrain into sharp, branching crests. <strong>Coast warp</strong> bends everything so coastlines wander. <strong>Elevation exponent</strong> raises heights to a power: low gives plateaus, high gives sharp peaks, and the coast stays put.</p>
     <h3>Keys</h3>
-    <p class="keys"><kbd>N</kbd> new landscape · <kbd>1</kbd>–<kbd>4</kbd> grey / thermal / topographic / lines · <kbd>F</kbd> fit the page · <kbd>H</kbd> hide the interface</p>
-    <p class="small">Sketch and page by Jesal Mehta (@cabofcuriosity), grown from the Perlin Contour sketches of February–March 2020. The island blend is the <em>(1 + e − d) / 2</em> from those sketches, after Red Blob Games' <a href="https://www.redblobgames.com/maps/terrain-from-noise/" target="_blank" rel="noopener">Making maps with noise</a>. Island Generator v5.3.</p>
+    <p class="keys"><kbd>N</kbd> new landscape · <kbd>1</kbd>–<kbd>4</kbd> grey / thermal / topographic / lines · <kbd>F</kbd> fit the frame · <kbd>H</kbd> hide the interface</p>
+    <p class="small">Sketch and page by Jesal Mehta (@cabofcuriosity), grown from the Perlin Contour sketches of February–March 2020. The island blend is the <em>(1 + e − d) / 2</em> from those sketches, after Red Blob Games' <a href="https://www.redblobgames.com/maps/terrain-from-noise/" target="_blank" rel="noopener">Making maps with noise</a>. Island Generator v5.5.</p>
   </div>
 </div>
 

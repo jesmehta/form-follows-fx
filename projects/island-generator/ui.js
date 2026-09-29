@@ -22,24 +22,26 @@
     focus: 0.9, shape: 'points', count: 1, size: 0.55,
     sea: 0.62, bands: 12, depth: false,
     style: 'grey', contours: false, markers: true,
-    page: 'A4', orient: 'portrait', dpi: 300, sheet: true, cw: 300, ch: 200,
+    page: 'A', orient: 'portrait', sheet: true, ca: 3, cb: 2,
+    print: 297, dpi: 300,
+    zoom: 100, panX: null, panY: null,   // what sits in the frame: part of the map since v5.5
     extra: [], removed: [], moved: {},
   };
   const S = IG.settings = JSON.parse(JSON.stringify(DEFAULTS));
-  S.zoom = 100; S.panX = null; S.panY = null;          // view: not in the URL
 
   // ── URL state: short keys, non-defaults only ──
   const URL_KEYS = {
     seed: 's', scale: 'fs', rough: 'r', ridges: 'rg', warp: 'w', peak: 'pk',
     focus: 'f', shape: 'sh', count: 'n', size: 'sz', sea: 'sl', bands: 'b', depth: 'dp',
-    style: 'st', contours: 'ln', page: 'pg', orient: 'o', dpi: 'dpi', sheet: 'sf', cw: 'cw', ch: 'ch',
+    style: 'st', contours: 'ln', page: 'pg', orient: 'o', sheet: 'sf', ca: 'ca', cb: 'cb',
+    print: 'ps', dpi: 'dpi', zoom: 'z', panX: 'x', panY: 'y',
   };
   const NUM = { seed: [0, 999999], scale: [0.5, 16], rough: [0, 1], ridges: [0, 1], warp: [0, 1],
-    peak: [0.3, 4], focus: [0, 1], count: [1, 16], size: [0.05, 1.5], sea: [0, 1], bands: [2, 30], dpi: [72, 600],
-    cw: [20, 2000], ch: [20, 2000] };
+    peak: [0.3, 4], focus: [0, 1], count: [1, 16], size: [0.05, 1.5], sea: [0, 1], bands: [0, 30], dpi: [72, 600],
+    ca: [0.1, 100], cb: [0.1, 100], print: [100, 1000], zoom: [25, 1600], panX: [-100, 100], panY: [-100, 100] };
   const ENUM = { shape: ['points', 'edge', 'line'], style: ['grey', 'thermal', 'topo', 'lines'],
-    page: Object.keys(M.PAGES).concat('custom'), orient: ['portrait', 'landscape'] };
-  const INT = new Set(['seed', 'count', 'bands', 'dpi', 'cw', 'ch']);
+    page: ['A', 'SQ', '43', '169', 'custom'], orient: ['portrait', 'landscape'] };
+  const INT = new Set(['seed', 'count', 'bands', 'dpi', 'print']);
 
   function readURL() {
     const q = new URLSearchParams(location.search);
@@ -92,14 +94,14 @@
   const SLIDERS = {
     focus:  { map: lin(0, 1), round: 2, tier: 'terrain', out: v => v === 0 ? 'off · mainland' : pct(v) },
     count:  { map: lin(1, 16), round: 0, tier: 'terrain', out: v => v + (v === 1 ? ' island' : ' islands') },
-    size:   { map: log(0.08, 1.2), round: 3, tier: 'terrain', out: v => pct(v) + ' of sheet' },
+    size:   { map: log(0.08, 1.2), round: 3, tier: 'terrain', out: v => pct(v) + ' of width' },
     scale:  { map: rev(log(0.8, 12)), round: 2, tier: 'terrain', out: v => v < 2 ? 'very smooth' : v < 5 ? 'smooth' : v < 8 ? 'busy' : 'chaotic' },
     rough:  { map: lin(0, 1), round: 2, tier: 'terrain', out: v => v < 0.25 ? 'smooth' : v < 0.6 ? 'natural' : v < 0.85 ? 'rugged' : 'jagged' },
     ridges: { map: lin(0, 1), round: 2, tier: 'terrain', out: v => v === 0 ? 'none' : pct(v) },
     warp:   { map: lin(0, 1), round: 2, tier: 'terrain', out: v => v === 0 ? 'none' : pct(v) },
     peak:   { map: log(0.4, 3), round: 2, tier: 'terrain', out: v => v < 0.85 ? 'plateaus' : v < 1.2 ? 'even' : v < 2 ? 'peaks' : 'spires' },
     sea:    { map: lin(0, 0.98), round: 3, tier: 'levels', out: v => pct(v) + ' under water' },
-    bands:  { map: lin(2, 30), round: 0, tier: 'levels', out: v => v + ' bands' },
+    bands:  { map: lin(0, 30), round: 0, tier: 'levels', out: v => v === 0 ? 'smooth' : v === 1 ? '1 band' : v + ' bands' },
     zoom:   { map: log(25, 1600), round: 0, tier: 'view', out: v => Math.round(v) + '%' },
   };
   const roundTo = (v, d) => { const k = Math.pow(10, d); return Math.round(v * k) / k; };
@@ -131,18 +133,21 @@
     });
   }
   function buildPages() {
-    const label = { SQ: 'Square', custom: 'Custom', none: 'None' };
-    $('seg-page').innerHTML = ['A5', 'A4', 'A3', 'SQ', 'custom', 'none'].map(k =>
-      `<button type="button" data-value="${k}">${label[k] || k}</button>`).join('');
+    const label = { A: 'A-series', SQ: 'Square', '43': '4 : 3', '169': '16 : 9', custom: 'Custom', none: 'None' };
+    $('seg-page').innerHTML = ['A', 'SQ', '43', '169', 'custom', 'none'].map(k =>
+      `<button type="button" data-value="${k}">${label[k]}</button>`).join('');
   }
-  // Sheet changes: only a change of shape rebuilds the map (A5/A4/A3 share
-  // one shape; None hides the frame and keeps the sheet underneath).
+  // Print sizes by long edge; A-series names them A5/A4/A3.
+  function buildPrint() {
+    const a = S.sheet && S.page === 'A';
+    $('seg-print').innerHTML = [210, 297, 420].map((mm, i) =>
+      `<button type="button" data-value="${mm}">${a ? ['A5', 'A4', 'A3'][i] : mm / 10 + ' cm'}</button>`).join('');
+  }
+  // Sheet changes only re-frame the landscape; it is never rebuilt.
   function sheetChanged(apply) {
-    const before = IG.sketch.aspect();
     apply();
     syncControls();
-    if (Math.abs(IG.sketch.aspect() - before) > 1e-9) { S.panX = S.panY = null; changed('terrain'); }
-    else changed(null);
+    changed('view');
   }
 
   // ── Wiring ──
@@ -161,7 +166,7 @@
       seg.addEventListener('click', e => {
         const b = e.target.closest('button'); if (!b) return;
         const key = seg.dataset.key;
-        let v = b.dataset.value; if (key === 'dpi') v = +v;
+        let v = b.dataset.value; if (key === 'dpi' || key === 'print') v = +v;
         if (key === 'shape' && S.focus <= 0) {
           // shapes only act through land weight; picking one turns it on
           S.focus = 0.85; toast('Land weight turned on so the shape shows');
@@ -180,8 +185,8 @@
       const v = b.dataset.value;
       sheetChanged(() => { if (v === 'none') S.sheet = false; else { S.sheet = true; S.page = v; } });
     });
-    for (const k of ['cw', 'ch']) $('inp-' + k).addEventListener('change', e => {
-      const v = clamp(Math.round(+e.target.value) || S[k], ...NUM[k]);
+    for (const k of ['ca', 'cb']) $('inp-' + k).addEventListener('change', e => {
+      const v = clamp(+e.target.value || S[k], ...NUM[k]);
       sheetChanged(() => { S[k] = v; });
     });
     $('chk-depth').addEventListener('change', e => { S.depth = e.target.checked; changed('look'); });
@@ -395,7 +400,9 @@
     });
     const pageOn = S.sheet ? S.page : 'none';
     $('seg-page').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.value === pageOn));
-    $('inp-cw').value = S.cw; $('inp-ch').value = S.ch;
+    buildPrint();
+    $('seg-print').querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.value === S.print));
+    $('inp-ca').value = S.ca; $('inp-cb').value = S.cb;
     document.body.dataset.page = pageOn;
     $('chk-depth').checked = S.depth; $('chk-markers').checked = S.markers; $('chk-lines').checked = S.contours || S.style === 'lines'; $('chk-lines').disabled = S.style === 'lines';
     $('inp-seed').value = S.seed;
@@ -412,9 +419,7 @@
     if (!IG.sketch) return;
     for (const [key, cfg] of Object.entries(SLIDERS)) $('out-' + key).textContent = cfg.out(S[key]);
     const P = IG.sketch.pagePixels(S.dpi);
-    $('out-page').textContent = P.window
-      ? `No sheet · exports the window as shown, ${fmt(P.w, 0)} × ${fmt(P.h, 0)} px`
-      : `${P.wmm} × ${P.hmm} mm · ${fmt(P.w, 0)} × ${fmt(P.h, 0)} px${P.capped ? ` (capped to ${P.dpi} dpi)` : ''}`;
+    $('out-page').textContent = `${P.wmm} × ${P.hmm} mm · ${fmt(P.w, 0)} × ${fmt(P.h, 0)} px${P.capped ? ` (capped to ${P.dpi} dpi)` : ''}`;
   }
 
   let lastStats = null, lastLevels = null;
@@ -425,41 +430,51 @@
     const st = lastStats; if (!st) return;
     let what;
     if (st.pieces === 0) what = 'Open sea';
-    else if (st.landShare > 0.5 && st.piecesTouchingEdge > 0) what = st.lakes > 2 ? `Mainland with ${st.lakes} lakes` : 'Mainland running off the page';
+    else if (st.landShare > 0.5 && st.piecesTouchingEdge > 0) what = st.lakes > 2 ? `Mainland with ${st.lakes} lakes` : 'Mainland running off the frame';
     else if (st.pieces === 1) what = st.piecesTouchingEdge ? 'A coast' : 'A single island';
     else if (st.largestShare > 0.7) what = `An island with ${st.pieces - 1} islet${st.pieces > 2 ? 's' : ''}`;
     else what = `An archipelago of ${st.pieces} islands`;
-    $('caption').textContent = `${what} · ${pct(st.landShare)} land · ${st.bands} contour bands`;
+    $('caption').textContent = `${what} · ${pct(st.landShare)} land · ${st.bands ? st.bands + ' contour bands' : 'smooth shading'}`;
     document.title = `${what} — Island Generator`;
 
     const rows = [
-      ['Land', `${pct(st.landShare)}<em>of the page</em>`],
+      ['Land', `${pct(st.landShare)}<em>of the frame</em>`],
       ['Pieces of land', st.pieces ? `${st.pieces}<em>largest is ${pct(st.largestShare)} of the land</em>` : '—'],
-      ['Reaching the edge', st.piecesTouchingEdge ? `${st.piecesTouchingEdge}<em>land continues off the page</em>` : 'none<em>every island is whole</em>'],
+      ['Reaching the edge', st.piecesTouchingEdge ? `${st.piecesTouchingEdge}<em>land continues off the frame</em>` : 'none<em>every island is whole</em>'],
       ['Lakes', st.lakes || '—'],
       ['Island centres', S.focus > 0 ? `${st.centres}<em>${S.shape === 'edge' ? 'one sets which side is land' : S.shape === 'line' ? 'joined into a spine' : 'land gathers round them'}</em>` : 'off<em>land weight is 0</em>'],
     ];
     $('facts').innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
     const L = lastLevels;
     if (L) {
+      // In the notation of the 2020 sketches where one exists.
+      const r = IG.sketch.frameRect();
       const raw = [
-        ['Seed', S.seed],
-        ['Sea level', `${fmt(L.sea, 3)} (quantile ${fmt(S.sea, 2)})`],
-        ['Contour step', fmt(L.step, 4)],
-        ['Height range', `${fmt(L.min, 3)} – ${fmt(L.top, 3)}`],
-        ['Noise', `${fmt(S.scale, 2)} cycles/page · gain ${fmt(0.3 + 0.45 * S.rough, 2)} · 6 octaves`],
-        ['Exponent', fmt(S.peak, 2)],
+        ['seed', `${S.seed}<em>noiseSeed</em>`],
+        ['t', `${fmt(S.scale * r.w / 400, 4)}<em>Perlin increment per px, as on a 400 px canvas</em>`],
+        ['noiseDetail', `(6, ${fmt(0.3 + 0.45 * S.rough, 2)})<em>octaves, falloff</em>`],
+        ['elev', `${fmt(S.peak, 2)}<em>n = pow(n0, elev)</em>`],
+        ['isleFac', `${fmt(S.size, 2)}<em>d = ds / (width · isleFac)</em>`],
+        ['isl', `weight ${fmt(S.focus, 2)}<em>(1 + n − d) / 2, blended with n</em>`],
+        ['b', `${S.bands}<em>fb = int(map(isl, sea, max, 0, b))</em>`],
+        ['sea', `${fmt(L.sea, 3)}<em>${pct(S.sea)} of heights below</em>`],
+        ['step', `${fmt(L.step, 4)}<em>height per band</em>`],
+        ['range', `${fmt(L.min, 3)} – ${fmt(L.top, 3)}<em>lowest – highest</em>`],
+        ['ridges · warp', `${fmt(S.ridges, 2)} · ${fmt(S.warp, 2)}<em>new in 2026, no 2020 term</em>`],
       ];
       $('raw').innerHTML = raw.map(([k, x]) => `<dt>${k}</dt><dd>${x}</dd>`).join('');
     }
   }
 
-  IG.ui = { viewport, onTerrain, onLevels, moveCentre, addCentre, removeCentre, zoomChanged, refresh: updateReadouts, hudOn: () => hud };
+  function viewMoved() { IG.sketch.viewChanged(); updateReadouts(); writeURL(); }
+
+  IG.ui = { viewport, onTerrain, onLevels, moveCentre, addCentre, removeCentre, zoomChanged, viewMoved, refresh: updateReadouts, hudOn: () => hud };
 
   // ── Boot ──
   readURL();
   buildPresets();
   buildPages();
+  buildPrint();
   wire();
   for (const w of ['controls', 'page']) {
     if (store.get('collapsed.' + w) === '1') { $('panel-' + w).classList.add('collapsed'); $('tab-' + w).hidden = false; }

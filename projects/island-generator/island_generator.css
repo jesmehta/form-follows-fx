@@ -408,3 +408,13 @@ details.sec > .sec-body { display: flex; flex-direction: column; gap: 8px; paddi
 
 /* in Lines style the lines are always drawn: toggle shown on, greyed out */
 [data-style="lines"] .not-lines { opacity: 0.4; pointer-events: none; }
+
+/* ── v5.5: readable facts and under-the-hood text on the glass panel ── */
+.facts dt { color: #c3bfd2; }
+.facts dd { color: #f1ede6; }
+.facts dd em { color: #aeaac0; }
+.facts.small dt { color: #d9c9a4; }
+.facts.small dd { color: #e4e0ea; }
+.facts.small dd em { color: #a9a5bb; font-family: var(--sans); font-size: 12px; }
+details.raw > summary { color: #b3afc4; }
+.custom-size span { align-self: center; color: var(--muted2); }

@@ -1,4 +1,4 @@
-// Island Generator v5.0 — the sketch
+// Island Generator v5.5 — the sketch
 // © Jesal Mehta, @cabofcuriosity
 // Based on Perlin Contour v1.0–v4.3 (2020)
 //
@@ -24,32 +24,62 @@ new p5(function (s) {
   let lines = null;                   // [{level, index, kind, polys}] in grid coords
   let msPerSample = 0.00002;          // learnt, for choosing the first pass
   let dirty = { terrain: true, view: true, levels: true };
-  let W = 0, H = 0;
+  let W = 0, H = 0, statsDue = 0;
 
-  // ── View ──
+  // ── View (v5.5) ──
+  // The landscape lives in its own space. Its unit square holds the
+  // generated centres and the sea-level reference, so the landscape never
+  // depends on the sheet. The sheet is a frame of some aspect ratio, fixed
+  // on screen; zoom and pan choose which part of the landscape sits in it,
+  // and that is what exports. At zoom 100% the unit square just fits the
+  // frame. Sheet: None uses the whole free area as an invisible frame.
+  const RATIOS = { A: [1, Math.SQRT2], SQ: [1, 1], '43': [3, 4], '169': [9, 16] };
+  function ratio() {                       // sheet [w, h], after orientation
+    if (!S.sheet) { const vp = IG.ui.viewport(); return [vp.w, vp.h]; }
+    if (S.page === 'custom') return [S.ca, S.cb];
+    const r = RATIOS[S.page];
+    return S.orient === 'landscape' && S.page !== 'SQ' ? [r[1], r[0]] : r;
+  }
+  function aspect() { const [w, h] = ratio(); return h / w; }
+  function frameScreen() {
+    const vp = IG.ui.viewport();
+    if (!S.sheet) return { x: vp.x, y: vp.y, w: vp.w, h: vp.h };
+    const A = aspect(), w = 0.92 * Math.min(vp.w, vp.h / A), h = w * A;
+    return { x: vp.x + (vp.w - w) / 2, y: vp.y + (vp.h - h) / 2, w, h };
+  }
   function view() {
-    const vp = IG.ui.viewport(), A = aspect();
-    const fit = 0.9 * Math.min(vp.w / 1, vp.h / A);
-    const ppu = fit * S.zoom / 100;
-    const cx = S.panX != null ? S.panX : 0.5, cy = S.panY != null ? S.panY : A / 2;
-    const ox = vp.x + vp.w / 2 - cx * ppu, oy = vp.y + vp.h / 2 - cy * ppu;
-    return { ppu, ox, oy, A,
+    const fr = frameScreen(), A = fr.h / fr.w;
+    const home = Math.max(1, 1 / A) / (S.sheet ? 1 : 0.92);   // landscape widths across the frame at 100%
+    const ppu = fr.w / home * S.zoom / 100;
+    const cx = S.panX != null ? S.panX : 0.5, cy = S.panY != null ? S.panY : 0.5;
+    const ox = fr.x + fr.w / 2 - cx * ppu, oy = fr.y + fr.h / 2 - cy * ppu;
+    return { ppu, ox, oy, fr,
       toScreen: (x, y) => [ox + x * ppu, oy + y * ppu],
       toPage: (X, Y) => [(X - ox) / ppu, (Y - oy) / ppu] };
   }
-  // Sheet size in mm, after orientation. The map is always measured
-  // against a sheet, even when the frame is hidden (Sheet: None), so
-  // hiding it never changes the map.
-  function dims() {
-    if (S.page === 'custom') return [S.cw, S.ch];
-    const [a, b] = M.PAGES[S.page];
-    return S.orient === 'landscape' && S.page !== 'SQ' ? [b, a] : [a, b];
+  // The landscape rectangle under the frame.
+  function frameRect(v) {
+    v = v || view();
+    const fr = v.fr, [x0, y0] = v.toPage(fr.x, fr.y), [x1, y1] = v.toPage(fr.x + fr.w, fr.y + fr.h);
+    return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
   }
-  function aspect() { const [w, h] = dims(); return h / w; }
+  // Print size in mm: the long edge is the chosen print size, the short
+  // edge follows the ratio. A-series at 210/297/420 is A5/A4/A3.
+  function printMM() {
+    const [w, h] = ratio(), L = S.print, k = L / Math.max(w, h);
+    return [Math.round(w * k), Math.round(h * k)];
+  }
+  function sheetName() {
+    if (!S.sheet) return 'No frame';
+    const o = S.page === 'SQ' || S.page === 'custom' ? '' : ' ' + S.orient;
+    if (S.page === 'A') return ({ 210: 'A5', 297: 'A4', 420: 'A3' }[S.print] || 'A-series') + o;
+    if (S.page === 'custom') return `${S.ca} : ${S.cb}`;
+    return ({ SQ: 'Square', '43': '4 : 3', '169': '16 : 9' }[S.page]) + o;
+  }
   function terrainParams() {
     return { seed: S.seed, scale: S.scale, rough: S.rough, ridges: S.ridges, warp: S.warp,
       peak: S.peak, focus: S.focus, shape: S.shape, count: S.count, size: S.size,
-      extra: S.extra, removed: S.removed, moved: S.moved, aspect: aspect() };
+      extra: S.extra, removed: S.removed, moved: S.moved, aspect: 1 };
   }
 
   // ── Colour ──
@@ -59,7 +89,8 @@ new p5(function (s) {
   }
   // Returns (e) → [r, g, b] for the current style and levels.
   function palette(L) {
-    const B = L.bands, style = S.style;
+    const smooth = L.bands === 0;
+    const B = smooth ? 256 : L.bands, style = S.style;   // smooth: a fine table, looked up continuously
     const land = [], sea = [];
     for (let b = 0; b < B; b++) {
       const t = B > 1 ? b / (B - 1) : 1;
@@ -76,7 +107,7 @@ new p5(function (s) {
       topo:    { flat: [96, 146, 188], shallow: [150, 198, 222], deep: [28, 64, 116] },
     }[style] || { flat: [12, 12, 14], shallow: [50, 52, 60], deep: [6, 6, 8] };
     const seaFlat = SEA.flat, shallow = SEA.shallow, deep = SEA.deep;
-    const DN = M.DEPTH_BANDS;
+    const DN = smooth ? 256 : M.DEPTH_BANDS;
     for (let d = 0; d < DN; d++) {
       const t = d / (DN - 1);
       sea.push(shallow.map((c, i) => c + (deep[i] - c) * t | 0));
@@ -84,8 +115,10 @@ new p5(function (s) {
     return e => {
       if (e < L.sea) {
         if (!S.depth) return seaFlat;
+        if (smooth) return sea[Math.min(DN - 1, (L.sea - e) / (L.depthStep * M.DEPTH_BANDS) * (DN - 1) | 0)];
         return sea[Math.min(DN - 1, Math.floor((L.sea - e) / L.depthStep))];
       }
+      if (smooth) return land[Math.min(B - 1, (e - L.sea) / (L.top - L.sea) * (B - 1) | 0)];
       return land[Math.min(B - 1, Math.floor((e - L.sea) / L.step))];
     };
   }
@@ -117,7 +150,7 @@ new p5(function (s) {
   // Contour levels to trace: coast, land bands, and depth lines if shown.
   function traceLevels(L) {
     const out = [];
-    for (let b = 0; b < L.bands; b++) out.push({ e: L.list[b], index: b, kind: b === 0 ? 'coast' : 'land' });
+    L.list.forEach((e, b) => out.push({ e, index: b, kind: b === 0 ? 'coast' : 'land' }));
     if (S.depth) for (let d = 1; d < M.DEPTH_BANDS; d++) {
       out.push({ e: L.sea - d * L.depthStep, index: -d, kind: 'depth' });
     }
@@ -127,7 +160,7 @@ new p5(function (s) {
   // ── Build steps ──
   function rebuildTerrain() {
     terrain = M.makeTerrain(terrainParams());
-    ref = M.pageReference(terrain, aspect());
+    ref = M.pageReference(terrain, 1);
     IG.ui.onTerrain(stats());
   }
   function rebuildLevels() {
@@ -206,9 +239,11 @@ new p5(function (s) {
   s.draw = function () {
     if (dirty.terrain) { rebuildTerrain(); dirty.levels = true; dirty.view = true; }
     if (dirty.levels) { rebuildLevels(); IG.ui.onLevels(lv, stats()); }
+    if (dirty.view && !dirty.terrain && !dirty.levels) statsDue = performance.now() + 150;
     if (dirty.terrain || dirty.view) startSampling();
     else if (dirty.levels && field) paint();
     dirty.terrain = dirty.view = dirty.levels = false;
+    if (statsDue && performance.now() > statsDue) { statsDue = 0; IG.ui.onTerrain(stats()); }
 
     if (job) {
       const t = performance.now();
@@ -240,7 +275,7 @@ new p5(function (s) {
       ctx.drawImage(img, X, Y, img.width * fieldStep * sc, img.height * fieldStep * sc);
       if (lines) {
         const k = lines.k, u = fieldStep * sc;
-        drawLines(ctx, lines.sets, (gx, gy) => [X + (gx * k + 0.5) * u, Y + (gy * k + 0.5) * u], v.ppu);
+        drawLines(ctx, lines.sets, (gx, gy) => [X + (gx * k + 0.5) * u, Y + (gy * k + 0.5) * u], v.fr.w / printMM()[0]);
       }
     }
     drawOverlay(ctx, v);
@@ -248,9 +283,7 @@ new p5(function (s) {
 
   // Line weights in mm of paper, so the screen shows what prints.
   const MM = { coast: 0.5, index: 0.35, land: 0.18, depth: 0.15 };
-  function pageMM() { return dims()[0]; }
-  function drawLines(ctx, sets, map, ppu) {
-    const pxPerMM = ppu / pageMM();
+  function drawLines(ctx, sets, map, pxPerMM) {
     ctx.lineJoin = 'round'; ctx.lineCap = 'round';
     for (const set of sets) {
       const kind = set.kind === 'land' && set.index % 5 === 0 ? 'index' : set.kind;
@@ -270,7 +303,7 @@ new p5(function (s) {
   function drawOverlay(ctx, v) {
     if (!IG.ui.hudOn()) return;
     if (S.sheet) {
-      const [x0, y0] = v.toScreen(0, 0), [x1, y1] = v.toScreen(1, v.A);
+      const x0 = v.fr.x, y0 = v.fr.y, x1 = x0 + v.fr.w, y1 = y0 + v.fr.h;
       // dim outside the page
       ctx.fillStyle = S.style === 'lines' ? 'rgba(217,213,204,0.72)' : 'rgba(5,5,8,0.62)';
       ctx.beginPath();
@@ -279,10 +312,9 @@ new p5(function (s) {
       ctx.fill('evenodd');
       ctx.strokeStyle = 'rgba(200,169,110,0.8)'; ctx.lineWidth = 1;
       ctx.strokeRect(x0 + 0.5, y0 + 0.5, x1 - x0 - 1, y1 - y0 - 1);
-      const [w, h] = dims();
-      const name = S.page === 'SQ' ? 'Square' : S.page === 'custom' ? 'Custom' : `${S.page} ${S.orient}`;
+      const [w, h] = printMM();
       ctx.font = '10px "Space Mono", monospace'; ctx.fillStyle = 'rgba(200,169,110,0.9)';
-      ctx.fillText(`${name} · ${w} × ${h} mm`, x0, y0 - 6);
+      ctx.fillText(`${sheetName()} · ${w} × ${h} mm`, x0, y0 - 6);
     }
 
     if (!S.markers || S.focus <= 0) return;
@@ -302,7 +334,7 @@ new p5(function (s) {
       ctx.strokeStyle = 'rgba(200,169,110,0.95)';
       ctx.beginPath(); ctx.arc(X, Y, hot ? 7 : 5.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
       if (S.shape === 'edge') {           // arrow: land lies this way
-        const [cx, cy] = v.toScreen(0.5, v.A / 2);
+        const [cx, cy] = v.toScreen(0.5, 0.5);
         const a = Math.atan2(Y - cy, X - cx), L = Math.hypot(X - cx, Y - cy);
         if (L > 12) {
           ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(X - Math.cos(a) * 8, Y - Math.sin(a) * 8); ctx.stroke();
@@ -311,11 +343,13 @@ new p5(function (s) {
     }
   }
 
-  // ── Stats for the info panel (from the page reference grid) ──
+  // ── Stats for the info panel: what's inside the frame ──
   function stats() {
     if (!ref || !terrain) return null;
     const L = M.levels(ref, S.sea, S.bands);
-    const { w, h, data: d } = ref.grid, land = new Uint8Array(w * h);
+    const r = frameRect(), w = 96, h = Math.max(8, Math.round(96 * r.h / r.w));
+    const grid = M.sampleField(terrain, r, w, h); grid.run();
+    const d = grid.data, land = new Uint8Array(w * h);
     let nLand = 0;
     for (let i = 0; i < d.length; i++) if (d[i] >= L.sea) { land[i] = 1; nLand++; }
     // connected pieces of land (4-neighbour), ignoring specks; lakes = water
@@ -376,7 +410,7 @@ new p5(function (s) {
     const h = hit(e.clientX, e.clientY);
     const v = view();
     drag = { x: e.clientX, y: e.clientY, moved: false, marker: h && h.c,
-      panX: S.panX != null ? S.panX : 0.5, panY: S.panY != null ? S.panY : v.A / 2, ppu: v.ppu };
+      panX: S.panX != null ? S.panX : 0.5, panY: S.panY != null ? S.panY : 0.5, ppu: v.ppu };
     if (h) cont.style.cursor = 'grabbing';
   });
   function onDrag(e) {
@@ -389,7 +423,7 @@ new p5(function (s) {
     } else {
       S.panX = drag.panX - dx / drag.ppu; S.panY = drag.panY - dy / drag.ppu;
       cont.style.cursor = 'move';
-      api.viewChanged();
+      IG.ui.viewMoved();
     }
   }
   cont.addEventListener('pointerup', e => {
@@ -411,7 +445,7 @@ new p5(function (s) {
     const [px, py] = v.toPage(e.clientX, e.clientY);
     const z = Math.min(1600, Math.max(25, S.zoom * Math.exp(-e.deltaY * 0.0012)));
     // keep the point under the cursor fixed
-    const cx = S.panX != null ? S.panX : 0.5, cy = S.panY != null ? S.panY : v.A / 2;
+    const cx = S.panX != null ? S.panX : 0.5, cy = S.panY != null ? S.panY : 0.5;
     const k = S.zoom / z;
     S.panX = px - (px - cx) * k; S.panY = py - (py - cy) * k;
     S.zoom = z;
@@ -419,23 +453,13 @@ new p5(function (s) {
   }, { passive: false });
 
   // ── Export ──
-  // What an export covers. With a sheet: the sheet, at `dpi`. With Sheet:
-  // None: the window as it is now, at twice screen resolution, measured in
-  // the sheet's mm so line weights match what's on screen.
+  // What an export covers: the landscape inside the frame (or the whole
+  // free area with Sheet: None), at the print size and dpi.
   function pagePixels(dpi) {
-    if (!S.sheet) {
-      const v = view();
-      const [x0, y0] = v.toPage(0, 0), [x1, y1] = v.toPage(W, H);
-      const rect = { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
-      const k = Math.min(1, Math.sqrt(M.PX_CAP / (W * H * 4)));
-      return { rect, window: true, w: Math.round(W * 2 * k), h: Math.round(H * 2 * k),
-        wmm: Math.round(rect.w * pageMM()), hmm: Math.round(rect.h * pageMM()), capped: false, dpi: 0 };
-    }
-    const [wmm, hmm] = dims();
+    const rect = frameRect(), [wmm, hmm] = printMM();
     const w = Math.round(wmm / 25.4 * dpi), h = Math.round(hmm / 25.4 * dpi);
     const k = Math.min(1, Math.sqrt(M.PX_CAP / (w * h)));
-    return { rect: { x: 0, y: 0, w: 1, h: aspect() }, w: Math.round(w * k), h: Math.round(h * k),
-      wmm, hmm, capped: k < 1, dpi: Math.round(dpi * k) };
+    return { rect, w: Math.round(w * k), h: Math.round(h * k), wmm, hmm, capped: k < 1, dpi: Math.round(dpi * k) };
   }
   const tick = () => new Promise(r => setTimeout(r, 0));
 
@@ -467,9 +491,8 @@ new p5(function (s) {
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   }
   function baseName() {
-    if (!S.sheet) return `island-${S.seed}-view`;
-    const [w, h] = dims();
-    return `island-${S.seed}-${S.page === 'custom' ? `${w}x${h}mm` : S.page + (S.page === 'SQ' ? '' : S.orient === 'landscape' ? 'L' : 'P')}`;
+    const [w, h] = printMM();
+    return `island-${S.seed}-${w}x${h}mm`;
   }
 
   async function exportPNG(progress) {
@@ -503,11 +526,11 @@ new p5(function (s) {
       const sets = traceLevels(lv).map(t => ({ ...t, polys: M.isolines(f, t.e, false) }));
       progress(0.9); await tick();
       const sx = P.w / f.w, sy = P.h / f.h;
-      drawLines(ctx, sets, (gx, gy) => [(gx + 0.5) * sx, (gy + 0.5) * sy], P.w / P.rect.w);
+      drawLines(ctx, sets, (gx, gy) => [(gx + 0.5) * sx, (gy + 0.5) * sy], P.w / P.wmm);
     }
     const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
     const look = S.style + (S.contours && S.style !== 'lines' ? '+lines' : '');
-    const name = `${baseName()}-${look}-${P.window ? '2x' : P.dpi + 'dpi'}.png`;
+    const name = `${baseName()}-${look}-${P.dpi}dpi.png`;
     download(blob, name);
     return { name, capped: P.capped };
   }
@@ -600,7 +623,7 @@ new p5(function (s) {
     const seaFill = S.style === 'lines' ? `rgb(${PAPER})` : `rgb(${palette(lv)(lv.min - 1)})`;
     const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="${P.wmm}mm" height="${P.hmm}mm" viewBox="0 0 ${P.wmm} ${P.hmm}">
-<!-- Island Generator v5.3 · seed ${S.seed} · ${location.href.replace(/--/g, '%2D%2D')} -->
+<!-- Island Generator v5.5 · seed ${S.seed} · ${location.href.replace(/--/g, '%2D%2D')} -->
 <g id="page" inkscape:groupmode="layer" inkscape:label="page">${mode === 'layers' ? `<rect width="${P.wmm}" height="${P.hmm}" fill="${seaFill}"/>` : ''}<rect width="${P.wmm}" height="${P.hmm}" fill="none" stroke="#999" stroke-width="0.1"/></g>
 ${layers.map(l => l.xml).join('\n')}
 </svg>`;
@@ -615,7 +638,7 @@ ${layers.map(l => l.xml).join('\n')}
     levelsChanged() { dirty.levels = true; },
     lookChanged(resample) { if (resample) dirty.view = true; else dirty.levels = true; },
     viewChanged() { dirty.view = true; },
-    exportPNG, exportHeightmap, exportSVG, pagePixels, stats,
+    exportPNG, exportHeightmap, exportSVG, pagePixels, stats, printMM, sheetName, frameRect: () => frameRect(),
     centres: () => (terrain ? terrain.centres : []),
     aspect,
   };

@@ -252,9 +252,10 @@ window.IG = window.IG || {};
     const i = Math.max(0, Math.min(n - 1, Math.round(sea * (n - 1))));
     const seaE = sea <= 0 ? ref.min - 1e-6 : sea >= 1 ? ref.max + 1e-6 : s[i];
     const top = Math.max(seaE + 1e-6, ref.max);
-    const step = (top - seaE) / bands;
-    const list = [];                                   // contour elevations, coast first
-    for (let b = 0; b < bands; b++) list.push(seaE + b * step);
+    // bands = 0 is smooth, unbanded shading; the coast is still a contour.
+    const step = (top - seaE) / Math.max(1, bands);
+    const list = [seaE];                               // contour elevations, coast first
+    for (let b = 1; b < bands; b++) list.push(seaE + b * step);
     // Depth bands divide the water's own range (sea level → deepest point
     // on the page), not the land's step: the sea floor is often much deeper
     // than any hill is high, and land-sized steps crammed every depth line
