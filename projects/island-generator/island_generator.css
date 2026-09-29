@@ -418,3 +418,8 @@ details.sec > .sec-body { display: flex; flex-direction: column; gap: 8px; paddi
 .facts.small dd em { color: #a9a5bb; font-family: var(--sans); font-size: 12px; }
 details.raw > summary { color: #b3afc4; }
 .custom-size span { align-self: center; color: var(--muted2); }
+
+/* ── v5.6: hachures ── */
+.only-hach { display: none; }
+[data-style="hachure"] .only-hach { display: flex; }
+[data-style="hachure"] .credit { color: #8a8478; }

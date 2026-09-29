@@ -361,6 +361,122 @@ window.IG = window.IG || {};
     return line.filter((_, i) => keep[i]);
   }
 
+  // ── Hachures (v5.6) ──
+  // Engraved-map relief (Lehmann, 1799): short strokes that run along the
+  // slope, one band at a time. Each stroke starts on a band's lower
+  // contour and follows the gradient uphill until it reaches the band's
+  // upper contour (the top band runs until the ground flattens at a
+  // summit). Strokes are seeded every `pitch` along the contour, rows in
+  // neighbouring bands are staggered, and a stroke stops if it runs into
+  // another (a coarse occupancy grid), which keeps converging strokes from
+  // blotting near summits. This is the basic version: no re-seeding into
+  // gaps where strokes spread apart.
+  //
+  // opts: pitch, step (grid units), byHeight (weight by band height rather
+  // than slope), maxSteps (caps stroke length: engraved hachures are short,
+  // and long strokes wander on gentle ground), flat (slope weight below
+  // which ground is left white). Returns [{ pts: [[x, y]…], t }], t = 0…1.
+  function hachures(field, list, opts) {
+    const { w, h, data } = field;
+    const at = (x, y) => {
+      x = x < 0 ? 0 : x > w - 1.001 ? w - 1.001 : x; y = y < 0 ? 0 : y > h - 1.001 ? h - 1.001 : y;
+      const i = x | 0, j = y | 0, u = x - i, v = y - j, o = j * w + i;
+      const a = data[o], b = data[o + 1], c = data[o + w], d = data[o + w + 1];
+      return (a + (b - a) * u) * (1 - v) + (c + (d - c) * u) * v;
+    };
+    // Slope scale: the 90th percentile of gradient on land, so "steep" is
+    // relative to this landscape, whatever the sampling.
+    const mags = [];
+    for (let j = 1; j < h - 1; j += 3) for (let i = 1; i < w - 1; i += 3) {
+      const o = j * w + i;
+      if (data[o] < list[0]) continue;
+      mags.push(Math.hypot(data[o + 1] - data[o - 1], data[o + w] - data[o - w]) / 2);
+    }
+    mags.sort((a, b) => a - b);
+    const g90 = (mags.length && mags[Math.floor(mags.length * 0.9)]) || 1e-6;
+
+    const strokes = [], nB = list.length;
+    for (let b = 0; b < nB; b++) {
+      const lo = list[b], hi = b + 1 < nB ? list[b + 1] : Infinity;
+      const tBand = nB > 1 ? b / (nB - 1) : 1;
+      // by height: higher bands get denser strokes as well as heavier ones
+      const pitch = opts.byHeight ? opts.pitch * (1.8 - 1.2 * tBand) : opts.pitch;
+      const cell = Math.max(0.5, pitch * 0.55), cw = Math.ceil(w / cell) + 1;
+      const occ = new Uint8Array(cw * (Math.ceil(h / cell) + 1));
+      const cellOf = (x, y) => ((y / cell) | 0) * cw + ((x / cell) | 0);
+      for (const poly of isolines(field, lo, false)) {
+        let need = (b % 2) ? pitch * 0.5 : pitch * 0.25;   // staggered rows
+        for (let k = 1; k < poly.length; k++) {
+          const [x0, y0] = poly[k - 1], [x1, y1] = poly[k];
+          const L = Math.hypot(x1 - x0, y1 - y0);
+          let pos = 0;
+          while (need <= L - pos) {
+            pos += need; need = pitch;
+            const f = pos / L;
+            let x = x0 + (x1 - x0) * f, y = y0 + (y1 - y0) * f;
+            if (occ[cellOf(x, y)]) continue;
+            const pts = [[x, y]]; let slopeSum = 0, n = 0;
+            for (let it = 0; it < opts.maxSteps; it++) {
+              const gx = at(x + 0.5, y) - at(x - 0.5, y), gy = at(x, y + 0.5) - at(x, y - 0.5);
+              const m = Math.hypot(gx, gy);
+              if (m < 1e-7) break;
+              const nx = x + gx / m * opts.step, ny = y + gy / m * opts.step;
+              if (nx < 0 || ny < 0 || nx > w - 1 || ny > h - 1 || at(nx, ny) >= hi) break;
+              if (occ[cellOf(nx, ny)] && cellOf(nx, ny) !== cellOf(x, y)) break;
+              x = nx; y = ny; pts.push([x, y]); slopeSum += m; n++;
+            }
+            if (pts.length < 2) continue;
+            for (const [px, py] of pts) occ[cellOf(px, py)] = 1;
+            const t = opts.byHeight ? tBand : Math.min(1, slopeSum / n / g90);
+            if (!opts.byHeight && t < opts.flat) continue;   // near-flat ground stays white
+            strokes.push({ pts, t });
+          }
+          need -= L - pos;
+        }
+      }
+    }
+    return strokes;
+  }
+
+  // ── Distance from land (v5.6), for water-lining ──
+  // Exact Euclidean distance transform (Felzenszwalb & Huttenlocher) of the
+  // cells below `level`, in grid units; 0 on land. Isolines of it are the
+  // lines that follow the coast out to sea.
+  function distanceFromLand(field, level) {
+    const { w, h, data } = field, BIG = 1e20;
+    const g = new Float64Array(w * h);
+    for (let i = 0; i < w * h; i++) g[i] = data[i] >= level ? 0 : BIG;
+    const n = Math.max(w, h), f = new Float64Array(n), d = new Float64Array(n);
+    const v = new Int32Array(n), z = new Float64Array(n + 1);
+    function pass(len) {
+      let k = 0; v[0] = 0; z[0] = -Infinity; z[1] = Infinity;
+      for (let q = 1; q < len; q++) {
+        let s;
+        for (;;) {
+          const p = v[k];
+          s = ((f[q] + q * q) - (f[p] + p * p)) / (2 * q - 2 * p);
+          if (s <= z[k] && k > 0) k--; else break;
+        }
+        if (s <= z[k]) { v[0] = q; z[0] = -Infinity; z[1] = Infinity; k = 0; continue; }
+        k++; v[k] = q; z[k] = s; z[k + 1] = Infinity;
+      }
+      k = 0;
+      for (let q = 0; q < len; q++) { while (z[k + 1] < q) k++; const p = v[k]; d[q] = (q - p) * (q - p) + f[p]; }
+    }
+    for (let x = 0; x < w; x++) {
+      for (let y = 0; y < h; y++) f[y] = g[y * w + x];
+      pass(h);
+      for (let y = 0; y < h; y++) g[y * w + x] = d[y];
+    }
+    const out = new Float32Array(w * h);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) f[x] = g[y * w + x];
+      pass(w);
+      for (let x = 0; x < w; x++) out[y * w + x] = Math.sqrt(Math.min(d[x], 1e12));
+    }
+    return { w, h, data: out };
+  }
+
   // ── Page sizes (mm, portrait). 'custom' reads its size from settings. ──
   const PAGES = {
     A5: [148, 210], A4: [210, 297], A3: [297, 420], SQ: [300, 300],
@@ -384,6 +500,6 @@ window.IG = window.IG || {};
       p: { count: 1, size: 0.5, focus: 0, shape: 'points', sea: 0.3, scale: 7, rough: 0.35, ridges: 0, warp: 0.5, peak: 0.7 } },
   ];
 
-  IG.model = { rng, makeNoise, makeTerrain, sampleField, pageReference, levels, isolines, simplify, PAGES, PX_CAP, PRESETS };
+  IG.model = { rng, makeNoise, makeTerrain, sampleField, pageReference, levels, isolines, simplify, hachures, distanceFromLand, PAGES, PX_CAP, PRESETS };
 
 })();

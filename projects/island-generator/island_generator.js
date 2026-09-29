@@ -1,4 +1,4 @@
-// Island Generator v5.5 — the sketch
+// Island Generator v5.6 — the sketch
 // © Jesal Mehta, @cabofcuriosity
 // Based on Perlin Contour v1.0–v4.3 (2020)
 //
@@ -22,6 +22,7 @@ new p5(function (s) {
   let field = null, fieldStep = 0, job = null, jobStep = 0, steps = [];
   let img = null, imgCtx = null;      // field-sized canvas holding the coloured raster
   let lines = null;                   // [{level, index, kind, polys}] in grid coords
+  let hach = null;                    // hachures, coast and water lines, in grid coords
   let msPerSample = 0.00002;          // learnt, for choosing the first pass
   let dirty = { terrain: true, view: true, levels: true };
   let W = 0, H = 0, statsDue = 0;
@@ -142,10 +143,52 @@ new p5(function (s) {
   // translucent dark line on land and a pale one in dark seas.
   function inkFor(kind) {
     if (S.style === 'lines') return kind === 'depth' ? DEPTH_INK : INK;
+    if (S.style === 'hachure') return kind === 'depth' ? DEPTH_INK : 'rgba(42,38,34,0.45)';
     if (kind === 'depth') return S.style === 'topo' ? 'rgba(20,45,90,0.45)' : 'rgba(255,255,255,0.22)';
     return S.style === 'topo' ? 'rgba(45,32,20,0.6)' : 'rgba(0,0,0,0.55)';
   }
   const withLines = () => S.style === 'lines' || S.contours;
+  const onPaper = () => S.style === 'lines' || S.style === 'hachure';
+
+  // Hachures + coast + water-lining for a field sampled at `spmm` samples
+  // per mm of print. Pitch, step and water-line spacing are in mm of print,
+  // so the screen shows what prints.
+  const HACH = { pitch: 0.6, step: 0.2, maxLen: 3.5, flat: 0.12, coast: 0.35, water: 0.1, wMin: 0.05, wMax: 0.28 };
+  function buildHachures(src, spmm) {
+    const step = Math.max(0.3, HACH.step * spmm);
+    const strokes = M.hachures(src, lv.list, {
+      pitch: HACH.pitch * spmm, step, flat: HACH.flat,
+      byHeight: S.hachBy === 'height', maxSteps: Math.ceil(HACH.maxLen * spmm / step) });
+    const coast = M.isolines(src, lv.sea, false);
+    // water lines: first 0.6 mm off the coast, gaps widening by 30% each
+    const dist = M.distanceFromLand(src, lv.sea), water = [];
+    for (let d = 0.6, gap = 0.5, n = 0; n < 10; n++, d += gap, gap *= 1.3) water.push(M.isolines(dist, d * spmm, false));
+    return { strokes, coast, water };
+  }
+  function drawHachures(ctx, H, map, pxPerMM) {
+    ctx.lineJoin = 'round';
+    // water lines, then hachures bucketed by weight (one path per bucket), then the coast
+    ctx.lineCap = 'round'; ctx.strokeStyle = '#3d4b5c';
+    ctx.lineWidth = Math.max(0.4, HACH.water * pxPerMM);
+    ctx.beginPath();
+    for (const ring of H.water) for (const poly of ring) poly.forEach((p, i) => { const [x, y] = map(p[0], p[1]); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); });
+    ctx.stroke();
+    ctx.lineCap = 'butt'; ctx.strokeStyle = INK;
+    const NB = 8, buckets = Array.from({ length: NB }, () => []);
+    for (const s of H.strokes) buckets[Math.min(NB - 1, s.t * NB | 0)].push(s.pts);
+    buckets.forEach((list, b) => {
+      if (!list.length) return;
+      ctx.lineWidth = Math.max(0.35, (HACH.wMin + (HACH.wMax - HACH.wMin) * (b + 0.5) / NB) * pxPerMM);
+      ctx.beginPath();
+      for (const pts of list) pts.forEach((p, i) => { const [x, y] = map(p[0], p[1]); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); });
+      ctx.stroke();
+    });
+    ctx.lineCap = 'round';
+    ctx.lineWidth = Math.max(0.6, HACH.coast * pxPerMM);
+    ctx.beginPath();
+    for (const poly of H.coast) poly.forEach((p, i) => { const [x, y] = map(p[0], p[1]); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); });
+    ctx.stroke();
+  }
 
   // Contour levels to trace: coast, land bands, and depth lines if shown.
   function traceLevels(L) {
@@ -173,7 +216,7 @@ new p5(function (s) {
     // (2 for line drawings: finer adds nothing once the lines are smooth).
     let first = 1;
     for (const st of [1, 2, 3, 4, 6, 8, 12]) { first = st; if (n / (st * st) * msPerSample < 25) break; }
-    const floor = S.style === 'lines' ? 2 : 1;
+    const floor = onPaper() ? 2 : 1;
     steps = [];
     for (let st = first; st > floor; st = Math.max(floor, Math.floor(st / 2))) steps.push(st);
     steps.push(Math.max(floor, Math.min(first, floor)));
@@ -199,7 +242,7 @@ new p5(function (s) {
       imgCtx = img.getContext('2d');
     }
     const id = imgCtx.createImageData(w, h), px = id.data;
-    if (S.style === 'lines') {
+    if (onPaper()) {
       for (let i = 0, j = 0; i < w * h; i++, j += 4) { px[j] = PAPER[0]; px[j + 1] = PAPER[1]; px[j + 2] = PAPER[2]; px[j + 3] = 255; }
     } else {
       const col = palette(lv);
@@ -213,6 +256,13 @@ new p5(function (s) {
       // not smoothness. k = samples of the field per traced sample.
       const k = fieldStep === 1 ? 2 : 1, src = k === 1 ? field : decimate(field, k);
       lines = { k, sets: traceLevels(lv).map(t => ({ ...t, polys: M.isolines(src, t.e, false) })) };
+    }
+    hach = null;
+    if (S.style === 'hachure' && fieldStep <= 2) {
+      // coarse first passes skip it: hachures only settle in with the field
+      const k = fieldStep === 1 ? 2 : 1, src = k === 1 ? field : decimate(field, k);
+      const spmm = view().fr.w / printMM()[0] / (fieldStep * k);
+      hach = Object.assign(buildHachures(src, spmm), { k });
     }
     imgCtx.putImageData(id, 0, 0);
   }
@@ -263,7 +313,7 @@ new p5(function (s) {
   function render(ctx) {
     const dpr = s.pixelDensity();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.fillStyle = S.style === 'lines' ? '#d9d5cc' : '#050508';
+    ctx.fillStyle = onPaper() ? '#d9d5cc' : '#050508';
     ctx.fillRect(0, 0, W, H);
     const v = view();
     if (img && field) {
@@ -274,9 +324,14 @@ new p5(function (s) {
       const X = v.ox + (0 - fv.ox) / fv.ppu * v.ppu, Y = v.oy + (0 - fv.oy) / fv.ppu * v.ppu;
       ctx.imageSmoothingEnabled = fieldStep > 1;
       ctx.drawImage(img, X, Y, img.width * fieldStep * sc, img.height * fieldStep * sc);
+      const pxPerMM = v.fr.w / printMM()[0];
+      if (hach) {
+        const k = hach.k, u = fieldStep * sc;
+        drawHachures(ctx, hach, (gx, gy) => [X + (gx * k + 0.5) * u, Y + (gy * k + 0.5) * u], pxPerMM);
+      }
       if (lines) {
         const k = lines.k, u = fieldStep * sc;
-        drawLines(ctx, lines.sets, (gx, gy) => [X + (gx * k + 0.5) * u, Y + (gy * k + 0.5) * u], v.fr.w / printMM()[0]);
+        drawLines(ctx, lines.sets, (gx, gy) => [X + (gx * k + 0.5) * u, Y + (gy * k + 0.5) * u], pxPerMM);
       }
     }
     drawOverlay(ctx, v);
@@ -306,7 +361,7 @@ new p5(function (s) {
     if (S.sheet) {
       const x0 = v.fr.x, y0 = v.fr.y, x1 = x0 + v.fr.w, y1 = y0 + v.fr.h;
       // dim outside the page
-      ctx.fillStyle = S.style === 'lines' ? 'rgba(217,213,204,0.72)' : 'rgba(5,5,8,0.62)';
+      ctx.fillStyle = onPaper() ? 'rgba(217,213,204,0.72)' : 'rgba(5,5,8,0.62)';
       ctx.beginPath();
       ctx.rect(0, 0, W, H);
       ctx.rect(x0, y0, x1 - x0, y1 - y0);
@@ -500,7 +555,7 @@ new p5(function (s) {
     const P = pagePixels(S.dpi);
     const cv = document.createElement('canvas'); cv.width = P.w; cv.height = P.h;
     const ctx = cv.getContext('2d');
-    if (S.style === 'lines') {
+    if (onPaper()) {
       ctx.fillStyle = `rgb(${PAPER})`; ctx.fillRect(0, 0, P.w, P.h);
     } else {
       const { sw, sh } = sampleSize(P.w, P.h);
@@ -521,16 +576,16 @@ new p5(function (s) {
         progress((withLines() ? 0.5 : 0.7) + 0.2 * (y0 + rows) / P.h); await tick();
       }
     }
-    if (withLines()) {
+    if (withLines() || S.style === 'hachure') {
       const res = Math.min(4, Math.sqrt(2.5e6 / (P.wmm * P.hmm)));    // samples per mm
       const f = await samplePage(P.rect, Math.round(P.wmm * res), Math.round(P.hmm * res), p => progress(0.7 + p * 0.15));
-      const sets = traceLevels(lv).map(t => ({ ...t, polys: M.isolines(f, t.e, false) }));
-      progress(0.9); await tick();
-      const sx = P.w / f.w, sy = P.h / f.h;
-      drawLines(ctx, sets, (gx, gy) => [(gx + 0.5) * sx, (gy + 0.5) * sy], P.w / P.wmm);
+      const sx = P.w / f.w, sy = P.h / f.h, map = (gx, gy) => [(gx + 0.5) * sx, (gy + 0.5) * sy];
+      progress(0.88); await tick();
+      if (S.style === 'hachure') drawHachures(ctx, buildHachures(f, res), map, P.w / P.wmm);
+      if (withLines()) drawLines(ctx, traceLevels(lv).map(t => ({ ...t, polys: M.isolines(f, t.e, false) })), map, P.w / P.wmm);
     }
     const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
-    const look = S.style + (S.contours && S.style !== 'lines' ? '+lines' : '');
+    const look = S.style + (S.style === 'hachure' ? '-' + S.hachBy : '') + (S.contours && S.style !== 'lines' ? '+lines' : '');
     const name = `${baseName()}-${look}-${P.dpi}dpi.png`;
     download(blob, name);
     return { name, capped: P.capped };
@@ -613,7 +668,7 @@ new p5(function (s) {
           const kind = t.kind === 'land' && t.index % 5 === 0 ? 'index' : t.kind;
           layers.push({ order: t.index, xml: `<g id="${id}" inkscape:groupmode="layer" inkscape:label="${label}" fill="none" stroke="${t.kind === 'depth' ? DEPTH_INK : INK}" stroke-width="${MM[kind]}" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></g>` });
         } else {
-          const c = S.style === 'lines' ? null : grey(t.e + lv.step * 0.01);
+          const c = onPaper() ? null : grey(t.e + lv.step * 0.01);
           const fill = c ? `rgb(${c})` : `hsl(35 20% ${Math.round(88 - Math.max(0, t.index) / lv.bands * 55)}%)`;
           layers.push({ order: t.index, xml: `<g id="${id}" inkscape:groupmode="layer" inkscape:label="${label}"><path d="${d}" fill="${fill}" fill-rule="evenodd" stroke="#000" stroke-width="0.1"/></g>` });
         }
@@ -621,10 +676,21 @@ new p5(function (s) {
       progress(0.6 + 0.4 * (n + 1) / levelsToDo.length); await tick();
     }
     layers.sort((a, b) => a.order - b.order);           // deepest first, peaks on top
-    const seaFill = S.style === 'lines' ? `rgb(${PAPER})` : `rgb(${palette(lv)(lv.min - 1)})`;
+    if (mode === 'lines' && S.style === 'hachure') {
+      // Hachures and water lines as their own layers, strokes grouped by weight
+      const H = buildHachures(f, 1 / sx);
+      const pl = poly => 'M' + poly.map(([x, y]) => `${fmt((x + 0.5) * sx)},${fmt((y + 0.5) * sy)}`).join('L');
+      const water = H.water.map(ring => ring.map(p => pl(M.simplify(p, tol))).join('')).join('');
+      layers.unshift({ order: -999, xml: `<g id="water-lines" inkscape:groupmode="layer" inkscape:label="water lines" fill="none" stroke="#3d4b5c" stroke-width="${HACH.water}" stroke-linecap="round"><path d="${water}"/></g>` });
+      const NB = 8, buckets = Array.from({ length: NB }, () => []);
+      for (const s of H.strokes) buckets[Math.min(NB - 1, s.t * NB | 0)].push(pl(M.simplify(s.pts, tol)));
+      const groups = buckets.map((b, i) => b.length ? `<path d="${b.join('')}" stroke-width="${fmt(HACH.wMin + (HACH.wMax - HACH.wMin) * (i + 0.5) / NB)}"/>` : '').join('');
+      layers.push({ order: 999, xml: `<g id="hachures" inkscape:groupmode="layer" inkscape:label="hachures (${S.hachBy})" fill="none" stroke="${INK}" stroke-linecap="butt">${groups}</g>` });
+    }
+    const seaFill = onPaper() ? `rgb(${PAPER})` : `rgb(${palette(lv)(lv.min - 1)})`;
     const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="${P.wmm}mm" height="${P.hmm}mm" viewBox="0 0 ${P.wmm} ${P.hmm}">
-<!-- Island Generator v5.5 · seed ${S.seed} · ${location.href.replace(/--/g, '%2D%2D')} -->
+<!-- Island Generator v5.6 · seed ${S.seed} · ${location.href.replace(/--/g, '%2D%2D')} -->
 <g id="page" inkscape:groupmode="layer" inkscape:label="page">${mode === 'layers' ? `<rect width="${P.wmm}" height="${P.hmm}" fill="${seaFill}"/>` : ''}<rect width="${P.wmm}" height="${P.hmm}" fill="none" stroke="#999" stroke-width="0.1"/></g>
 ${layers.map(l => l.xml).join('\n')}
 </svg>`;

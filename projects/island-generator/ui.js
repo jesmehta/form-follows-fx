@@ -21,7 +21,7 @@
     scale: 3, rough: 0.5, ridges: 0.15, warp: 0.3, peak: 1.3,
     focus: 0.9, shape: 'points', count: 1, size: 0.55,
     sea: 0.62, bands: 12, depth: false,
-    style: 'grey', contours: false, markers: true,
+    style: 'grey', hachBy: 'slope', contours: false, markers: true,
     page: 'A', orient: 'portrait', sheet: true, ca: 3, cb: 2,
     print: 297, dpi: 300,
     zoom: 100, panX: null, panY: null,   // what sits in the frame: part of the map since v5.5
@@ -33,13 +33,13 @@
   const URL_KEYS = {
     seed: 's', scale: 'fs', rough: 'r', ridges: 'rg', warp: 'w', peak: 'pk',
     focus: 'f', shape: 'sh', count: 'n', size: 'sz', sea: 'sl', bands: 'b', depth: 'dp',
-    style: 'st', contours: 'ln', page: 'pg', orient: 'o', sheet: 'sf', ca: 'ca', cb: 'cb',
+    style: 'st', hachBy: 'hb', contours: 'ln', page: 'pg', orient: 'o', sheet: 'sf', ca: 'ca', cb: 'cb',
     print: 'ps', dpi: 'dpi', zoom: 'z', panX: 'x', panY: 'y',
   };
   const NUM = { seed: [0, 999999], scale: [0.5, 16], rough: [0, 1], ridges: [0, 1], warp: [0, 1],
     peak: [0.3, 4], focus: [0, 1], count: [1, 16], size: [0.05, 1.5], sea: [0, 1], bands: [0, 30], dpi: [72, 600],
     ca: [0.1, 100], cb: [0.1, 100], print: [100, 1000], zoom: [25, 1600], panX: [-100, 100], panY: [-100, 100] };
-  const ENUM = { shape: ['points', 'edge', 'line'], style: ['grey', 'thermal', 'topo', 'lines'],
+  const ENUM = { shape: ['points', 'edge', 'line'], style: ['grey', 'thermal', 'topo', 'lines', 'hachure'], hachBy: ['slope', 'height'],
     page: ['A', 'SQ', '43', '169', 'custom'], orient: ['portrait', 'landscape'] };
   const INT = new Set(['seed', 'count', 'bands', 'dpi', 'print']);
 
@@ -171,12 +171,13 @@
           // shapes only act through land weight; picking one turns it on
           S.focus = 0.85; toast('Land weight turned on so the shape shows');
         } else if (S[key] === v) return;
-        const wasLines = S.style === 'lines';
+        const paper = st => st === 'lines' || st === 'hachure', wasPaper = paper(S.style);
         if (key === 'orient') return sheetChanged(() => { S.orient = v; });
         S[key] = v;
         syncControls();
         if (key === 'shape') { forgetGeneratedEdits(); changed('terrain'); }
-        else if (key === 'style') changed((wasLines || v === 'lines') ? 'resample' : 'look');
+        else if (key === 'style') changed(wasPaper !== paper(v) ? 'resample' : 'look');
+        else if (key === 'hachBy') changed('look');
         else changed(null);
       });
     });
@@ -371,9 +372,10 @@
     if (k === 'n') newLandscape();
     else if (k === 'h') setHud(!hud);
     else if (k === 'f') fit();
-    else if (k === '1' || k === '2' || k === '3' || k === '4') {
-      const v = ['grey', 'thermal', 'topo', 'lines'][+k - 1];
-      if (v !== S.style) { const was = S.style; S.style = v; syncControls(); changed(was === 'lines' || v === 'lines' ? 'resample' : 'look'); }
+    else if (k >= '1' && k <= '5' && k.length === 1) {
+      const v = ['grey', 'thermal', 'topo', 'lines', 'hachure'][+k - 1];
+      const paper = st => st === 'lines' || st === 'hachure';
+      if (v !== S.style) { const was = S.style; S.style = v; syncControls(); changed(paper(was) !== paper(v) ? 'resample' : 'look'); }
     }
   }
 
