@@ -61,6 +61,17 @@ window.IG = window.IG || {};
 
   const OCTAVES = 6;
 
+  // Smooth minimum of distances (log-sum-exp, width 0.12 R). A hard
+  // min() creases the mask where the nearest centre or spine segment
+  // switches; this rounds those seams off.
+  function smin(ds) {
+    if (ds.length === 1) return ds[0];
+    const k = 0.12;
+    let m = Infinity; for (const d of ds) if (d < m) m = d;
+    let sum = 0; for (const d of ds) sum += Math.exp(-(d - m) / k);
+    return m - k * Math.log(sum);
+  }
+
   // ── Parameters → a terrain object with height(x, y) ──
   //
   // P (all from settings):
@@ -108,25 +119,21 @@ window.IG = window.IG || {};
     } else if (P.shape === 'line' && centres.length >= 2) {
       // A spine through the centres in order: distance to the polyline.
       maskDist = (x, y) => {
-        let best = Infinity;
+        const ds = [];
         for (let i = 0; i < centres.length - 1; i++) {
           const a = centres[i], b = centres[i + 1];
           const vx = b.x - a.x, vy = b.y - a.y, wx = x - a.x, wy = y - a.y;
           const t = Math.max(0, Math.min(1, (wx * vx + wy * vy) / (vx * vx + vy * vy || 1)));
-          const d = Math.hypot(wx - vx * t, wy - vy * t);
-          if (d < best) best = d;
+          ds.push(Math.hypot(wx - vx * t, wy - vy * t) / R);
         }
-        return best / R;
+        return smin(ds);
       };
     } else {
       // Points (and 'line' with a single centre): nearest centre — to-do (e).
       maskDist = (x, y) => {
-        let best = Infinity;
-        for (let i = 0; i < centres.length; i++) {
-          const d = Math.hypot(x - centres[i].x, y - centres[i].y);
-          if (d < best) best = d;
-        }
-        return best / R;
+        const ds = [];
+        for (let i = 0; i < centres.length; i++) ds.push(Math.hypot(x - centres[i].x, y - centres[i].y) / R);
+        return smin(ds);
       };
     }
     const noCentres = centres.length === 0 && P.shape !== 'edge';
@@ -163,7 +170,12 @@ window.IG = window.IG || {};
       e = Math.pow(e, peak);                                              // v3's exponent
       if (focus > 0 && !noCentres) {
         const d = maskDist(x, y);
-        const g = 0.7 * (1 - Math.min(1.8, d));                           // 0.7 at centre, <0 past R
+        // 0.7 at the focus, 0 one Island factor out, easing towards −0.56.
+        // v5.0–v5.6 clamped d at 1.8 with a hard min(): the lift's slope
+        // switched off in one step, creasing the terrain along a line at
+        // 1.8 R (parallel to a spine, round an island, along a coast).
+        // tanh eases into the same limit with no crease.
+        const g = 0.7 * (1 - 1.8 * Math.tanh(d / 1.8));
         e = e * (1 - focus) + ((e + g) / 2) * focus;                      // v4's (1 + e − d) / 2
       }
       return e;

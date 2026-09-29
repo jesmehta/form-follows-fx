@@ -418,3 +418,27 @@ changed nothing visible. Counting why strokes ended showed the real
 cause: 62% hit a neighbour, because strokes traced uphill converge.
 Reversed to downhill-first with an uphill gap-filling pass (v5.6.1).
 Strokes now span each band and fan around the hills.
+
+## Part 12: unpublished docs, the mask crease, hachures again (2026-09-30)
+
+> **update both bookshelf and fffx's copy step to prevent md files,
+> screenshots, etc in project folders to be copied. If this is risky in
+> that apart from md files screenshots vs other images may mix up, see if
+> the entire documentation subfolders withing each project can be
+> prevented. If not easy, then I am ok with moveing the project
+> documentation into the world's primary documentation folder for each
+> world**
+
+The folder-based version was easy and safe. Each project's docs now live
+in `projects/<name>/documentation/`, in both Bookshelf and fffx, and the
+copy loop drops that folder plus any stray `.md`. No project loads a
+`.md` at runtime, and images a page uses are never in `documentation/`,
+so nothing can be mixed up. fffx had no copy loop, so adding one makes
+Dance of Planets and Island Generator live on the next push.
+
+> **hachures still dont look very good.
+> also is the spine line cutting them - i see a contour artefact in
+> parallel but not at the spine line, offset by some distance**
+
+The artefact was the mask's hard clamp at 1.8 R (fixed in v5.6.2). The
+hachure look went back to the user as questions before more changes.

@@ -653,6 +653,21 @@ focus on. Panels run full height with a "more below" hint. Depth
 contours fixed: own step, visible sea shades. Details under "v5.1: first
 review round".
 
+### v5.6.2: no creases in the land mask (2026-09-30)
+
+**"is the spine line cutting them - i see a contour artefact in parallel
+but not at the spine line, offset by some distance"**. The mask's
+distance was clamped with a hard `min(d, 1.8)`, so the lift's slope
+switched off in one step at 1.8 × Island factor. That put a crease in
+the terrain along a line parallel to a spine, round each island, and
+along a coast. It is now eased with `1.8 · tanh(d / 1.8)`: the same
+slope near the focus and the same limit, with no crease.
+
+The same kind of seam occurred where the nearest centre, or nearest
+spine segment, switches. Those use a smooth minimum now (log-sum-exp,
+width 0.12 R). Maps change slightly as a result, since the lift fades
+more gradually.
+
 ### v5.6.1: hachures run contour to contour (2026-09-30)
 
 **"the hachures arent going form one contour to the next, they seem to be
