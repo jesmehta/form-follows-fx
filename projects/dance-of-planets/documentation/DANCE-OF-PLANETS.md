@@ -7,8 +7,10 @@ their orbital periods resolves into a rose, a trefoil, a lace ring. Lives
 at `projects/dance-of-planets/`, served at `/dance-of-planets/` on
 `fffx.cabinetofcuriosities.in`.
 
-Companion docs in this folder (moved here from `documentation/dance-of-planets/`
-on 2026-09-30, following Bookshelf's docs-beside-the-code pattern):
+Companion docs in this folder: `projects/dance-of-planets/documentation/`.
+They moved here from the top-level `documentation/dance-of-planets/` on
+2026-09-30, following Bookshelf's pattern. The deploy loop leaves the
+`documentation/` subfolder out of the published site.
 
 - [`conversation-dance-of-planets.md`](conversation-dance-of-planets.md) —
   the real conversation behind these decisions, user inputs verbatim in bold.
@@ -331,7 +333,7 @@ imports).
 | `projects/dance-of-planets/model.js` | Orbital maths, data, presets |
 | `projects/dance-of-planets/ui.js` | Settings, controls, info panel, URL, keys |
 | `projects/dance-of-planets/dance_of_planets.js` | The p5 sketch: layers, renderer, overlay, export |
-| `projects/dance-of-planets/screenshots/` | `v3.0-desktop.png`, `v3.0-mobile-controls.png`, `speed-bug-comparison.png` |
+| `projects/dance-of-planets/documentation/screenshots/` | `v3.0-desktop.png`, `v3.0-mobile-controls.png`, `speed-bug-comparison.png` |
 
 ## Verified
 

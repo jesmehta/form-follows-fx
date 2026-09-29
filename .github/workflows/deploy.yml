@@ -41,6 +41,19 @@ jobs:
     - name: Build MkDocs Site
       run: mkdocs build --site-dir public
 
+    - name: Copy static interactive projects
+      run: |
+        # Bookshelf's loop: each projects/<name>/ is served at /<name>/.
+        # Each project's own docs live in its documentation/ subfolder and
+        # stay in the repo only: that folder, and any stray .md file, is
+        # not published.
+        for proj in projects/*/; do
+          name=$(basename "$proj")
+          cp -r "$proj" "public/$name"
+          rm -rf "public/$name/documentation"
+          find "public/$name" -name '*.md' -delete
+        done
+
     - name: Setup Pages
       uses: actions/configure-pages@v5
 

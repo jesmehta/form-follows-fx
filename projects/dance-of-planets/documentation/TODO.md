@@ -47,8 +47,10 @@ deleted. Design intent behind each item is in
 Tracked in Cabinet's `documentation/toDo - immediate.md` as the quick win
 "Launch Dance of Planets v3.0 in FFFX". Commits through `0656c73` are pushed.
 
-- [ ] Add a `projects/*/` copy loop to fffx's `deploy.yml` (port of
-      Bookshelf's "Copy static interactive projects" step)
+- [x] Add a `projects/*/` copy loop to fffx's `deploy.yml` (port of
+      Bookshelf's "Copy static interactive projects" step, excluding each
+      project's `documentation/`) (2026-09-30). **Pushing it publishes
+      both projects.**
 - [ ] Point `harmonics-dance-of-planets` entry / writeup page at the tool;
       `location` values per fffx's vocabulary
 - [ ] Wire `README.md` + `documentation/FILE-MANIFEST.md` to this folder
@@ -95,7 +97,6 @@ Tracked in Cabinet's `documentation/toDo - immediate.md` as the quick win
 
 - [x] Docs moved from `documentation/<project>/` into this folder, beside
       the code, as Bookshelf does (2026-09-30)
-- [ ] When fffx's `projects/*/` deploy loop is written, decide whether to
-      exclude `*.md` and `screenshots/`. A plain `cp -r` publishes them:
-      any file is fetchable by path, although not listed. The repo is
-      public anyway.
+- [x] Docs moved again into `documentation/` inside this folder. fffx's
+      new deploy loop drops that subfolder and any `.md`, so docs are not
+      published; Bookshelf's loop was changed the same way (2026-09-30)
