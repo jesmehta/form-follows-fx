@@ -339,3 +339,17 @@ Mid-build, the user added:
 Answered as neither: smooth is slightly cheaper than banded. It was built
 as Contour bands = 0. Both landed as v5.5; details are in
 `ISLAND-GENERATOR.md`, "v5.5: the frame".
+
+## Part 9: fixes to smooth mode and depth (2026-09-30)
+
+> **when contour bands = 0 and contour lines is toggled on, the sea still
+> shows contour lines**
+
+These were the depth lines, still at their fixed 6 steps. Fixed (v5.5.1):
+smooth means smooth under the sea too.
+
+> **contour bands should apply to the sea as well - 10 bands = 10 from
+> cost to max-height of island and 10 from coast to max-depth of sea**
+
+Built as v5.5.2. The band count now applies to both sides of the coast,
+each with its own step.

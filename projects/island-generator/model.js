@@ -256,11 +256,11 @@ window.IG = window.IG || {};
     const step = (top - seaE) / Math.max(1, bands);
     const list = [seaE];                               // contour elevations, coast first
     for (let b = 1; b < bands; b++) list.push(seaE + b * step);
-    // Depth bands divide the water's own range (sea level → deepest point
-    // on the page), not the land's step: the sea floor is often much deeper
-    // than any hill is high, and land-sized steps crammed every depth line
-    // against the coast.
-    const depthStep = Math.max(1e-6, (seaE - ref.min) / DEPTH_BANDS);
+    // The same number of bands below the sea as above it: land is cut from
+    // the coast up to the highest point, the sea from the coast down to the
+    // deepest. Each side gets its own step, since the sea floor is often
+    // much deeper than any hill is high.
+    const depthStep = Math.max(1e-6, (seaE - ref.min) / Math.max(1, bands));
     return { sea: seaE, top, step, bands, list, min: ref.min, depthStep };
   }
 
@@ -366,7 +366,6 @@ window.IG = window.IG || {};
     A5: [148, 210], A4: [210, 297], A3: [297, 420], SQ: [300, 300],
   };
   const PX_CAP = 60e6;   // largest export raster, pixels
-  const DEPTH_BANDS = 6;
 
   // ── Presets: named points in the same parameter space ──
   // Only the terrain keys; look (style, bands) is left as the user has it.
@@ -385,6 +384,6 @@ window.IG = window.IG || {};
       p: { count: 1, size: 0.5, focus: 0, shape: 'points', sea: 0.3, scale: 7, rough: 0.35, ridges: 0, warp: 0.5, peak: 0.7 } },
   ];
 
-  IG.model = { rng, makeNoise, makeTerrain, sampleField, pageReference, levels, isolines, simplify, PAGES, PX_CAP, PRESETS, DEPTH_BANDS };
+  IG.model = { rng, makeNoise, makeTerrain, sampleField, pageReference, levels, isolines, simplify, PAGES, PX_CAP, PRESETS };
 
 })();

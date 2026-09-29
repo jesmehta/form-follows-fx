@@ -585,6 +585,16 @@ focus on. Panels run full height with a "more below" hint. Depth
 contours fixed: own step, visible sea shades. Details under "v5.1: first
 review round".
 
+### v5.5.2: sea bands follow Contour bands (2026-09-30)
+
+**"contour bands should apply to the sea as well - 10 bands = 10 from
+cost to max-height of island and 10 from coast to max-depth of sea"**.
+The fixed 6 depth bands (v5.1) are gone. With Depth contours on, the sea
+gets the same number of bands as the land. Each side has its own step:
+coast → highest point, and coast → deepest point on the landscape.
+Contour lines and SVG exports follow, so 10 bands give the coast plus 9
+lines on each side.
+
 ### v5.5.1: no depth lines when smooth (2026-09-30)
 
 Fix: **"when contour bands = 0 and contour lines is toggled on, the sea

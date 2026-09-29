@@ -107,15 +107,15 @@ new p5(function (s) {
       topo:    { flat: [96, 146, 188], shallow: [150, 198, 222], deep: [28, 64, 116] },
     }[style] || { flat: [12, 12, 14], shallow: [50, 52, 60], deep: [6, 6, 8] };
     const seaFlat = SEA.flat, shallow = SEA.shallow, deep = SEA.deep;
-    const DN = smooth ? 256 : M.DEPTH_BANDS;
+    const DN = smooth ? 256 : L.bands;
     for (let d = 0; d < DN; d++) {
-      const t = d / (DN - 1);
+      const t = DN > 1 ? d / (DN - 1) : 0;
       sea.push(shallow.map((c, i) => c + (deep[i] - c) * t | 0));
     }
     return e => {
       if (e < L.sea) {
         if (!S.depth) return seaFlat;
-        if (smooth) return sea[Math.min(DN - 1, (L.sea - e) / (L.depthStep * M.DEPTH_BANDS) * (DN - 1) | 0)];
+        if (smooth) return sea[Math.min(DN - 1, (L.sea - e) / (L.sea - L.min || 1) * (DN - 1) | 0)];
         return sea[Math.min(DN - 1, Math.floor((L.sea - e) / L.depthStep))];
       }
       if (smooth) return land[Math.min(B - 1, (e - L.sea) / (L.top - L.sea) * (B - 1) | 0)];
@@ -152,7 +152,7 @@ new p5(function (s) {
     const out = [];
     L.list.forEach((e, b) => out.push({ e, index: b, kind: b === 0 ? 'coast' : 'land' }));
     // Smooth (0 bands) means smooth under the sea too: depth shading, no depth lines.
-    if (S.depth && L.bands > 0) for (let d = 1; d < M.DEPTH_BANDS; d++) {
+    if (S.depth && L.bands > 0) for (let d = 1; d < L.bands; d++) {
       out.push({ e: L.sea - d * L.depthStep, index: -d, kind: 'depth' });
     }
     return out;
