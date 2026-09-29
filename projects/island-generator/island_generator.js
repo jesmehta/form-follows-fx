@@ -151,7 +151,8 @@ new p5(function (s) {
   function traceLevels(L) {
     const out = [];
     L.list.forEach((e, b) => out.push({ e, index: b, kind: b === 0 ? 'coast' : 'land' }));
-    if (S.depth) for (let d = 1; d < M.DEPTH_BANDS; d++) {
+    // Smooth (0 bands) means smooth under the sea too: depth shading, no depth lines.
+    if (S.depth && L.bands > 0) for (let d = 1; d < M.DEPTH_BANDS; d++) {
       out.push({ e: L.sea - d * L.depthStep, index: -d, kind: 'depth' });
     }
     return out;

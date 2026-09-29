@@ -585,6 +585,14 @@ focus on. Panels run full height with a "more below" hint. Depth
 contours fixed: own step, visible sea shades. Details under "v5.1: first
 review round".
 
+### v5.5.1: no depth lines when smooth (2026-09-30)
+
+Fix: **"when contour bands = 0 and contour lines is toggled on, the sea
+still shows contour lines"**. Those were the depth lines, still traced at
+their 6 fixed steps. Smooth now means smooth under the sea too: depth
+shading stays, depth lines are dropped. This applies on screen and in PNG
+and SVG export, which leaves only the coast.
+
 ### v5.5: the frame, print size, smooth shading, readable facts (2026-09-30)
 
 The sheet is now an aspect-ratio frame fixed on screen: A-series, Square,
