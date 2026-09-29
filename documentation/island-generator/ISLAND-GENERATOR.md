@@ -108,21 +108,26 @@ right-hand panel reassigned to the **page**:
 
 ### One parameter space
 
-| Group | Control | What it does | 2020 ancestor |
+Panel order and names as of v5.2 (the user's sequence and naming, see
+"v5.2" below). The v5.0 name is given where it changed.
+
+| Section | Control | What it does | 2020 ancestor |
 |---|---|---|---|
-| Where the land gathers | **Land focus** 0–1 | Blend between pure noise (0 = mainland) and noise lifted around centres | v4.0 `(1 + e − d)/2`, v4.2 "Island factor" |
-| | **Shape**: Islands / Coast / Spine | What the distance is measured to: the nearest centre, one side of the page, or a line through the centres | to-do (d), (e) |
+| Presets | Island, Archipelago, Mainland, Coastline, Mountain range, Lake country | Named points in this same space | — |
+| Land and sea | **Shape**: Islands / Coast / Spine | What the distance is measured to: the nearest centre, one side of the sheet, or a line through the centres | to-do (d), (e) |
 | | **Islands** 1–16 | How many centres are generated from the seed | to-do (e) |
-| | **Island size** | Radius of each centre's pull | v4.2 island factor |
-| Terrain | **Feature scale** | Noise cycles across the page width | v4.3's `t` "smooth to chaotic" |
-| | **Roughness** | Octave gain (0.3 → 0.75) | — |
+| | **Island factor** (was Island size) | Radius of each centre's pull | v4.2 "Island factor" |
+| | **Land focus** 0–1 | Blend between pure noise (0 = mainland) and noise lifted around centres | v4.0 `(1 + e − d)/2` |
+| | **Sea level** | Share of the sheet under water | v3 `b/3` oceans |
+| Terrain details | **Feature smoothness** (was Feature scale; slider reversed) | Noise cycles across the sheet width; right = fewer, broader landforms | v1.0–v4.3 `t`, "the Perlin increment… very smooth to chaotic" |
+| | **Surface roughness** (was Roughness) | Octave gain (0.3 → 0.75) | — |
 | | **Ridges** | Blend in ridged noise (sharp crests) | — |
 | | **Coast warp** | Domain warp of page coordinates, bending noise *and* mask | — |
-| | **Peakiness** | Exponent on height: plateaus ↔ spires | v3 "exponent for sealevel" |
-| Sea & contours | **Sea level** | Share of the sheet under water | v3 `b/3` oceans |
-| | **Contour bands** 2–30 | Number of land bands | v2 banding |
+| | **Elevation exponent** (was Peakiness) | Exponent on height: plateaus ↔ sharp peaks | v3 `elev`, "exponent for sealevel" |
+| Visual controls | **Contour bands** 2–30 | Number of land bands | v2 `b`, "no of bandgaps" |
 | | Depth contours | Bands and lines under the sea too | v3's underwater bands |
-| Drawing | Grey / Thermal / Lines | Render style | v2 grey, v4.3 colour |
+| | Colours: Grey / Thermal / Lines | Render style | v2 grey, v4.3 colour |
+| | Island centres | Show or hide the markers | — |
 
 Presets set only terrain keys (plus sea level) and leave the look alone.
 They are Island, Archipelago, Mainland, Coastline, Mountain range and Lake
@@ -267,8 +272,102 @@ The user's feedback on v5.0, verbatim, and what changed:
 
 Still open from this round: **"The biggest issues is that I dont relate
 my work with these controls, and I have tragically forgotten a lot of my
-work since it was from many years ago"**. This is under discussion; see
-the conversation log, Part 4.
+work since it was from many years ago"**. Taken up in v5.2.
+
+## v5.2: the user's names and order (2026-09-30)
+
+The response to "I dont relate my work with these controls" was a
+comparison table (2020 sketch → control, now folded into the parameter
+table above) and four options. The user chose to rename:
+**"I'd go with 3 - use my names, then I'll update from there"**, with
+refinements **"feature scale = feature smoothness, roughness = surface
+roughness, contour bands is ok"**. Elevation exponent and Island factor
+come from the 2020 sketches.
+
+**Order.** The user's own sequence, in four collapsible sections:
+**"Presets / Land and Sea / Terrain details / Visual controls … I think
+this is a more logical flow. Make each section collapsible."** Sections
+start open, and each viewer's open/closed state is remembered. The Page
+panel got the same treatment.
+
+**Help text.** **"Move large helper text to tooltips/hover etc. As a
+possibly public page going forward, I dont need references to "your 2020
+tool" "your xyz" etc. … remove helper text where it isnt helping a fresh
+viewer, it's not for me."**
+- Explanations now sit behind ⓘ icons, which show on hover (desktop) or
+  tap (touch).
+- Every "your …" and 2020 reference was removed from the interface. The
+  explainer's credit line remains.
+- The bottom-bar hint (click / drag / scroll) stays, because it tells a
+  new visitor how to interact.
+
+**Feature smoothness reversed.** A "smoothness" slider should get smoother
+to the right, so the mapping is reversed. The stored value is still noise
+cycles per sheet width, so URLs are unaffected.
+
+## How the terrain is computed
+
+Written up in answer to **"what are the island coast spine buttons doing,
+mathematically - also visually / how are ridges working, mathematically
+?"**. These are the steps of `height(x, y)` in `model.js`, where `(x, y)`
+is in sheet widths:
+
+1. **Warp:** `(x, y) += warp · 0.12 · (fbm₂, fbm₃)`, two further noise
+   fields at half frequency.
+2. **Noise:** `e = 0.5 + 0.5 · fbm(x, y)`, clamped 0–1. fbm is 6 octaves of
+   Perlin noise (frequency ×2.03, amplitude × gain per octave), normalised
+   by √Σa² so its spread is the same at every roughness.
+3. **Ridges:** `e = (1 − ridges) · e + ridges · ridged(x, y)`.
+4. **Exponent:** `e = e ^ exponent`.
+5. **Mask** (Land focus > 0): `g = 0.7 · (1 − min(d, 1.8))`, then
+   `e = (1 − focus) · e + focus · (e + g) / 2`. At focus 1 this is the v4
+   formula `(1 + e − d) / 2`, up to the 0.7 scale.
+6. **Sea level** is the height below which the chosen share of the sheet
+   lies. The coastline is the contour at that height.
+
+**Shapes differ only in `d`** (R = Island factor):
+
+- **Islands:** `d = distance to the nearest centre / R`. Each centre is a
+  cone; taking the nearest merges them, so the sheet is split into cells
+  around the centres. Visually: blobs around each marker that fade out
+  about one R away, with edges roughened by the noise. Many small ones
+  make an archipelago; close ones merge.
+- **Coast:** `u` is the direction from the sheet's centre to the marker,
+  `s` is a point's position along `u`, and
+  `d = (half-extent − s) / (3.2 · R)`. This is a tilted plane: 0 at the edge
+  the marker points to, growing steadily across the sheet. Visually: land
+  on the marker's side, sea opposite, and a coast running across the
+  arrow. R sets the slope, so a larger R lets land reach further inland.
+- **Spine:** `d = distance to the polyline through the centres, in order,
+  / R`, a tent-shaped lift along a line. Visually: one elongated
+  landmass along the chain of markers. With a single centre it falls back
+  to Islands.
+
+**Ridges** are Musgrave's ridged multifractal on an independent noise
+field, over 6 octaves:
+
+```text
+r    = 1 − |1.4 · noise(x·f, y·f)|    // fold: zero-crossings become crests
+r    = r² · prev                       // sharper crests, flatter lowlands
+prev = min(1, 1.6 · r)                 // finer octaves show mostly on high ground
+sum += amplitude · r ;  ridged = sum / Σamplitudes
+```
+
+- The fold does most of the work. Noise crosses zero along long winding
+  lines, and `1 − |n|` turns them into knife-edge crests, giving a
+  branching network of ridgelines.
+- Squaring narrows the crests and flattens the ground between them.
+- The `prev` weighting puts fine detail on the ridges and keeps valleys
+  smooth.
+
+Visually, it moves from rounded hills at 0 to long, thin, branching crests
+with broad valleys.
+
+Known limits:
+- The ridges don't follow Spine, since they're global noise. This is why
+  the Mountain range preset reads weakly.
+- The ridge field is also one of the two warp fields, at a different
+  scale, which is a small correlation to separate (see TODO).
 
 ## Architecture
 
@@ -400,3 +499,12 @@ window at 2×. Shape buttons always show, and picking one turns Land
 focus on. Panels run full height with a "more below" hint. Depth
 contours fixed: own step, visible sea shades. Details under "v5.1: first
 review round".
+
+### v5.2: the user's names and order (2026-09-30)
+
+Controls regrouped into Presets / Land and sea / Terrain details / Visual
+controls, all collapsible and remembered, with the Page panel the same.
+Renames: Feature smoothness (reversed), Surface roughness, Elevation
+exponent, Island factor. Helper text moved behind ⓘ tooltips (hover or
+tap). "Your …" and 2020 references removed from the interface; explainer
+rewritten.

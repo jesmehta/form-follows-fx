@@ -43,9 +43,18 @@ land and are never deleted. The design intent behind each item is in
 - [x] Sheet: A5, A4, A3, Square, Custom (mm), None; None exports the window (2026-09-29)
 - [x] Panels full height, "more below" scroll hint (2026-09-29)
 - [x] Fix depth contours: own step, visible sea shades (2026-09-29)
-- [ ] **"I dont relate my work with these controls"**: how the page
-      connects to the 2020 sketches. Under discussion (conversation log,
-      Part 4)
+- [x] **"I dont relate my work with these controls"**: comparison table,
+      then the user's names and section order (v5.2) (2026-09-30)
+
+## v5.2: the user's names and order
+
+- [x] Sections Presets / Land and sea / Terrain details / Visual controls,
+      collapsible, state remembered; Page panel too (2026-09-30)
+- [x] Renames: Feature smoothness (reversed), Surface roughness,
+      Elevation exponent, Island factor (2026-09-30)
+- [x] Helper text behind ⓘ (hover or tap); no "your …" or 2020
+      references in the interface (2026-09-30)
+- [ ] User's further naming pass ("then I'll update from there")
 
 - [ ] **User review of v5.0 look and feel**, and of the build-time
       decisions listed in `ISLAND-GENERATOR.md`
@@ -71,6 +80,9 @@ land and are never deleted. The design intent behind each item is in
       ridge direction?
 - [ ] Hillshade (light from the NW) as a fourth style? It's cheap from
       the same field.
+- [ ] Make Ridges follow the Spine (ridge direction along the spine line)
+- [ ] Give ridges their own noise field; it currently shares one with a
+      warp axis
 - [ ] The 2020 bugs (HSB clipping, `TRUE`, `key == s`) could be talked
       through alongside the DoP code discussion.
 

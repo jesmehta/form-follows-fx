@@ -186,3 +186,84 @@ order in which the ideas arrived (noise → bands → exponent and sea →
 island mask → off-centre focus) aren't visible anywhere on the page.
 Ways to reconnect them were put to the user as a discussion before
 building anything.
+
+### The reply: a comparison table and four options
+
+The reply mapped each 2020 idea to its v5.0 control:
+
+- `t` → Feature scale
+- `b` → Contour bands
+- `elev` → Peakiness
+- the `b/3` ocean → Sea level
+- `(1 + e − d)/2` → Land focus
+- Island factor → Island size
+- v4.3's off-centre focus and to-dos → clickable centres and the shapes
+
+It then offered four ways to show the lineage:
+
+1. a build-it-up stepper that replays the versions (recommended);
+2. lineage tags on each control;
+3. the user's own names on the controls;
+4. a writeup page.
+
+## Part 5: the maths, the user's names and order (2026-09-30)
+
+> **- what are the island coast spine buttons doing, mathematically - also
+> visually
+> - how are ridges working, mathematically ?
+>
+> The table of comparision helps.
+>
+> I'd go with 3 - use my names, then I'll update from there
+> I'd also rearrange the controls (using your names for now):
+>
+> Presets
+> - presets
+> Land and Sea
+> - island - coast - spine
+> - island + island size
+> - land focus
+> - sealevel
+> Terrain details
+> - terrain set of sliders
+> Visual controls
+> - contour bands + sealevel toggle
+> - colours
+> - island centre toggle
+>
+> I think this is a more logical flow.
+> Make each section collapsible.
+> Move large helper text to tooltips/hover etc. As a possibly public page
+> going forward, I dont need references to "your 2020 tool" "your xyz"
+> etc. After your table comparision and my controls sequencing, things are
+> clearer, remove helper text where it isnt helping a fresh viewer, it's
+> not for me.
+>
+> ask questions for clarity**
+
+The maths was answered in full and is kept in `ISLAND-GENERATOR.md`, "How
+the terrain is computed":
+
+- **The three shapes differ only in what `d` measures:** the nearest
+  centre (cones), one side of the sheet (a tilted plane), or a polyline
+  (a tent along a line).
+- **Ridges are a ridged multifractal:** fold, square, and weight by the
+  previous octave.
+
+Two weaknesses were raised unprompted: the ridges ignore the spine, and
+they share a noise field with the warp.
+
+Four questions came back:
+
+| Question | Answer |
+|---|---|
+| Name mapping (Feature scale → Perlin increment, Contour bands → Bands, Peakiness → Elevation exponent, Island size → Island factor) | **"feature scale = feature smoothness, roughness = surface roughness, contour bands is ok,"** |
+| Is "sealevel toggle" the depth-contours switch? | **Yes, depth contours** |
+| Help text: ⓘ hover/tap · hover only · delete | **ⓘ icon: hover or tap** |
+| Collapsible defaults | **All open, remembered** |
+
+The name answer was read as: the listed changes apply, and the rest of the
+proposed mapping (Elevation exponent, Island factor) stands. That was
+flagged back to the user for correction. Built as v5.2. The "click / drag
+/ scroll" bottom-bar hint and the explainer modal (rewritten neutrally)
+were kept as fresh-viewer help.
