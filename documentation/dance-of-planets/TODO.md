@@ -33,8 +33,9 @@ deleted. Design intent behind each item is in
 - [x] Mobile layout (2026-09-29)
 - [x] Version strings → v3.0 (2026-09-29)
 
-- [ ] **User review of v3.0 look and feel**, on the real page (not
-      screenshots)
+- [x] **User review of v3.0 look and feel** -- "look feel is fine"; the
+      build-time decisions (default density, keep-drawing not resetting,
+      etc.) confirmed "all good" (2026-09-29)
 - [ ] Real-device check: phone (sheets, touch scrub), HiDPI desktop
       (trail blit cost at full-window size)
 - [ ] Speed assumes 60 fps (p5's default frame-rate cap, so fast displays
@@ -42,6 +43,9 @@ deleted. Design intent behind each item is in
       skipping. Switch to time-based stepping only if that shows up.
 
 ## Launch (fffx-side)
+
+Tracked in Cabinet's `documentation/toDo - immediate.md` as the quick win
+"Launch Dance of Planets v3.0 in FFFX". Commits through `0656c73` are pushed.
 
 - [ ] Add a `projects/*/` copy loop to fffx's `deploy.yml` (port of
       Bookshelf's "Copy static interactive projects" step)
@@ -51,7 +55,8 @@ deleted. Design intent behind each item is in
       (FILE-MANIFEST currently has someone's older uncommitted edits —
       don't commit those along with it)
 - [ ] Writeup page: Dance of Venus + the code + captured visuals (replaces
-      the placeholder `.md`)
+      the placeholder `.md`) -- not urgent, but next after the launch;
+      tracked in Cabinet's immediate todo alongside Island Generator
 
 ## Later / discussion
 
@@ -65,9 +70,11 @@ deleted. Design intent behind each item is in
 - [ ] Planet data: v2's table is kept unchanged (Venus 0.615 yr, Jupiter
       11.9, …). Refining it changes every pattern slightly; discuss before
       touching.
-- [ ] Writeup material: Trail mode = Venus's geocentric path (retrograde
-      loops); corrected vs classic comparison image already in
-      `screenshots/speed-bug-comparison.png`.
+- [ ] Trail mode = Venus's geocentric path (retrograde loops), which
+      disappear under Classic speeds (`screenshots/speed-bug-comparison.png`).
+      Belongs to the code/bug review, not the writeup: "that is attached to
+      the speed bug in my code which i will review". Whether it goes into the
+      writeup is decided there.
 
 ## Watch out for
 

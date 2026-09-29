@@ -210,3 +210,28 @@ Part 3. What came up along the way, in order:
 
 Stopped before the fffx launch steps (deploy loop, entry/README wiring) and
 before any look-and-feel review. Those are the user's next calls.
+
+## Part 5 -- review and follow-ups
+
+The build-time decisions and the open items went back to the user:
+
+> **things I should check - all good. Excepth the find for the writeup -
+> that is attached to the speed bug in my code which i will review.**
+
+> **still open - look feel is fine
+> discussion of orig code is open
+> add the launch step as a todo point in cabinet's immediate todo
+> the writeup page is another todo point but not urgent though
+> immediate-ish**
+
+> **i've pushed the commits**
+
+So:
+- The Trail = geocentric-path finding moves out of the writeup pile and
+  into the code/bug review the user is doing themselves.
+- The launch step became a quick win in Cabinet's
+  `documentation/toDo - immediate.md`. That file is the site-complex
+  queue, even for FFFX work. The existing "Publish Dance of Planets and
+  Island Generator" item there was reworded so it covers only the writeup
+  (plus Island Generator), marked next after launch.
+- The code/bug discussion stays open in `TODO.md`.
