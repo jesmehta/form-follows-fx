@@ -117,7 +117,7 @@ Panel order and names as of v5.2 (the user's sequence and naming, see
 | Land and sea | **Shape**: Islands / Coast / Spine | What the distance is measured to: the nearest centre, one side of the sheet, or a line through the centres | to-do (d), (e) |
 | | **Islands** 1–16 | How many centres are generated from the seed | to-do (e) |
 | | **Island factor** (was Island size) | Radius of each centre's pull | v4.2 "Island factor" |
-| | **Land focus** 0–1 | Blend between pure noise (0 = mainland) and noise lifted around centres | v4.0 `(1 + e − d)/2` |
+| | **Land weight** (was Land focus) 0–1 | Blend between pure noise (0 = mainland) and noise lifted around centres | v4.0 `(1 + e − d)/2` (always at full weight there) |
 | | **Sea level** | Share of the sheet under water | v3 `b/3` oceans |
 | Terrain details | **Feature smoothness** (was Feature scale; slider reversed) | Noise cycles across the sheet width; right = fewer, broader landforms | v1.0–v4.3 `t`, "the Perlin increment… very smooth to chaotic" |
 | | **Surface roughness** (was Roughness) | Octave gain (0.3 → 0.75) | — |
@@ -126,7 +126,8 @@ Panel order and names as of v5.2 (the user's sequence and naming, see
 | | **Elevation exponent** (was Peakiness) | Exponent on height: plateaus ↔ sharp peaks | v3 `elev`, "exponent for sealevel" |
 | Visual controls | **Contour bands** 2–30 | Number of land bands | v2 `b`, "no of bandgaps" |
 | | Depth contours | Bands and lines under the sea too | v3's underwater bands |
-| | Colours: Grey / Thermal / Lines | Render style | v2 grey, v4.3 colour |
+| | Colours: Grey / Thermal / Topology / Lines | Render style | v2 grey, v4.3 colour |
+| | Contour lines | Draw the contour lines over Grey, Thermal or Topology | — |
 | | Island centres | Show or hide the markers | — |
 
 Presets set only terrain keys (plus sea level) and leave the look alone.
@@ -150,6 +151,10 @@ Hypsometric (atlas) colour was offered and not chosen.
 
 - **Grey**: land bands from dark grey to near-white, sea near-black (v3's
   "black oceans"). The HSB clipping is fixed.
+- **Topology** (added v5.3; the user's name): realistic map colours.
+  These are hypsometric tints running from green lowlands through tan and
+  brown hills to grey rock and snow, with a blue sea and lighter
+  shallows.
 - **Thermal**: v4.3's hue sweep, re-mapped to run cold to hot (270° → 0°)
   instead of 0° → 360°, which wrapped red back to red.
 - **Lines**: dark contour lines on paper. The coast is heaviest and every
@@ -325,6 +330,19 @@ is in sheet widths:
 6. **Sea level** is the height below which the chosen share of the sheet
    lies. The coastline is the contour at that height.
 
+Which of these steps come from the 2020 sketches (checked against all
+seven commits):
+
+| Step | In the 2020 code? |
+|---|---|
+| 1. Warp | **No.** New in v5.0. |
+| 2. Noise | **Yes.** `noise(x0, y0)` in every version. p5's `noise()` is itself 4 layered octaves, so this was already fBm. v5.0 swaps it for seeded Perlin with 6 octaves and a roughness control. |
+| 3. Ridges | **No.** No `abs()` or ridge code in any version. New in v5.0. |
+| 4. Exponent | **Yes.** v3 onward: `pow(n0, elev)`. |
+| 5. Mask | **Yes, in its original form.** v4.0–v4.3: `(1 + n − d)/2`, with `d` the distance from one fixed point (centre, then w/3, h/3). The blend weight, several centres and the Coast/Spine shapes are new. |
+| 6. Sea level | **Partly.** v3 made the bottom third of bands black (`map(f_, b/3, b, …)`); a movable, quantile-based sea level is new. |
+| Banding | **Yes.** v2 onward: `int(map(n, 0, 1, 0, b))`. |
+
 **Shapes differ only in `d`** (R = Island factor):
 
 - **Islands:** `d = distance to the nearest centre / R`. Each centre is a
@@ -499,6 +517,15 @@ window at 2×. Shape buttons always show, and picking one turns Land
 focus on. Panels run full height with a "more below" hint. Depth
 contours fixed: own step, visible sea shades. Details under "v5.1: first
 review round".
+
+### v5.3: Topology, contour overlay, Land weight (2026-09-30)
+
+Colours are now Grey / Thermal / Topology / Lines, with keys 1–4.
+Topology is the realistic-colour option. A *Contour lines* toggle draws
+the lines over any filled style: ink on land, pale in dark seas, and
+traced at half resolution on screen. It also applies to the PNG export.
+Land focus is renamed Land weight. The Shape tooltip no longer mentions
+it.
 
 ### v5.2: the user's names and order (2026-09-30)
 

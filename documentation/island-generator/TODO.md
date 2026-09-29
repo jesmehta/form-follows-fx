@@ -54,7 +54,15 @@ land and are never deleted. The design intent behind each item is in
       Elevation exponent, Island factor (2026-09-30)
 - [x] Helper text behind ⓘ (hover or tap); no "your …" or 2020
       references in the interface (2026-09-30)
-- [ ] User's further naming pass ("then I'll update from there")
+- [ ] User's further naming pass ("then I'll update from there"). Land
+      focus → Land weight done in v5.3
+
+## v5.3
+
+- [x] Topology colour style (hypsometric tints) (2026-09-30)
+- [x] Contour lines toggle over Grey / Thermal / Topology, on screen and
+      in PNG export (2026-09-30)
+- [x] Land focus → Land weight; Shape tooltip trimmed (2026-09-30)
 
 - [ ] **User review of v5.0 look and feel**, and of the build-time
       decisions listed in `ISLAND-GENERATOR.md`

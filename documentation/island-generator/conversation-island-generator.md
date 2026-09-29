@@ -267,3 +267,36 @@ proposed mapping (Elevation exponent, Island factor) stands. That was
 flagged back to the user for correction. Built as v5.2. The "click / drag
 / scroll" bottom-bar hint and the explainer modal (rewritten neutrally)
 were kept as fresh-viewer help.
+
+## Part 6: which steps are really the 2020 code (2026-09-30)
+
+> **The Warp, Noise and Mask are not present in my code, are they ?
+> Ridges is present elsewhere, not sure if I got around to using it here,
+> either.
+>
+> Shape Tooltip - "Works through Land focus" is entrirly unnecessary
+> Land focus = reanme to Land weight
+>
+> Colours :
+> Grey + Thermal + Topology + Lines
+> Lines toggle
+> Topology = realistic colour bands
+> Lines toggle = add lines to other colour modes**
+
+All seven commits were searched to answer this:
+
+- **Warp:** not in the 2020 code.
+- **Noise:** in every version, as `noise(x0, y0)`. p5's `noise()` already
+  layers 4 octaves, so the 2020 sketches were using fBm without naming it.
+- **Mask:** in v4.0–v4.3 as `(1 + n − d)/2` from a single fixed point.
+  The weighting, multiple centres and shapes are new.
+- **Ridges:** not in any of the seven versions (no `abs()` or ridge code).
+  Whatever the user remembers must be in another sketch.
+
+The table is now in `ISLAND-GENERATOR.md`, under "How the terrain is
+computed".
+
+Built as v5.3. Topology uses hypsometric tints. It was flagged to the
+user that in maths "topology" means something else and cartographers
+would say "topographic"/"hypsometric", but the user's name is used as
+asked.
