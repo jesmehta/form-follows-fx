@@ -37,8 +37,9 @@ deleted. Design intent behind each item is in
       screenshots)
 - [ ] Real-device check: phone (sheets, touch scrub), HiDPI desktop
       (trail blit cost at full-window size)
-- [ ] Speed assumes ~60 fps; on 120 Hz displays it runs twice as fast.
-      Switch to time-based stepping if that matters.
+- [ ] Speed assumes 60 fps (p5's default frame-rate cap, so fast displays
+      are fine); a slow machine that drops frames draws slower rather than
+      skipping. Switch to time-based stepping only if that shows up.
 
 ## Launch (fffx-side)
 
