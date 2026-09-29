@@ -64,14 +64,18 @@ new p5(function (s) {
     for (let b = 0; b < B; b++) {
       const t = B > 1 ? b / (B - 1) : 1;
       if (style === 'thermal') land.push(hsv(270 * (1 - t), 0.92, 0.35 + 0.65 * Math.min(1, t * 1.6 + 0.2)));
+      else if (style === 'topo') land.push(ramp(TOPO_LAND, t));
       else { const g = 96 + t * 150 | 0; land.push([g, g, g]); }
     }
     // Sea: flat near-black, or with depth on, shallow → deep in visibly
     // different steps (the first build's were all within a few levels of
     // black, which is why depth "didn't work").
-    const seaFlat = style === 'thermal' ? [14, 8, 40] : [12, 12, 14];
-    const shallow = style === 'thermal' ? [52, 40, 150] : [50, 52, 60];
-    const deep = style === 'thermal' ? [8, 4, 26] : [6, 6, 8];
+    const SEA = {
+      grey:    { flat: [12, 12, 14], shallow: [50, 52, 60], deep: [6, 6, 8] },
+      thermal: { flat: [14, 8, 40], shallow: [52, 40, 150], deep: [8, 4, 26] },
+      topo:    { flat: [96, 146, 188], shallow: [150, 198, 222], deep: [28, 64, 116] },
+    }[style] || { flat: [12, 12, 14], shallow: [50, 52, 60], deep: [6, 6, 8] };
+    const seaFlat = SEA.flat, shallow = SEA.shallow, deep = SEA.deep;
     const DN = M.DEPTH_BANDS;
     for (let d = 0; d < DN; d++) {
       const t = d / (DN - 1);
@@ -86,6 +90,29 @@ new p5(function (s) {
     };
   }
   const PAPER = [244, 241, 234], INK = '#2a2622', DEPTH_INK = '#6f8aa6';
+  // Topology: hypsometric tints, low green → tan → brown → rock → snow.
+  const TOPO_LAND = [
+    [0.00, [88, 142, 86]], [0.22, [148, 172, 98]], [0.42, [212, 196, 128]],
+    [0.62, [176, 128, 82]], [0.80, [140, 124, 114]], [1.00, [246, 246, 244]],
+  ];
+  function ramp(stops, t) {
+    for (let i = 1; i < stops.length; i++) {
+      const [t1, c1] = stops[i];
+      if (t <= t1) {
+        const [t0, c0] = stops[i - 1], k = (t - t0) / (t1 - t0 || 1);
+        return c0.map((c, j) => c + (c1[j] - c) * k | 0);
+      }
+    }
+    return stops[stops.length - 1][1];
+  }
+  // Line colour: ink on paper for the Lines style; over colour, a
+  // translucent dark line on land and a pale one in dark seas.
+  function inkFor(kind) {
+    if (S.style === 'lines') return kind === 'depth' ? DEPTH_INK : INK;
+    if (kind === 'depth') return S.style === 'topo' ? 'rgba(20,45,90,0.45)' : 'rgba(255,255,255,0.22)';
+    return S.style === 'topo' ? 'rgba(45,32,20,0.6)' : 'rgba(0,0,0,0.55)';
+  }
+  const withLines = () => S.style === 'lines' || S.contours;
 
   // Contour levels to trace: coast, land bands, and depth lines if shown.
   function traceLevels(L) {
@@ -140,15 +167,26 @@ new p5(function (s) {
     const id = imgCtx.createImageData(w, h), px = id.data;
     if (S.style === 'lines') {
       for (let i = 0, j = 0; i < w * h; i++, j += 4) { px[j] = PAPER[0]; px[j + 1] = PAPER[1]; px[j + 2] = PAPER[2]; px[j + 3] = 255; }
-      lines = traceLevels(lv).map(t => ({ ...t, polys: M.isolines(field, t.e, false) }));
     } else {
       const col = palette(lv);
       for (let i = 0, j = 0; i < w * h; i++, j += 4) {
         const c = col(data[i]); px[j] = c[0]; px[j + 1] = c[1]; px[j + 2] = c[2]; px[j + 3] = 255;
       }
-      lines = null;
+    }
+    lines = null;
+    if (withLines()) {
+      // Lines are traced at no finer than half resolution: finer adds cost,
+      // not smoothness. k = samples of the field per traced sample.
+      const k = fieldStep === 1 ? 2 : 1, src = k === 1 ? field : decimate(field, k);
+      lines = { k, sets: traceLevels(lv).map(t => ({ ...t, polys: M.isolines(src, t.e, false) })) };
     }
     imgCtx.putImageData(id, 0, 0);
+  }
+
+  function decimate(f, k) {
+    const w = Math.ceil(f.w / k), h = Math.ceil(f.h / k), data = new Float32Array(w * h);
+    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) data[j * w + i] = f.data[(j * k) * f.w + i * k];
+    return { w, h, data };
   }
 
   // ── p5 ──
@@ -200,7 +238,10 @@ new p5(function (s) {
       const X = v.ox + (0 - fv.ox) / fv.ppu * v.ppu, Y = v.oy + (0 - fv.oy) / fv.ppu * v.ppu;
       ctx.imageSmoothingEnabled = fieldStep > 1;
       ctx.drawImage(img, X, Y, img.width * fieldStep * sc, img.height * fieldStep * sc);
-      if (lines) drawLines(ctx, lines, (gx, gy) => [X + (gx + 0.5) * fieldStep * sc, Y + (gy + 0.5) * fieldStep * sc], v.ppu);
+      if (lines) {
+        const k = lines.k, u = fieldStep * sc;
+        drawLines(ctx, lines.sets, (gx, gy) => [X + (gx * k + 0.5) * u, Y + (gy * k + 0.5) * u], v.ppu);
+      }
     }
     drawOverlay(ctx, v);
   }
@@ -213,7 +254,7 @@ new p5(function (s) {
     ctx.lineJoin = 'round'; ctx.lineCap = 'round';
     for (const set of sets) {
       const kind = set.kind === 'land' && set.index % 5 === 0 ? 'index' : set.kind;
-      ctx.strokeStyle = set.kind === 'depth' ? DEPTH_INK : INK;
+      ctx.strokeStyle = inkFor(set.kind);
       ctx.lineWidth = Math.max(0.6, MM[kind] * pxPerMM);
       ctx.beginPath();
       for (const poly of set.polys) {
@@ -437,15 +478,9 @@ new p5(function (s) {
     const ctx = cv.getContext('2d');
     if (S.style === 'lines') {
       ctx.fillStyle = `rgb(${PAPER})`; ctx.fillRect(0, 0, P.w, P.h);
-      const res = Math.min(4, Math.sqrt(2.5e6 / (P.wmm * P.hmm)));    // samples per mm
-      const f = await samplePage(P.rect, Math.round(P.wmm * res), Math.round(P.hmm * res), p => progress(p * 0.7));
-      const sets = traceLevels(lv).map(t => ({ ...t, polys: M.isolines(f, t.e, false) }));
-      progress(0.85); await tick();
-      const sx = P.w / f.w, sy = P.h / f.h;
-      drawLines(ctx, sets, (gx, gy) => [(gx + 0.5) * sx, (gy + 0.5) * sy], P.w / P.rect.w);
     } else {
       const { sw, sh } = sampleSize(P.w, P.h);
-      const f = await samplePage(P.rect, sw, sh, p => progress(p * 0.7));
+      const f = await samplePage(P.rect, sw, sh, p => progress(p * (withLines() ? 0.5 : 0.7)));
       const col = palette(lv);
       const band = 256;                         // rows per putImageData
       for (let y0 = 0; y0 < P.h; y0 += band) {
@@ -459,11 +494,20 @@ new p5(function (s) {
           }
         }
         ctx.putImageData(id, 0, y0);
-        progress(0.7 + 0.25 * (y0 + rows) / P.h); await tick();
+        progress((withLines() ? 0.5 : 0.7) + 0.2 * (y0 + rows) / P.h); await tick();
       }
     }
+    if (withLines()) {
+      const res = Math.min(4, Math.sqrt(2.5e6 / (P.wmm * P.hmm)));    // samples per mm
+      const f = await samplePage(P.rect, Math.round(P.wmm * res), Math.round(P.hmm * res), p => progress(0.7 + p * 0.15));
+      const sets = traceLevels(lv).map(t => ({ ...t, polys: M.isolines(f, t.e, false) }));
+      progress(0.9); await tick();
+      const sx = P.w / f.w, sy = P.h / f.h;
+      drawLines(ctx, sets, (gx, gy) => [(gx + 0.5) * sx, (gy + 0.5) * sy], P.w / P.rect.w);
+    }
     const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
-    const name = `${baseName()}-${S.style}-${P.window ? '2x' : P.dpi + 'dpi'}.png`;
+    const look = S.style + (S.contours && S.style !== 'lines' ? '+lines' : '');
+    const name = `${baseName()}-${look}-${P.window ? '2x' : P.dpi + 'dpi'}.png`;
     download(blob, name);
     return { name, capped: P.capped };
   }
@@ -556,7 +600,7 @@ new p5(function (s) {
     const seaFill = S.style === 'lines' ? `rgb(${PAPER})` : `rgb(${palette(lv)(lv.min - 1)})`;
     const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="${P.wmm}mm" height="${P.hmm}mm" viewBox="0 0 ${P.wmm} ${P.hmm}">
-<!-- Island Generator v5.2 · seed ${S.seed} · ${location.href.replace(/--/g, '%2D%2D')} -->
+<!-- Island Generator v5.3 · seed ${S.seed} · ${location.href.replace(/--/g, '%2D%2D')} -->
 <g id="page" inkscape:groupmode="layer" inkscape:label="page">${mode === 'layers' ? `<rect width="${P.wmm}" height="${P.hmm}" fill="${seaFill}"/>` : ''}<rect width="${P.wmm}" height="${P.hmm}" fill="none" stroke="#999" stroke-width="0.1"/></g>
 ${layers.map(l => l.xml).join('\n')}
 </svg>`;

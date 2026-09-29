@@ -21,7 +21,7 @@
     scale: 3, rough: 0.5, ridges: 0.15, warp: 0.3, peak: 1.3,
     focus: 0.9, shape: 'points', count: 1, size: 0.55,
     sea: 0.62, bands: 12, depth: false,
-    style: 'grey', markers: true,
+    style: 'grey', contours: false, markers: true,
     page: 'A4', orient: 'portrait', dpi: 300, sheet: true, cw: 300, ch: 200,
     extra: [], removed: [], moved: {},
   };
@@ -32,12 +32,12 @@
   const URL_KEYS = {
     seed: 's', scale: 'fs', rough: 'r', ridges: 'rg', warp: 'w', peak: 'pk',
     focus: 'f', shape: 'sh', count: 'n', size: 'sz', sea: 'sl', bands: 'b', depth: 'dp',
-    style: 'st', page: 'pg', orient: 'o', dpi: 'dpi', sheet: 'sf', cw: 'cw', ch: 'ch',
+    style: 'st', contours: 'ln', page: 'pg', orient: 'o', dpi: 'dpi', sheet: 'sf', cw: 'cw', ch: 'ch',
   };
   const NUM = { seed: [0, 999999], scale: [0.5, 16], rough: [0, 1], ridges: [0, 1], warp: [0, 1],
     peak: [0.3, 4], focus: [0, 1], count: [1, 16], size: [0.05, 1.5], sea: [0, 1], bands: [2, 30], dpi: [72, 600],
     cw: [20, 2000], ch: [20, 2000] };
-  const ENUM = { shape: ['points', 'edge', 'line'], style: ['grey', 'thermal', 'lines'],
+  const ENUM = { shape: ['points', 'edge', 'line'], style: ['grey', 'thermal', 'topo', 'lines'],
     page: Object.keys(M.PAGES).concat('custom'), orient: ['portrait', 'landscape'] };
   const INT = new Set(['seed', 'count', 'bands', 'dpi', 'cw', 'ch']);
 
@@ -163,8 +163,8 @@
         const key = seg.dataset.key;
         let v = b.dataset.value; if (key === 'dpi') v = +v;
         if (key === 'shape' && S.focus <= 0) {
-          // shapes only act through land focus; picking one turns it on
-          S.focus = 0.85; toast('Land focus turned on so the shape shows');
+          // shapes only act through land weight; picking one turns it on
+          S.focus = 0.85; toast('Land weight turned on so the shape shows');
         } else if (S[key] === v) return;
         const wasLines = S.style === 'lines';
         if (key === 'orient') return sheetChanged(() => { S.orient = v; });
@@ -185,6 +185,7 @@
       sheetChanged(() => { S[k] = v; });
     });
     $('chk-depth').addEventListener('change', e => { S.depth = e.target.checked; changed('look'); });
+    $('chk-lines').addEventListener('change', e => { S.contours = e.target.checked; changed('look'); });
     $('chk-markers').addEventListener('change', e => { S.markers = e.target.checked; changed(null); });
     $('btn-reset-markers').addEventListener('click', () => {
       S.extra = []; forgetGeneratedEdits(); changed('terrain'); toast('Island centres back to the generated ones');
@@ -315,7 +316,7 @@
   }
   function addCentre(x, y) {
     if (!S.markers) return;
-    if (S.focus <= 0) { S.focus = 0.85; syncControls(); toast('Land focus turned on so the new island shows'); }
+    if (S.focus <= 0) { S.focus = 0.85; syncControls(); toast('Land weight turned on so the new island shows'); }
     if (S.shape === 'edge') {
       const c = IG.sketch.centres()[0];
       if (c) moveCentre(c, x, y); else { S.extra = [{ x, y }]; changed('terrain'); }
@@ -365,8 +366,8 @@
     if (k === 'n') newLandscape();
     else if (k === 'h') setHud(!hud);
     else if (k === 'f') fit();
-    else if (k === '1' || k === '2' || k === '3') {
-      const v = ['grey', 'thermal', 'lines'][+k - 1];
+    else if (k === '1' || k === '2' || k === '3' || k === '4') {
+      const v = ['grey', 'thermal', 'topo', 'lines'][+k - 1];
       if (v !== S.style) { const was = S.style; S.style = v; syncControls(); changed(was === 'lines' || v === 'lines' ? 'resample' : 'look'); }
     }
   }
@@ -396,7 +397,7 @@
     $('seg-page').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.value === pageOn));
     $('inp-cw').value = S.cw; $('inp-ch').value = S.ch;
     document.body.dataset.page = pageOn;
-    $('chk-depth').checked = S.depth; $('chk-markers').checked = S.markers;
+    $('chk-depth').checked = S.depth; $('chk-markers').checked = S.markers; $('chk-lines').checked = S.contours;
     $('inp-seed').value = S.seed;
     document.body.dataset.shape = S.shape;
     document.body.dataset.style = S.style;
@@ -436,7 +437,7 @@
       ['Pieces of land', st.pieces ? `${st.pieces}<em>largest is ${pct(st.largestShare)} of the land</em>` : '—'],
       ['Reaching the edge', st.piecesTouchingEdge ? `${st.piecesTouchingEdge}<em>land continues off the page</em>` : 'none<em>every island is whole</em>'],
       ['Lakes', st.lakes || '—'],
-      ['Island centres', S.focus > 0 ? `${st.centres}<em>${S.shape === 'edge' ? 'one sets which side is land' : S.shape === 'line' ? 'joined into a spine' : 'land gathers round them'}</em>` : 'off<em>land focus is 0</em>'],
+      ['Island centres', S.focus > 0 ? `${st.centres}<em>${S.shape === 'edge' ? 'one sets which side is land' : S.shape === 'line' ? 'joined into a spine' : 'land gathers round them'}</em>` : 'off<em>land weight is 0</em>'],
     ];
     $('facts').innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
     const L = lastLevels;
