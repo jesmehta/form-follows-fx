@@ -142,3 +142,47 @@ above. What came up along the way, in order:
 The build stopped before the fffx launch steps (deploy loop, entry
 wiring) and before any look-and-feel review. Those are the user's next
 calls, listed in `TODO.md`.
+
+## Part 4: first review (2026-09-29)
+
+> **Ok, feedback :
+>
+> presets - dont need the 2020 version
+>
+> why does the land focus slider sometimes ahve and sometimes disappear
+> the islands-coast-spine buttons ?
+>
+> RHS bar :
+> Sheet should also have None as an option, if I want to admire the whole
+> thing without the boundary
+> Have A3, A4, A5, square, and custom dimension, and none
+>
+> LHS + RHS panel - let it extend the full height of the page, and
+> indicate there is further to scroll if needed
+>
+> Dont need 2020 colours
+>
+> Depth contours undersea dont work
+>
+> The biggest issues is that I dont relate my work with these controls,
+> and I have tragically forgotten a lot of my work since it was from many
+> years ago**
+
+On the disappearing buttons: v5.0 hid the Islands / Coast / Spine
+controls whenever Land focus was 0, because at 0 no centres are used and
+the controls do nothing. That was a reasonable rule that read as a
+glitch. They now stay visible, and picking one turns focus back on.
+
+On depth: the contours were being drawn, just invisibly. The sea shades
+were all near-black, and the depth lines used the land's step, so they
+bunched at the coast.
+
+The concrete items were fixed as v5.1 (listed in `ISLAND-GENERATOR.md`).
+The last point is not a bug to fix but a design question: the page was
+built as a *general* island tool, and its vocabulary (land focus, coast
+warp, peakiness) is new. The user's own 2020 vocabulary (bands,
+elevation exponent, island factor, the Perlin increment `t`) and the
+order in which the ideas arrived (noise → bands → exponent and sea →
+island mask → off-centre focus) aren't visible anywhere on the page.
+Ways to reconnect them were put to the user as a discussion before
+building anything.

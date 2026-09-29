@@ -90,9 +90,13 @@ canvas, controls float above, like DoP, but controls for export for page
 dimensions and zoom"**. So this is the Dance of Planets shell with the
 right-hand panel reassigned to the **page**:
 
-- The terrain is infinite. The sheet (A5–A1 or square; portrait or
-  landscape; 150/300 dpi) is a gold frame over it, and everything outside
-  is dimmed. What's inside the frame is what every export produces.
+- The terrain is infinite. The sheet (A5, A4, A3, Square, Custom in mm,
+  or None; portrait or landscape; 150/300 dpi) is a gold frame over it,
+  and everything outside is dimmed. What's inside the frame is what every
+  export produces.
+- **None** hides the frame to look at the whole landscape (v5.1, see
+  below). The map stays laid out on the last sheet, so nothing moves.
+  Exports then capture the window as shown, at 2× screen resolution.
 - Zoom and pan (scroll, drag) move only the view. They never change the
   map, the coastline or the export.
 - Changing A4 → A3 changes only export size, because the map is measured
@@ -121,9 +125,8 @@ right-hand panel reassigned to the **page**:
 | Drawing | Grey / Thermal / Lines | Render style | v2 grey, v4.3 colour |
 
 Presets set only terrain keys (plus sea level) and leave the look alone.
-They are Island, Archipelago, Mainland, Coastline, Mountain range, Lake
-country, and **2020 · v4.3**, which approximates the original: focus at
-(w/3, h/3), size 1, no sea, 18 bands, 2020 colours on.
+They are Island, Archipelago, Mainland, Coastline, Mountain range and Lake
+country. (A "2020 · v4.3" preset was removed in v5.1.)
 
 ### Island centres: generated *and* clickable
 
@@ -147,9 +150,6 @@ Hypsometric (atlas) colour was offered and not chosen.
 - **Lines**: dark contour lines on paper. The coast is heaviest and every
   5th band is an index contour, with widths in **mm of paper**
   (0.5 / 0.35 / 0.18). The screen previews exactly what the SVG plots.
-- **2020 colours** (Advanced): bands across the whole height range with no
-  sea, grey clipped as HSB did, and thermal as the original 0–360°. Kept
-  for comparison, like DoP's Classic toggle.
 
 ### Export
 
@@ -158,8 +158,8 @@ as **PNG at A-series print res** and **Heightmap PNG**. DXF was offered
 and not chosen.
 
 - **PNG**: the sheet at the chosen dpi, as drawn (A4 @ 300 = 2480 × 3508).
-  It is capped at 60 Mpx, so A1 @ 300 drops to about 240 dpi, and the
-  readout says so.
+  It is capped at 60 Mpx, which no current sheet reaches at 300 dpi
+  except a large Custom size; the readout says when it's capped.
 - **Heightmap**: a real 16-bit greyscale PNG of raw elevation, with the
   page minimum at 0 and the maximum at 65535. The sea is *not* flattened.
   It's written by a small in-page PNG encoder, because canvas can only
@@ -213,7 +213,7 @@ be revisited.
   | terrain | height function, page reference, field | seed, all terrain and land-focus sliders, centres, orientation |
   | view | field resampled for the window | zoom, pan, resize, panel collapse |
   | levels | recolour or re-contour the existing field | sea level, bands |
-  | look | recolour (Lines ↔ fill resamples) | style, depth, 2020 colours |
+  | look | recolour (Lines ↔ fill resamples) | style, depth |
   | none | readouts only | page size, dpi, markers |
 
 - **Progressive sampling.** The first pass uses the coarsest step that fits
@@ -235,6 +235,40 @@ be revisited.
 - **The caption describes the map live**, e.g. "An archipelago of 13
   islands · 28% land · 12 contour bands". It counts connected land (and
   lakes: water not touching the edge) on the reference grid.
+
+## v5.1: first review round (2026-09-29)
+
+The user's feedback on v5.0, verbatim, and what changed:
+
+- **"presets - dont need the 2020 version"**: removed.
+- **"Dont need 2020 colours"**: the toggle and its code are removed. The
+  2020 look survives only as history (the v1.0–v4.3 commits).
+- **"why does the land focus slider sometimes ahve and sometimes
+  disappear the islands-coast-spine buttons ?"**: v5.0 hid the shape
+  controls whenever Land focus was 0, because at 0 no centres are used.
+  Hiding them read as a glitch. Now they always show; the count and size
+  sliders dim at 0, a hint says why, and picking a shape turns focus back
+  on (0.85).
+- **"Sheet should also have None as an option, if I want to admire the
+  whole thing without the boundary / Have A3, A4, A5, square, and custom
+  dimension, and none"**: the sheet options are now A5, A4, A3, Square,
+  Custom (W × H in mm) and None. A2/A1 are gone. Only a change of the
+  sheet's *shape* rebuilds the map.
+- **"LHS + RHS panel - let it extend the full height of the page, and
+  indicate there is further to scroll if needed"**: on desktop the panels
+  run top to bottom and the bottom bar sits between them. A fade with
+  "▾ more below" shows while a panel has more content under the fold.
+- **"Depth contours undersea dont work"**: they were drawn, just
+  invisibly. The sea shades all sat within a few levels of black, and the
+  depth lines used the land's contour step, which crammed them against
+  the coast. Depth now has its own step (sea level → deepest point, 6
+  bands), the sea runs from a visible shallow grey/blue to near-black,
+  and the lowest land band was lifted so the coast stays legible.
+
+Still open from this round: **"The biggest issues is that I dont relate
+my work with these controls, and I have tragically forgotten a lot of my
+work since it was from many years ago"**. This is under discussion; see
+the conversation log, Part 4.
 
 ## Architecture
 
@@ -348,7 +382,7 @@ and a page frame. It has:
 - land focus with Islands / Coast / Spine masks and generated plus
   clickable centres;
 - sea level as a share of the sheet, with bands and depth contours;
-- Grey / Thermal / Lines styles plus 2020 colours;
+- Grey / Thermal / Lines styles, plus a 2020 colours toggle;
 - seven presets;
 - A5–A1 and square sheets, portrait or landscape, 150/300 dpi, and zoom
   and pan;
@@ -357,3 +391,12 @@ and a page frame. It has:
   mobile sheets.
 
 Redraws happen only on change, in tiers, and progressively.
+
+### v5.1: first review round (2026-09-29)
+
+Removed the 2020 · v4.3 preset and the 2020 colours toggle. Sheets are
+now A5 / A4 / A3 / Square / Custom (mm) / None, where None exports the
+window at 2×. Shape buttons always show, and picking one turns Land
+focus on. Panels run full height with a "more below" hint. Depth
+contours fixed: own step, visible sea shades. Details under "v5.1: first
+review round".

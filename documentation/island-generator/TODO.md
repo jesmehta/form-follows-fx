@@ -36,6 +36,17 @@ land and are never deleted. The design intent behind each item is in
       explainer, keys, mobile sheets (2026-09-29)
 - [x] Headless check (desktop + mobile, all exports) (2026-09-29)
 
+## v5.1: first review round
+
+- [x] Drop the 2020 · v4.3 preset and the 2020 colours toggle (2026-09-29)
+- [x] Shape buttons always visible; picking one turns Land focus on (2026-09-29)
+- [x] Sheet: A5, A4, A3, Square, Custom (mm), None; None exports the window (2026-09-29)
+- [x] Panels full height, "more below" scroll hint (2026-09-29)
+- [x] Fix depth contours: own step, visible sea shades (2026-09-29)
+- [ ] **"I dont relate my work with these controls"**: how the page
+      connects to the 2020 sketches. Under discussion (conversation log,
+      Part 4)
+
 - [ ] **User review of v5.0 look and feel**, and of the build-time
       decisions listed in `ISLAND-GENERATOR.md`
 - [ ] Real-device check: phone (sheets, touch drag of markers), HiDPI
@@ -70,9 +81,9 @@ land and are never deleted. The design intent behind each item is in
   windows take a second or so to settle.
 - The heightmap export needs `CompressionStream` (Chrome 80+, Firefox
   113+, Safari 16.4+).
-- A1 at 300 dpi exceeds the 60 Mpx cap and exports at about 240 dpi. The
+- A very large Custom sheet at 300 dpi can exceed the 60 Mpx cap. The
   readout says "capped".
-- Noise is our own Perlin, so the 2020 · v4.3 preset matches the old look
-  in spirit, not pixel for pixel.
+- Sheet: None exports the window, so the export's framing depends on the
+  window size and zoom at that moment.
 - Sea level is a quantile. On a map with huge flat areas (very low
   peakiness), small slider moves can jump the coast a lot.
