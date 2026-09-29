@@ -88,11 +88,12 @@
   // ── Sliders: key → [element id, min, max, step, scale, tier, readout] ──
   const log = (min, max) => ({ toVal: p => min * Math.pow(max / min, p / 1000), toPos: v => Math.round(Math.log(v / min) / Math.log(max / min) * 1000) });
   const lin = (min, max) => ({ toVal: p => min + (max - min) * p / 1000, toPos: v => Math.round((v - min) / (max - min) * 1000) });
+  const rev = m => ({ toVal: p => m.toVal(1000 - p), toPos: v => 1000 - m.toPos(v) });
   const SLIDERS = {
     focus:  { map: lin(0, 1), round: 2, tier: 'terrain', out: v => v === 0 ? 'off · mainland' : pct(v) },
     count:  { map: lin(1, 16), round: 0, tier: 'terrain', out: v => v + (v === 1 ? ' island' : ' islands') },
-    size:   { map: log(0.08, 1.2), round: 3, tier: 'terrain', out: v => pct(v) + ' of page' },
-    scale:  { map: log(0.8, 12), round: 2, tier: 'terrain', out: v => v < 2 ? 'broad' : v < 5 ? 'medium' : v < 8 ? 'busy' : 'chaotic' },
+    size:   { map: log(0.08, 1.2), round: 3, tier: 'terrain', out: v => pct(v) + ' of sheet' },
+    scale:  { map: rev(log(0.8, 12)), round: 2, tier: 'terrain', out: v => v < 2 ? 'very smooth' : v < 5 ? 'smooth' : v < 8 ? 'busy' : 'chaotic' },
     rough:  { map: lin(0, 1), round: 2, tier: 'terrain', out: v => v < 0.25 ? 'smooth' : v < 0.6 ? 'natural' : v < 0.85 ? 'rugged' : 'jagged' },
     ridges: { map: lin(0, 1), round: 2, tier: 'terrain', out: v => v === 0 ? 'none' : pct(v) },
     warp:   { map: lin(0, 1), round: 2, tier: 'terrain', out: v => v === 0 ? 'none' : pct(v) },
@@ -231,6 +232,40 @@
     $('hud-restore').addEventListener('click', () => setHud(true));
     window.addEventListener('keydown', onKey);
 
+    // Collapsible sections: open by default, each viewer's choice remembered
+    document.querySelectorAll('details.sec').forEach(d => {
+      const v = store.get('sec.' + d.dataset.sec);
+      if (v === '0') d.open = false;
+      d.addEventListener('toggle', () => store.set('sec.' + d.dataset.sec, d.open ? '1' : '0'));
+    });
+
+    // ⓘ help: hover on desktop, tap on touch; one floating tip
+    const tip = $('tip');
+    let pinned = null;
+    function showTip(btn) {
+      tip.textContent = btn.dataset.tip; tip.hidden = false;
+      const r = btn.getBoundingClientRect(), w = Math.min(280, window.innerWidth - 20);
+      tip.style.width = w + 'px';
+      let x = r.left + r.width / 2 - w / 2;
+      x = Math.max(10, Math.min(window.innerWidth - w - 10, x));
+      tip.style.left = x + 'px';
+      const below = r.bottom + 8, h = tip.offsetHeight;
+      tip.style.top = (below + h < window.innerHeight - 10 ? below : r.top - h - 8) + 'px';
+    }
+    function hideTip() { tip.hidden = true; pinned = null; }
+    document.querySelectorAll('.info').forEach(b => {
+      b.setAttribute('aria-label', b.dataset.tip);
+      b.addEventListener('mouseenter', () => { if (!pinned) showTip(b); });
+      b.addEventListener('mouseleave', () => { if (!pinned) tip.hidden = true; });
+      b.addEventListener('click', e => {
+        e.preventDefault(); e.stopPropagation();          // don't toggle the section
+        if (pinned === b) return hideTip();
+        pinned = b; showTip(b);
+      });
+    });
+    document.addEventListener('click', e => { if (pinned && !e.target.closest('.info')) hideTip(); });
+    document.querySelectorAll('.panel-body').forEach(b => b.addEventListener('scroll', hideTip, { passive: true }));
+
     // "more below" fade on panels that scroll
     document.querySelectorAll('.panel-body').forEach(b => b.addEventListener('scroll', updateMore, { passive: true }));
     document.querySelectorAll('.panel details').forEach(d => d.addEventListener('toggle', updateMore));
@@ -324,7 +359,7 @@
 
   function onKey(e) {
     if (e.target.closest && e.target.closest('input, select, textarea')) { if (e.key !== 'Escape') return; }
-    if (e.key === 'Escape') { $('about').hidden = true; return; }
+    if (e.key === 'Escape') { $('about').hidden = true; $('tip').hidden = true; return; }
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const k = e.key.toLowerCase();
     if (k === 'n') newLandscape();
@@ -379,11 +414,6 @@
     $('out-page').textContent = P.window
       ? `No sheet · exports the window as shown, ${fmt(P.w, 0)} × ${fmt(P.h, 0)} px`
       : `${P.wmm} × ${P.hmm} mm · ${fmt(P.w, 0)} × ${fmt(P.h, 0)} px${P.capped ? ` (capped to ${P.dpi} dpi)` : ''}`;
-    $('hint-style').textContent = {
-      grey: 'Your 2020 look: elevation as grey bands, sea in black.',
-      thermal: 'The v4.3 colour experiment: bands as hues, cold to hot.',
-      lines: 'Contour lines on paper — exactly what the SVG export draws.',
-    }[S.style];
   }
 
   let lastStats = null, lastLevels = null;

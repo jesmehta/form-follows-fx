@@ -315,14 +315,8 @@ kbd { font-family: var(--mono); font-size: 11px; padding: 1px 5px; border: 1px s
   font-family: var(--mono); font-size: 10px; color: var(--accent);
   text-decoration: underline; text-underline-offset: 2px; margin-left: 4px;
 }
-.focus-group { display: flex; flex-direction: column; gap: 8px; }
-[data-focus="off"] .focus-group > :not(.only-focus-off):not(.seg) { opacity: 0.45; }
-[data-focus="on"] .only-focus-off,
-[data-shape="edge"] .not-edge,
-.shape-hint { display: none; }
-[data-shape="points"] .only-points,
-[data-shape="edge"] .only-edge,
-[data-shape="line"] .only-line { display: block; }
+[data-focus="off"] .dim-off { opacity: 0.45; }
+[data-shape="edge"] .not-edge { display: none; }
 
 .export-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .export {
@@ -380,3 +374,34 @@ kbd { font-family: var(--mono); font-size: 11px; padding: 1px 5px; border: 1px s
 [data-page="none"] .only-nosheet { display: block; }
 [data-page="none"] .only-sheet,
 [data-page="SQ"] .only-orient, [data-page="custom"] .only-orient, [data-page="none"] .only-orient { display: none; }
+
+/* ── Collapsible sections ── */
+details.sec { border-top: 1px solid var(--border); }
+details.sec:first-child { border-top: none; }
+details.sec > summary {
+  display: flex; align-items: center; gap: 6px;
+  padding: 12px 0 10px; border-top: none;
+}
+details.sec > summary::before { content: '▸'; color: var(--muted2); font-size: 9px; width: 10px; }
+details.sec[open] > summary::before { content: '▾'; }
+details.sec > summary:hover h2 { color: var(--accent); }
+details.sec > summary .info { margin-left: auto; }
+details.sec > .sec-body { display: flex; flex-direction: column; gap: 8px; padding: 0 0 14px; margin-top: 0; }
+.row-head { display: flex; align-items: center; justify-content: space-between; font-size: 14px; }
+#btn-reset-markers { align-self: flex-start; margin: -2px 0 2px; }
+
+/* ── ⓘ help ── */
+.info {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; border-radius: 50%; padding: 0; margin-left: 4px;
+  font-size: 11px; line-height: 1; color: var(--muted2);
+  vertical-align: 1px; cursor: help;
+}
+.info:hover, .info:focus-visible { color: var(--accent); }
+.tip {
+  position: fixed; z-index: 20; max-width: calc(100vw - 20px);
+  padding: 9px 12px; border-radius: 6px;
+  background: var(--panel); border: 1px solid rgba(200,169,110,0.45);
+  font-size: 14px; line-height: 1.35; color: var(--text);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.5); pointer-events: none;
+}

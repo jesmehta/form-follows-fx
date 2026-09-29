@@ -556,7 +556,7 @@ new p5(function (s) {
     const seaFill = S.style === 'lines' ? `rgb(${PAPER})` : `rgb(${palette(lv)(lv.min - 1)})`;
     const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="${P.wmm}mm" height="${P.hmm}mm" viewBox="0 0 ${P.wmm} ${P.hmm}">
-<!-- Island Generator v5.0 · seed ${S.seed} · ${location.href.replace(/--/g, '%2D%2D')} -->
+<!-- Island Generator v5.2 · seed ${S.seed} · ${location.href.replace(/--/g, '%2D%2D')} -->
 <g id="page" inkscape:groupmode="layer" inkscape:label="page">${mode === 'layers' ? `<rect width="${P.wmm}" height="${P.hmm}" fill="${seaFill}"/>` : ''}<rect width="${P.wmm}" height="${P.hmm}" fill="none" stroke="#999" stroke-width="0.1"/></g>
 ${layers.map(l => l.xml).join('\n')}
 </svg>`;
