@@ -23,6 +23,8 @@ new p5(function(s) {
 
   // ── Active drawing state (frozen at each reset) ──
   let rEarth, rVenus, avEarth, avVenus, scl;
+  let wEarth, wVenus; // angular rate per unit of `deg` -- see doReset()
+  let classic;        // true = v2.x behaviour (angle = period * deg)
   let deg, step;
   let px, py, xEarth, yEarth, xVenus, yVenus;
   let p1, p2;
@@ -68,10 +70,10 @@ new p5(function(s) {
   syncPair(slScl, txScl, (v) => {
     scl = s.width / 2 * (v / 100);
     // Rebase px/py so midpoint trail doesn't jump on zoom change
-    xEarth = rEarth * scl * s.cos(avEarth * deg);
-    yEarth = rEarth * scl * s.sin(avEarth * deg);
-    xVenus = rVenus * scl * s.cos(avVenus * deg);
-    yVenus = rVenus * scl * s.sin(avVenus * deg);
+    xEarth = rEarth * scl * s.cos(wEarth * deg);
+    yEarth = rEarth * scl * s.sin(wEarth * deg);
+    xVenus = rVenus * scl * s.cos(wVenus * deg);
+    yVenus = rVenus * scl * s.sin(wVenus * deg);
     px = (xEarth + xVenus) / 2;
     py = (yEarth + yVenus) / 2;
   });
@@ -103,19 +105,18 @@ new p5(function(s) {
     return { n1: bestQ, n2: bestP, cycleYears: bestQ * T1 };
   }
 
-  function updateInfoPanel(a_p1, a_p2, res) {
+  function updateInfoPanel(a_p1, a_p2, cyc) {
     document.getElementById('p1-name').textContent = solar[a_p1].name;
     document.getElementById('p1-ov').textContent   = solar[a_p1].ov + ' yr';
     document.getElementById('p1-au').textContent   = solar[a_p1].au + ' AU';
     document.getElementById('p2-name').textContent = solar[a_p2].name;
     document.getElementById('p2-ov').textContent   = solar[a_p2].ov + ' yr';
     document.getElementById('p2-au').textContent   = solar[a_p2].au + ' AU';
-    document.getElementById('res-ratio').textContent = res.n1 + ' : ' + res.n2;
-    document.getElementById('res-lcm').textContent   = res.cycleYears.toFixed(2) + ' yr';
-    document.getElementById('info-o1').textContent   = res.n1 + ' orbits of ' + solar[a_p1].name;
-    document.getElementById('info-o2').textContent   = res.n2 + ' orbits of ' + solar[a_p2].name;
-    const ctDeg = res.n1 * (360 / solar[a_p1].ov);
-    document.getElementById('info-target').textContent = ctDeg.toFixed(1) + '°';
+    document.getElementById('res-ratio').textContent = cyc.o1 + ' : ' + cyc.o2;
+    document.getElementById('res-lcm').textContent   = cyc.cycleYears.toFixed(2) + ' yr';
+    document.getElementById('info-o1').textContent   = cyc.o1 + ' orbits of ' + solar[a_p1].name;
+    document.getElementById('info-o2').textContent   = cyc.o2 + ' orbits of ' + solar[a_p2].name;
+    document.getElementById('info-target').textContent = cyc.cycleTarget.toFixed(1) + '°';
     updateFilename(a_p1, a_p2);
   }
 
@@ -142,6 +143,7 @@ new p5(function(s) {
     p2       = parseInt(selP2.value);
     loopMode = document.querySelector('input[name="loop"]:checked').value;
     drawMode = parseInt(document.querySelector('input[name="mode"]:checked').value);
+    classic  = document.getElementById('chk-classic').checked;
 
     // fadeAlpha used directly as p5 alpha (0.1–10, on 0–255 scale)
     // This gives very gentle, slow fades — exactly as intended
@@ -158,20 +160,35 @@ new p5(function(s) {
     avEarth = solar[p1].ov;
     avVenus = solar[p2].ov;
 
+    // ── Angular rates ──
+    // A planet's angle must grow in proportion to time / period: a planet
+    // with twice the period moves half as fast. `deg` is the time driver,
+    // measured in degrees of one Earth year (deg = 360 -> 1 year), so
+    //   angle = deg / period.
+    // v2.x used angle = period * deg, which makes outer planets move
+    // FASTER (Pluto 248x Earth). The symmetry survives (it depends only on
+    // the ratio) but the shape is different. Kept behind the Classic toggle.
+    wEarth = classic ? avEarth : 1 / avEarth;
+    wVenus = classic ? avVenus : 1 / avVenus;
+
     const res = findResonance(avEarth, avVenus);
+    // findResonance gives T2/T1 ~= n2/n1, so n2 orbits of P1 and n1 orbits
+    // of P2 take the same number of years (Earth-Venus: 8 and 13).
+    // Under classic (swapped) speeds the counts swap too.
+    const o1 = classic ? res.n1 : res.n2;
+    const o2 = classic ? res.n2 : res.n1;
 
     // ── Cycle target in deg-driver space ──
-    // `deg` is a raw angle driver passed into cos/sin as: cos(avEarth * deg)
-    // Planet 1 completes one full orbit when avEarth * deg = 360 → deg = 360 / avEarth
-    // Full resonance cycle = n1 complete orbits of Planet 1:
-    //   cycleTarget = n1 * (360 / avEarth)
-    cycleTarget = res.n1 * (360 / avEarth);
+    // Planet 1 completes one full orbit when wEarth * deg = 360 → deg = 360 / wEarth
+    // Full resonance cycle = o1 complete orbits of Planet 1:
+    cycleTarget = o1 * (360 / wEarth);
+    const cycleYears = classic ? res.cycleYears : o1 * avEarth;
 
     deg = 0;
-    xEarth = rEarth * scl * s.cos(avEarth * deg);
-    yEarth = rEarth * scl * s.sin(avEarth * deg);
-    xVenus = rVenus * scl * s.cos(avVenus * deg);
-    yVenus = rVenus * scl * s.sin(avVenus * deg);
+    xEarth = rEarth * scl * s.cos(wEarth * deg);
+    yEarth = rEarth * scl * s.sin(wEarth * deg);
+    xVenus = rVenus * scl * s.cos(wVenus * deg);
+    yVenus = rVenus * scl * s.sin(wVenus * deg);
     px = (xEarth + xVenus) / 2;
     py = (yEarth + yVenus) / 2;
 
@@ -180,7 +197,7 @@ new p5(function(s) {
     setStatus('running');
     if (!s.isLooping()) s.loop();
 
-    updateInfoPanel(p1, p2, res);
+    updateInfoPanel(p1, p2, { o1, o2, cycleYears, cycleTarget });
   }
 
   // ── p5 setup ──
@@ -203,10 +220,10 @@ new p5(function(s) {
       txScl.value = v;
       scl = s.width / 2 * (v / 100);
       // Rebase midpoint so trail doesn't jump on zoom
-      xEarth = rEarth * scl * s.cos(avEarth * deg);
-      yEarth = rEarth * scl * s.sin(avEarth * deg);
-      xVenus = rVenus * scl * s.cos(avVenus * deg);
-      yVenus = rVenus * scl * s.sin(avVenus * deg);
+      xEarth = rEarth * scl * s.cos(wEarth * deg);
+      yEarth = rEarth * scl * s.sin(wEarth * deg);
+      xVenus = rVenus * scl * s.cos(wVenus * deg);
+      yVenus = rVenus * scl * s.sin(wVenus * deg);
       px = (xEarth + xVenus) / 2;
       py = (yEarth + yVenus) / 2;
     }, { passive: false });
@@ -232,10 +249,10 @@ new p5(function(s) {
     s.stroke(255);
     s.noFill();
 
-    xEarth = rEarth * scl * s.cos(avEarth * deg);
-    yEarth = rEarth * scl * s.sin(avEarth * deg);
-    xVenus = rVenus * scl * s.cos(avVenus * deg);
-    yVenus = rVenus * scl * s.sin(avVenus * deg);
+    xEarth = rEarth * scl * s.cos(wEarth * deg);
+    yEarth = rEarth * scl * s.sin(wEarth * deg);
+    xVenus = rVenus * scl * s.cos(wVenus * deg);
+    yVenus = rVenus * scl * s.sin(wVenus * deg);
 
     const mx = (xEarth + xVenus) / 2;
     const my = (yEarth + yVenus) / 2;
@@ -266,10 +283,10 @@ new p5(function(s) {
       } else {
         // Continuous: reset deg and rebase start position, keep drawing
         deg = 0;
-        xEarth = rEarth * scl * s.cos(avEarth * deg);
-        yEarth = rEarth * scl * s.sin(avEarth * deg);
-        xVenus = rVenus * scl * s.cos(avVenus * deg);
-        yVenus = rVenus * scl * s.sin(avVenus * deg);
+        xEarth = rEarth * scl * s.cos(wEarth * deg);
+        yEarth = rEarth * scl * s.sin(wEarth * deg);
+        xVenus = rVenus * scl * s.cos(wVenus * deg);
+        yVenus = rVenus * scl * s.sin(wVenus * deg);
         px = (xEarth + xVenus) / 2;
         py = (yEarth + yVenus) / 2;
       }
