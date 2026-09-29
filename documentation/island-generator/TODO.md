@@ -63,6 +63,8 @@ land and are never deleted. The design intent behind each item is in
 - [x] Contour lines toggle over Grey / Thermal / Topology, on screen and
       in PNG export (2026-09-30)
 - [x] Land focus → Land weight; Shape tooltip trimmed (2026-09-30)
+- [x] v5.4: Topology → Topographic; Contour lines toggle greyed out (not
+      hidden) in Lines style (2026-09-30)
 
 - [ ] **User review of v5.0 look and feel**, and of the build-time
       decisions listed in `ISLAND-GENERATOR.md`

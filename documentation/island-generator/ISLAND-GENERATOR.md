@@ -126,8 +126,8 @@ Panel order and names as of v5.2 (the user's sequence and naming, see
 | | **Elevation exponent** (was Peakiness) | Exponent on height: plateaus ↔ sharp peaks | v3 `elev`, "exponent for sealevel" |
 | Visual controls | **Contour bands** 2–30 | Number of land bands | v2 `b`, "no of bandgaps" |
 | | Depth contours | Bands and lines under the sea too | v3's underwater bands |
-| | Colours: Grey / Thermal / Topology / Lines | Render style | v2 grey, v4.3 colour |
-| | Contour lines | Draw the contour lines over Grey, Thermal or Topology | — |
+| | Colours: Grey / Thermal / Topographic / Lines | Render style | v2 grey, v4.3 colour |
+| | Contour lines | Draw the contour lines over Grey, Thermal or Topographic; shown on and greyed out in Lines | — |
 | | Island centres | Show or hide the markers | — |
 
 Presets set only terrain keys (plus sea level) and leave the look alone.
@@ -151,7 +151,7 @@ Hypsometric (atlas) colour was offered and not chosen.
 
 - **Grey**: land bands from dark grey to near-white, sea near-black (v3's
   "black oceans"). The HSB clipping is fixed.
-- **Topology** (added v5.3; the user's name): realistic map colours.
+- **Topographic** (added v5.3 as "Topology", renamed v5.4): realistic map colours.
   These are hypsometric tints running from green lowlands through tan and
   brown hills to grey rock and snow, with a blue sea and lighter
   shallows.
@@ -517,6 +517,15 @@ window at 2×. Shape buttons always show, and picking one turns Land
 focus on. Panels run full height with a "more below" hint. Depth
 contours fixed: own step, visible sea shades. Details under "v5.1: first
 review round".
+
+### v5.4: Topographic, toggle kept in Lines (2026-09-30)
+
+"Topology" renamed **Topographic** (**"Yes make it topographic"**). The
+Contour lines toggle stays visible in Lines style, shown on and greyed
+out (**"Keep the contour lines toggle in lines mode as well just greyed
+out"**), so the control doesn't jump in and out of the panel. The
+viewer's own setting is kept for when they switch back to a filled
+style.
 
 ### v5.3: Topology, contour overlay, Land weight (2026-09-30)
 

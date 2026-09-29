@@ -300,3 +300,12 @@ Built as v5.3. Topology uses hypsometric tints. It was flagged to the
 user that in maths "topology" means something else and cartographers
 would say "topographic"/"hypsometric", but the user's name is used as
 asked.
+
+## Part 7: naming and the greyed-out toggle (2026-09-30)
+
+> **Yes make it topographic
+> Keep the contour lines toggle in lines mode as well just greyed out**
+
+Built as v5.4. In Lines style the toggle shows as on (lines are always
+drawn there) and disabled, and the viewer's own choice returns when they
+switch back to a filled style.
