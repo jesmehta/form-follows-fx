@@ -7,9 +7,9 @@
 // Every setting falls into one tier (ISLAND-GENERATOR.md, "Tiers"):
 //   terrain — the height function changes: resample everything
 //   levels  — sea level, bands: recolour the field already sampled
-//   look    — style, depth, classic: recolour (lines ↔ fill resamples)
+//   look    — style, depth: recolour (lines ↔ fill resamples)
 //   view    — zoom, pan: resample for the window, map unchanged
-//   none    — page size, resolution: only affects export
+//   none    — sheet on/off, resolution: only affects the frame and export
 
 (function () {
 
@@ -21,8 +21,8 @@
     scale: 3, rough: 0.5, ridges: 0.15, warp: 0.3, peak: 1.3,
     focus: 0.9, shape: 'points', count: 1, size: 0.55,
     sea: 0.62, bands: 12, depth: false,
-    style: 'grey', classic: false, markers: true,
-    page: 'A4', orient: 'portrait', dpi: 300,
+    style: 'grey', markers: true,
+    page: 'A4', orient: 'portrait', dpi: 300, sheet: true, cw: 300, ch: 200,
     extra: [], removed: [], moved: {},
   };
   const S = IG.settings = JSON.parse(JSON.stringify(DEFAULTS));
@@ -32,13 +32,14 @@
   const URL_KEYS = {
     seed: 's', scale: 'fs', rough: 'r', ridges: 'rg', warp: 'w', peak: 'pk',
     focus: 'f', shape: 'sh', count: 'n', size: 'sz', sea: 'sl', bands: 'b', depth: 'dp',
-    style: 'st', classic: 'cl', page: 'pg', orient: 'o', dpi: 'dpi',
+    style: 'st', page: 'pg', orient: 'o', dpi: 'dpi', sheet: 'sf', cw: 'cw', ch: 'ch',
   };
   const NUM = { seed: [0, 999999], scale: [0.5, 16], rough: [0, 1], ridges: [0, 1], warp: [0, 1],
-    peak: [0.3, 4], focus: [0, 1], count: [1, 16], size: [0.05, 1.5], sea: [0, 1], bands: [2, 30], dpi: [72, 600] };
+    peak: [0.3, 4], focus: [0, 1], count: [1, 16], size: [0.05, 1.5], sea: [0, 1], bands: [2, 30], dpi: [72, 600],
+    cw: [20, 2000], ch: [20, 2000] };
   const ENUM = { shape: ['points', 'edge', 'line'], style: ['grey', 'thermal', 'lines'],
-    page: Object.keys(M.PAGES), orient: ['portrait', 'landscape'] };
-  const INT = new Set(['seed', 'count', 'bands', 'dpi']);
+    page: Object.keys(M.PAGES).concat('custom'), orient: ['portrait', 'landscape'] };
+  const INT = new Set(['seed', 'count', 'bands', 'dpi', 'cw', 'ch']);
 
   function readURL() {
     const q = new URLSearchParams(location.search);
@@ -124,17 +125,23 @@
       const p = M.PRESETS.find(x => x.id === b.dataset.preset);
       Object.assign(S, p.p);
       S.extra = []; forgetGeneratedEdits();
-      // v4.3 measured its island from (w/3, h/3), not the centre
-      if (p.at) S.moved = { 0: { x: p.at[0], y: p.at[1] * IG.sketch.aspect() } };
-      if (p.id === 'v43') { S.classic = true; S.bands = 18; if (S.style === 'lines') S.style = 'grey'; }
-      else S.classic = false;
       syncControls();
-      changed('resample'); changed('terrain');
+      changed('terrain');
     });
   }
   function buildPages() {
-    $('seg-page').innerHTML = Object.keys(M.PAGES).map(k =>
-      `<button type="button" data-value="${k}">${k === 'SQ' ? '□' : k}</button>`).join('');
+    const label = { SQ: 'Square', custom: 'Custom', none: 'None' };
+    $('seg-page').innerHTML = ['A5', 'A4', 'A3', 'SQ', 'custom', 'none'].map(k =>
+      `<button type="button" data-value="${k}">${label[k] || k}</button>`).join('');
+  }
+  // Sheet changes: only a change of shape rebuilds the map (A5/A4/A3 share
+  // one shape; None hides the frame and keeps the sheet underneath).
+  function sheetChanged(apply) {
+    const before = IG.sketch.aspect();
+    apply();
+    syncControls();
+    if (Math.abs(IG.sketch.aspect() - before) > 1e-9) { S.panX = S.panY = null; changed('terrain'); }
+    else changed(null);
   }
 
   // ── Wiring ──
@@ -154,19 +161,29 @@
         const b = e.target.closest('button'); if (!b) return;
         const key = seg.dataset.key;
         let v = b.dataset.value; if (key === 'dpi') v = +v;
-        if (S[key] === v) return;
+        if (key === 'shape' && S.focus <= 0) {
+          // shapes only act through land focus; picking one turns it on
+          S.focus = 0.85; toast('Land focus turned on so the shape shows');
+        } else if (S[key] === v) return;
         const wasLines = S.style === 'lines';
+        if (key === 'orient') return sheetChanged(() => { S.orient = v; });
         S[key] = v;
         syncControls();
         if (key === 'shape') { forgetGeneratedEdits(); changed('terrain'); }
         else if (key === 'style') changed((wasLines || v === 'lines') ? 'resample' : 'look');
-        else if (key === 'orient' || (key === 'page' && (v === 'SQ' || S.pageWasSQ))) { S.panX = S.panY = null; changed('terrain'); }
         else changed(null);
-        S.pageWasSQ = S.page === 'SQ';
       });
     });
+    $('seg-page').addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      const v = b.dataset.value;
+      sheetChanged(() => { if (v === 'none') S.sheet = false; else { S.sheet = true; S.page = v; } });
+    });
+    for (const k of ['cw', 'ch']) $('inp-' + k).addEventListener('change', e => {
+      const v = clamp(Math.round(+e.target.value) || S[k], ...NUM[k]);
+      sheetChanged(() => { S[k] = v; });
+    });
     $('chk-depth').addEventListener('change', e => { S.depth = e.target.checked; changed('look'); });
-    $('chk-classic').addEventListener('change', e => { S.classic = e.target.checked; changed('look'); });
     $('chk-markers').addEventListener('change', e => { S.markers = e.target.checked; changed(null); });
     $('btn-reset-markers').addEventListener('click', () => {
       S.extra = []; forgetGeneratedEdits(); changed('terrain'); toast('Island centres back to the generated ones');
@@ -213,6 +230,22 @@
     });
     $('hud-restore').addEventListener('click', () => setHud(true));
     window.addEventListener('keydown', onKey);
+
+    // "more below" fade on panels that scroll
+    document.querySelectorAll('.panel-body').forEach(b => b.addEventListener('scroll', updateMore, { passive: true }));
+    document.querySelectorAll('.panel details').forEach(d => d.addEventListener('toggle', updateMore));
+    window.addEventListener('resize', updateMore);
+    if (window.ResizeObserver) {
+      const ro = new ResizeObserver(updateMore);
+      document.querySelectorAll('.panel-body').forEach(b => { ro.observe(b); for (const c of b.children) ro.observe(c); });
+    }
+  }
+
+  function updateMore() {
+    document.querySelectorAll('.panel').forEach(p => {
+      const b = p.querySelector('.panel-body');
+      p.classList.toggle('has-more', b.scrollHeight - b.scrollTop - b.clientHeight > 6);
+    });
   }
 
   function newLandscape() {
@@ -279,6 +312,7 @@
     const el = $(id), open = !el.classList.contains('sheet-open');
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('sheet-open'));
     el.classList.toggle('sheet-open', open);
+    updateMore();
   }
   let hud = true;
   function setHud(on) {
@@ -323,8 +357,11 @@
     document.querySelectorAll('.seg[data-key]').forEach(seg => {
       seg.querySelectorAll('button').forEach(b => b.classList.toggle('on', String(S[seg.dataset.key]) === b.dataset.value));
     });
-    $('chk-depth').checked = S.depth; $('chk-classic').checked = S.classic; $('chk-markers').checked = S.markers;
-    if (S.classic) document.querySelector('.advanced').open = true;
+    const pageOn = S.sheet ? S.page : 'none';
+    $('seg-page').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.value === pageOn));
+    $('inp-cw').value = S.cw; $('inp-ch').value = S.ch;
+    document.body.dataset.page = pageOn;
+    $('chk-depth').checked = S.depth; $('chk-markers').checked = S.markers;
     $('inp-seed').value = S.seed;
     document.body.dataset.shape = S.shape;
     document.body.dataset.style = S.style;
@@ -339,7 +376,9 @@
     if (!IG.sketch) return;
     for (const [key, cfg] of Object.entries(SLIDERS)) $('out-' + key).textContent = cfg.out(S[key]);
     const P = IG.sketch.pagePixels(S.dpi);
-    $('out-page').textContent = `${P.wmm} × ${P.hmm} mm · ${fmt(P.w, 0)} × ${fmt(P.h, 0)} px${P.capped ? ` (capped to ${P.dpi} dpi)` : ''}`;
+    $('out-page').textContent = P.window
+      ? `No sheet · exports the window as shown, ${fmt(P.w, 0)} × ${fmt(P.h, 0)} px`
+      : `${P.wmm} × ${P.hmm} mm · ${fmt(P.w, 0)} × ${fmt(P.h, 0)} px${P.capped ? ` (capped to ${P.dpi} dpi)` : ''}`;
     $('hint-style').textContent = {
       grey: 'Your 2020 look: elevation as grey bands, sea in black.',
       thermal: 'The v4.3 colour experiment: bands as hues, cold to hot.',
@@ -388,7 +427,6 @@
 
   // ── Boot ──
   readURL();
-  S.pageWasSQ = S.page === 'SQ';
   buildPresets();
   buildPages();
   wire();

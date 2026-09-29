@@ -41,8 +41,9 @@
           <div class="slider-head"><span>Land focus</span><output id="out-focus"></output></div>
           <input type="range" id="sl-focus" min="0" max="1000" step="1">
         </div>
-        <p class="hint only-focus-off">At 0 the noise runs to every edge — a mainland. Raise it to pull land towards island centres.</p>
-        <div class="only-focus-on">
+        <p class="hint">At 0 the noise runs to every edge — a mainland. Raise it to pull land towards island centres.</p>
+        <div class="focus-group">
+          <p class="hint only-focus-off">Land focus is 0, so the shapes below have no effect. Picking one turns it back on.</p>
           <div class="seg" data-key="shape">
             <button type="button" data-value="points">Islands</button>
             <button type="button" data-value="edge">Coast</button>
@@ -114,11 +115,10 @@
       <details class="advanced">
         <summary>Advanced</summary>
         <label class="toggle"><input type="checkbox" id="chk-markers"><span>Show island centres</span></label>
-        <label class="toggle"><input type="checkbox" id="chk-classic"><span>2020 colours</span></label>
-        <p class="hint">The 2020 sketches drew bands across the whole height range with no sea, and in grey clipped the top third to white (a colour-mode quirk). Kept for comparison.</p>
       </details>
 
     </div>
+    <div class="more" aria-hidden="true">▾ more below</div>
   </aside>
 
   <!-- ── PAGE & EXPORT (right) ── -->
@@ -131,12 +131,16 @@
 
       <section>
         <h2>Sheet</h2>
-        <div class="seg small" data-key="page" id="seg-page"></div>
-        <div class="seg" data-key="orient">
+        <div class="seg small wrap" id="seg-page"></div>
+        <div class="custom-size only-custom">
+          <label>W <input type="number" id="inp-cw" min="20" max="2000" step="1"> mm</label>
+          <label>H <input type="number" id="inp-ch" min="20" max="2000" step="1"> mm</label>
+        </div>
+        <div class="seg only-orient" data-key="orient">
           <button type="button" data-value="portrait">Portrait</button>
           <button type="button" data-value="landscape">Landscape</button>
         </div>
-        <div class="seg" data-key="dpi">
+        <div class="seg only-sheet" data-key="dpi">
           <button type="button" data-value="150">150 dpi</button>
           <button type="button" data-value="300">300 dpi</button>
         </div>
@@ -148,11 +152,12 @@
             <button class="icon" id="btn-fit" type="button" title="Fit the page (F)">fit</button>
           </div>
         </div>
-        <p class="hint">The framed sheet is what exports. Drag to pan, scroll to zoom — the view never changes the map.</p>
+        <p class="hint only-sheet">The framed sheet is what exports. Drag to pan, scroll to zoom — the view never changes the map.</p>
+        <p class="hint only-nosheet">No frame: the map is still laid out on the last sheet, so nothing moves. Exports capture the window as you see it.</p>
       </section>
 
       <section>
-        <h2>Export the sheet</h2>
+        <h2>Export</h2>
         <div class="export-grid">
           <button class="export" id="btn-png" type="button"><b>PNG</b><small>as drawn, print resolution</small></button>
           <button class="export" id="btn-height" type="button"><b>Heightmap</b><small>16-bit grey PNG</small></button>
@@ -172,6 +177,7 @@
       </details>
 
     </div>
+    <div class="more" aria-hidden="true">▾ more below</div>
   </aside>
 
   <button class="edge-tab left" id="tab-controls" type="button" hidden>Landscape ›</button>

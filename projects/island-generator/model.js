@@ -255,7 +255,12 @@ window.IG = window.IG || {};
     const step = (top - seaE) / bands;
     const list = [];                                   // contour elevations, coast first
     for (let b = 0; b < bands; b++) list.push(seaE + b * step);
-    return { sea: seaE, top, step, bands, list, min: ref.min };
+    // Depth bands divide the water's own range (sea level → deepest point
+    // on the page), not the land's step: the sea floor is often much deeper
+    // than any hill is high, and land-sized steps crammed every depth line
+    // against the coast.
+    const depthStep = Math.max(1e-6, (seaE - ref.min) / DEPTH_BANDS);
+    return { sea: seaE, top, step, bands, list, min: ref.min, depthStep };
   }
 
   // ── Marching squares ──
@@ -355,12 +360,12 @@ window.IG = window.IG || {};
     return line.filter((_, i) => keep[i]);
   }
 
-  // ── Page sizes (mm, portrait) ──
+  // ── Page sizes (mm, portrait). 'custom' reads its size from settings. ──
   const PAGES = {
-    A5: [148, 210], A4: [210, 297], A3: [297, 420], A2: [420, 594], A1: [594, 841],
-    SQ: [300, 300],
+    A5: [148, 210], A4: [210, 297], A3: [297, 420], SQ: [300, 300],
   };
   const PX_CAP = 60e6;   // largest export raster, pixels
+  const DEPTH_BANDS = 6;
 
   // ── Presets: named points in the same parameter space ──
   // Only the terrain keys; look (style, bands) is left as the user has it.
@@ -377,10 +382,8 @@ window.IG = window.IG || {};
       p: { count: 4, size: 0.28, focus: 0.8, shape: 'line', sea: 0.35, scale: 3.5, rough: 0.6, ridges: 0.85, warp: 0.25, peak: 1.6 } },
     { id: 'lakes',   title: 'Lake country',  note: 'low, wet, many pools',
       p: { count: 1, size: 0.5, focus: 0, shape: 'points', sea: 0.3, scale: 7, rough: 0.35, ridges: 0, warp: 0.5, peak: 0.7 } },
-    { id: 'v43',     title: '2020 · v4.3',   note: 'the original look', at: [1 / 3, 1 / 3],
-      p: { count: 1, size: 1, focus: 1, shape: 'points', sea: 0, scale: 4.2, rough: 0.45, ridges: 0, warp: 0, peak: 1 } },
   ];
 
-  IG.model = { rng, makeNoise, makeTerrain, sampleField, pageReference, levels, isolines, simplify, PAGES, PX_CAP, PRESETS };
+  IG.model = { rng, makeNoise, makeTerrain, sampleField, pageReference, levels, isolines, simplify, PAGES, PX_CAP, PRESETS, DEPTH_BANDS };
 
 })();
