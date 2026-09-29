@@ -90,3 +90,12 @@ Tracked in Cabinet's `documentation/toDo - immediate.md` as the quick win
 - The v2 fade uses a low-alpha black rect every frame. On 8-bit canvases,
   alphas this small never fully reach black — faint grey ghosts remain.
   This may be part of the intended look; don't "fix" it without asking.
+
+## Docs location
+
+- [x] Docs moved from `documentation/<project>/` into this folder, beside
+      the code, as Bookshelf does (2026-09-30)
+- [ ] When fffx's `projects/*/` deploy loop is written, decide whether to
+      exclude `*.md` and `screenshots/`. A plain `cp -r` publishes them:
+      any file is fetchable by path, although not listed. The repo is
+      public anyway.

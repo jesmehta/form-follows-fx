@@ -135,3 +135,12 @@ land and are never deleted. The design intent behind each item is in
 - [ ] Hachures as an overlay on the colour themes, like Contour lines
       ("will consider overlaying it like lines later")
 - [ ] Maybe a hachure density control (pitch is fixed at 0.6 mm of print)
+
+## Docs location
+
+- [x] Docs moved from `documentation/<project>/` into this folder, beside
+      the code, as Bookshelf does (2026-09-30)
+- [ ] When fffx's `projects/*/` deploy loop is written, decide whether to
+      exclude `*.md` and `screenshots/`. A plain `cp -r` publishes them:
+      any file is fetchable by path, although not listed. The repo is
+      public anyway.

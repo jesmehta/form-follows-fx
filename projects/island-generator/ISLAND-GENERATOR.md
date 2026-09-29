@@ -65,9 +65,14 @@ Kept as-is in the history commits. The fixes live only in v5.0.
 ### Where it lives: `projects/island-generator/` in fffx
 
 The same pattern as Dance of Planets: a self-contained static page in
-fffx's `projects/`, docs in `documentation/island-generator/`. The user
-asked for it directly (**"create an Island Generator folder inside fffx
-projects"**).
+fffx's `projects/`. The user asked for it directly (**"create an Island
+Generator folder inside fffx projects"**). The docs lived in
+`documentation/island-generator/` until 2026-09-30, when they moved into
+the project folder itself, beside the code, following Bookshelf's
+pattern (**"just like Bookshelf stores the individual projects'
+documentation inside the project's own folder"**). Note: a Bookshelf-style
+deploy loop copies the whole folder, which would publish these `.md`
+files and `screenshots/` too; see TODO.
 
 ### History: every 2020 version committed in order
 
@@ -550,8 +555,8 @@ works from `file://` (as DoP does).
 | `projects/island-generator/model.js` | Noise, terrain, sampling, levels, marching squares, presets |
 | `projects/island-generator/ui.js` | Settings, controls, URL, facts, keys |
 | `projects/island-generator/island_generator.js` | The p5 sketch: progressive render, overlay, pointer, export |
-| `documentation/island-generator/sketch-notes-2020.md` | The 2020 notes, verbatim |
-| `documentation/island-generator/screenshots/` | `v5.0-desktop`, `-archipelago`, `-mountain-range`, `-lines`, `-mobile-controls`, `-exports` |
+| `projects/island-generator/sketch-notes-2020.md` | The 2020 notes, verbatim |
+| `projects/island-generator/screenshots/` | `v5.0-desktop`, `-archipelago`, `-mountain-range`, `-lines`, `-mobile-controls`, `-exports` |
 
 ## Verified
 
