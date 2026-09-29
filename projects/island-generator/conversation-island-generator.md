@@ -385,3 +385,36 @@ Built as v5.6.
 - **The remaining artefacts** (twigs at knolls, gaps on divergent slopes)
   are the known limit of the basic version. They are left for the user to
   judge before deciding on the refinement.
+
+## Part 11: docs beside the code, and hachures that span the band (2026-09-30)
+
+> **just like Bookshelf stores the individual projects' documentation
+> inside the project's own folder, move Dance of Planets and Island
+> Generator docus into their respective folders inside projects folder**
+
+Both projects' docs, screenshots and the 2020 notes moved from
+`documentation/<name>/` into `projects/<name>/` with `git mv`. Cabinet's
+immediate TODO pointed at the old Dance of Planets path, and was fixed in
+Cabinet.
+
+> **if publishing the whole folder mean the docs get "published" are the
+> md files literally available on the live website, atleast if you know
+> the filename and path ?**
+
+Yes. A `cp -r` of the project folder into the site publishes every file
+in it. The `.md` files and screenshots are fetchable by exact path,
+though GitHub Pages doesn't list folders. This is already the case for
+Bookshelf's projects. The repos are public anyway, so the added exposure
+is small. fffx's copy loop isn't written yet, so it can exclude `*.md`
+and `screenshots/`. That decision is in both projects' TODOs.
+
+> **the hachures arent going form one contour to the next, they seem to
+> be stopping after some fixed distnace with a white gap upto the next
+> contour - it looks like terraced fileds and almost feels like not the
+> terrain itself but the banded contour landscape go hachured**
+
+The first guess (the 3.5 mm length cap) was removed, but that alone
+changed nothing visible. Counting why strokes ended showed the real
+cause: 62% hit a neighbour, because strokes traced uphill converge.
+Reversed to downhill-first with an uphill gap-filling pass (v5.6.1).
+Strokes now span each band and fan around the hills.

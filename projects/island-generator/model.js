@@ -362,20 +362,22 @@ window.IG = window.IG || {};
   }
 
   // ── Hachures (v5.6) ──
-  // Engraved-map relief (Lehmann, 1799): short strokes that run along the
-  // slope, one band at a time. Each stroke starts on a band's lower
-  // contour and follows the gradient uphill until it reaches the band's
-  // upper contour (the top band runs until the ground flattens at a
-  // summit). Strokes are seeded every `pitch` along the contour, rows in
-  // neighbouring bands are staggered, and a stroke stops if it runs into
-  // another (a coarse occupancy grid), which keeps converging strokes from
-  // blotting near summits. This is the basic version: no re-seeding into
-  // gaps where strokes spread apart.
+  // Engraved-map relief (Lehmann, 1799): strokes that run down the slope,
+  // one band at a time, from each contour to the next. Two passes per band
+  // (v5.6.1): strokes seeded every `pitch` along the upper contour run
+  // downhill to the lower one, then strokes seeded along the lower contour
+  // run uphill into whatever space is still empty. A coarse occupancy grid
+  // stops a stroke that meets another. Rows in neighbouring bands are
+  // staggered.
   //
   // opts: pitch, step (grid units), byHeight (weight by band height rather
-  // than slope), maxSteps (caps stroke length: engraved hachures are short,
-  // and long strokes wander on gentle ground), flat (slope weight below
-  // which ground is left white). Returns [{ pts: [[x, y]…], t }], t = 0…1.
+  // than slope), maxSteps (a safety cap only), flat (slope weight below
+  // which ground is left white), stopFlat (a stroke ends where the ground
+  // flattens below this share of the landscape's steep slope: there the
+  // uphill direction is noise, and strokes wander).
+  // A stroke otherwise always runs to the next contour; v5.6 capped length
+  // at 3.5 mm, which left a white strip under each contour (terraces).
+  // Returns [{ pts: [[x, y]…], t }], t = 0…1.
   function hachures(field, list, opts) {
     const { w, h, data } = field;
     const at = (x, y) => {
@@ -395,7 +397,39 @@ window.IG = window.IG || {};
     mags.sort((a, b) => a - b);
     const g90 = (mags.length && mags[Math.floor(mags.length * 0.9)]) || 1e-6;
 
-    const strokes = [], nB = list.length;
+    const strokes = [], nB = list.length, st = opts.stats;
+
+    // Trace from (x, y) along the gradient: dir +1 uphill until `stop` is
+    // reached from below, -1 downhill until it's reached from above.
+    // Ends early on flat ground, at the edge, or on meeting another stroke.
+    function trace(x, y, dir, stop, occ, cellOf) {
+      const pts = [[x, y]]; let slopeSum = 0, n = 0;
+      for (let it = 0; it < opts.maxSteps; it++) {
+        const gx = at(x + 0.5, y) - at(x - 0.5, y), gy = at(x, y + 0.5) - at(x, y - 0.5);
+        const m = Math.hypot(gx, gy);
+        if (m < 1e-7 || m < opts.stopFlat * g90) { if (st) st.flat++; break; }
+        const nx = x + dir * gx / m * opts.step, ny = y + dir * gy / m * opts.step;
+        if (nx < 0 || ny < 0 || nx > w - 1 || ny > h - 1) { if (st) st.edge++; break; }
+        const e = at(nx, ny);
+        if (dir > 0 ? e >= stop : e <= stop) { pts.push([nx, ny]); if (st) st.contour++; break; }
+        const c = cellOf(nx, ny);
+        if (occ[c] && c !== cellOf(x, y)) { if (st) st.occupied++; break; }
+        x = nx; y = ny; pts.push([x, y]); slopeSum += m; n++;
+      }
+      return { pts, slope: n ? slopeSum / n : 0 };
+    }
+    // Walk a contour, calling fn(x, y) every `pitch` along it.
+    function along(poly, pitch, start, fn) {
+      let need = start;
+      for (let k = 1; k < poly.length; k++) {
+        const [x0, y0] = poly[k - 1], [x1, y1] = poly[k];
+        const L = Math.hypot(x1 - x0, y1 - y0);
+        let pos = 0;
+        while (need <= L - pos) { pos += need; need = pitch; fn(x0 + (x1 - x0) * pos / L, y0 + (y1 - y0) * pos / L); }
+        need -= L - pos;
+      }
+    }
+
     for (let b = 0; b < nB; b++) {
       const lo = list[b], hi = b + 1 < nB ? list[b + 1] : Infinity;
       const tBand = nB > 1 ? b / (nB - 1) : 1;
@@ -404,36 +438,30 @@ window.IG = window.IG || {};
       const cell = Math.max(0.5, pitch * 0.55), cw = Math.ceil(w / cell) + 1;
       const occ = new Uint8Array(cw * (Math.ceil(h / cell) + 1));
       const cellOf = (x, y) => ((y / cell) | 0) * cw + ((x / cell) | 0);
-      for (const poly of isolines(field, lo, false)) {
-        let need = (b % 2) ? pitch * 0.5 : pitch * 0.25;   // staggered rows
-        for (let k = 1; k < poly.length; k++) {
-          const [x0, y0] = poly[k - 1], [x1, y1] = poly[k];
-          const L = Math.hypot(x1 - x0, y1 - y0);
-          let pos = 0;
-          while (need <= L - pos) {
-            pos += need; need = pitch;
-            const f = pos / L;
-            let x = x0 + (x1 - x0) * f, y = y0 + (y1 - y0) * f;
-            if (occ[cellOf(x, y)]) continue;
-            const pts = [[x, y]]; let slopeSum = 0, n = 0;
-            for (let it = 0; it < opts.maxSteps; it++) {
-              const gx = at(x + 0.5, y) - at(x - 0.5, y), gy = at(x, y + 0.5) - at(x, y - 0.5);
-              const m = Math.hypot(gx, gy);
-              if (m < 1e-7) break;
-              const nx = x + gx / m * opts.step, ny = y + gy / m * opts.step;
-              if (nx < 0 || ny < 0 || nx > w - 1 || ny > h - 1 || at(nx, ny) >= hi) break;
-              if (occ[cellOf(nx, ny)] && cellOf(nx, ny) !== cellOf(x, y)) break;
-              x = nx; y = ny; pts.push([x, y]); slopeSum += m; n++;
-            }
-            if (pts.length < 2) continue;
-            for (const [px, py] of pts) occ[cellOf(px, py)] = 1;
-            const t = opts.byHeight ? tBand : Math.min(1, slopeSum / n / g90);
-            if (!opts.byHeight && t < opts.flat) continue;   // near-flat ground stays white
-            strokes.push({ pts, t });
-          }
-          need -= L - pos;
-        }
+      const stagger = (b % 2) ? pitch * 0.5 : pitch * 0.25;
+      const keep = (r) => {
+        if (r.pts.length < 2) return;
+        for (const [px, py] of r.pts) occ[cellOf(px, py)] = 1;
+        const t = opts.byHeight ? tBand : Math.min(1, r.slope / g90);
+        if (!opts.byHeight && t < opts.flat) return;       // near-flat ground stays white
+        strokes.push({ pts: r.pts, t });
+      };
+      // Pass 1: from the upper contour, downhill. Strokes fan out going
+      // down a hill, so nearly all of them reach the lower contour. (The
+      // first build traced uphill from the lower contour; going up a hill
+      // strokes converge, and ~60% stopped early on a neighbour, which
+      // read as terraces.)
+      if (hi !== Infinity) {
+        for (const poly of isolines(field, hi, false)) along(poly, pitch, stagger, (x, y) => {
+          if (!occ[cellOf(x, y)]) keep(trace(x, y, -1, lo, occ, cellOf));
+        });
       }
+      // Pass 2: from the lower contour, uphill, only into space still
+      // empty. This fills the wedges that open between fanning strokes,
+      // and is the only pass for the top band (it runs to the summit).
+      for (const poly of isolines(field, lo, false)) along(poly, pitch, stagger, (x, y) => {
+        if (!occ[cellOf(x, y)]) keep(trace(x, y, +1, hi, occ, cellOf));
+      });
     }
     return strokes;
   }

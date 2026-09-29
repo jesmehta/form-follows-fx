@@ -480,13 +480,13 @@ strokes spread apart on convex ground and bunch in hollows. A cheap
 
 - **One band at a time.** Strokes are seeded every *pitch* along the
   band's lower contour, and rows in neighbouring bands are staggered.
-- **Tracing.** Each stroke follows the gradient uphill in small steps and
-  stops at the first of these:
-  - the band's upper contour;
-  - flat ground (the top band runs toward the summit);
-  - a cell another stroke already occupies, via a coarse grid, reset per
-    band;
-  - the length cap.
+- **Tracing** (as of v5.6.1). Each band gets two passes:
+  1. Strokes from the upper contour run downhill to the lower one.
+  2. Strokes from the lower contour run uphill into the space still empty.
+
+  A stroke stops at the target contour, on flat ground, or on a cell
+  another stroke occupies (a coarse grid, reset per band). v5.6 used only
+  the uphill pass plus a 3.5 mm cap, which made terraces; see v5.6.1.
 - **Weight** is a switch (`hachBy`, URL `hb`):
   - *By slope*, the classic Lehmann rule "the steeper, the darker": the
     stroke's average gradient over this landscape's 90th-percentile
@@ -649,6 +649,28 @@ window at 2×. Shape buttons always show, and picking one turns Land
 focus on. Panels run full height with a "more below" hint. Depth
 contours fixed: own step, visible sea shades. Details under "v5.1: first
 review round".
+
+### v5.6.1: hachures run contour to contour (2026-09-30)
+
+**"the hachures arent going form one contour to the next, they seem to be
+stopping after some fixed distnace with a white gap upto the next
+contour - it looks like terraced fileds"**. Measured before fixing: only
+27% of strokes reached the next contour, and 62% stopped on a neighbour.
+The cause was geometric. Strokes were seeded on each band's lower contour
+and traced *uphill*, and going up a hill contours shorten, so neighbouring
+strokes converge and stop. The 3.5 mm length cap made it worse. Now there
+are two passes per band:
+
+1. **Downhill from the upper contour.** Strokes fan out as they descend,
+   so they reach the lower contour.
+2. **Uphill from the lower contour,** only into empty space. This fills
+   the wedges between fanning strokes, and runs to the summit in the top
+   band.
+
+The length cap is gone. A stroke now ends early only where the ground
+flattens (below 8% of the landscape's steep slope; 4% when weighting by
+height), because there the direction of steepest descent is noise. A4 at
+300 dpi exports in about 8.5 s.
 
 ### v5.6: Hachures (2026-09-30)
 

@@ -153,11 +153,11 @@ new p5(function (s) {
   // Hachures + coast + water-lining for a field sampled at `spmm` samples
   // per mm of print. Pitch, step and water-line spacing are in mm of print,
   // so the screen shows what prints.
-  const HACH = { pitch: 0.6, step: 0.2, maxLen: 3.5, flat: 0.12, coast: 0.35, water: 0.1, wMin: 0.05, wMax: 0.28 };
+  const HACH = { pitch: 0.6, step: 0.2, maxLen: 60, flat: 0.12, stopFlat: 0.08, coast: 0.35, water: 0.1, wMin: 0.05, wMax: 0.28 };
   function buildHachures(src, spmm) {
     const step = Math.max(0.3, HACH.step * spmm);
     const strokes = M.hachures(src, lv.list, {
-      pitch: HACH.pitch * spmm, step, flat: HACH.flat,
+      pitch: HACH.pitch * spmm, step, flat: HACH.flat, stopFlat: S.hachBy === 'height' ? 0.04 : HACH.stopFlat,
       byHeight: S.hachBy === 'height', maxSteps: Math.ceil(HACH.maxLen * spmm / step) });
     const coast = M.isolines(src, lv.sea, false);
     // water lines: first 0.6 mm off the coast, gaps widening by 30% each
