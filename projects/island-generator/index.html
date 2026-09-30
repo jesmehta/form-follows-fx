@@ -100,17 +100,35 @@
             <input type="range" id="sl-bands" min="0" max="1000" step="1">
           </div>
           <label class="toggle"><input type="checkbox" id="chk-depth"><span>Depth contours</span></label>
-          <div class="row-head"><span>Colours</span><button class="info" type="button" data-tip="Grey: height as grey bands. Thermal: height as colours, cold to hot. Topographic: map colours — sea blues, green lowlands, brown hills, snowy peaks. Lines: contour lines on paper, exactly what the SVG export draws. Hachures: engraved-map strokes running down the slopes — heavier where steeper (or higher) — with water lines tracing the coast out to sea.">ⓘ</button></div>
+          <div class="row-head"><span>Colours</span><button class="info" type="button" data-tip="Grey: height as grey bands. Thermal: height as colours, cold to hot. Topographic: map colours — sea blues, green lowlands, brown hills, snowy peaks. Lines: contour lines on paper, exactly what the SVG export draws. Engraved: the land drawn in pen strokes, with water lines tracing the coast out to sea — either hachures, rows of strokes running down the slopes from one contour to the next, or stipple, loose strokes that grow longer on steeper ground. Both are heavier where the ground is steep and on the side away from the light.">ⓘ</button></div>
           <div class="seg small wrap" data-key="style">
             <button type="button" data-value="grey">Grey</button>
             <button type="button" data-value="thermal">Thermal</button>
             <button type="button" data-value="topo">Topographic</button>
             <button type="button" data-value="lines">Lines</button>
-            <button type="button" data-value="hachure">Hachures</button>
+            <button type="button" data-value="hachure">Engraved</button>
           </div>
-          <div class="seg only-hach" data-key="hachBy">
-            <button type="button" data-value="slope">By slope</button>
-            <button type="button" data-value="height">By height</button>
+          <div class="only-eng">
+            <div class="seg" data-key="engrave">
+              <button type="button" data-value="hachure">Hachures</button>
+              <button type="button" data-value="stipple">Stipple</button>
+            </div>
+            <div class="slider only-hmode">
+              <div class="slider-head"><span>Stroke length <button class="info" type="button" data-tip="The longest a hachure may run before it stops, leaving a little white on gentle ground. Off, at the far right, lets every stroke run from one contour to the next.">ⓘ</button></span><output id="out-hcap"></output></div>
+              <input type="range" id="sl-hcap" min="0" max="1000" step="1">
+            </div>
+            <div class="slider only-stip">
+              <div class="slider-head"><span>Spacing <button class="info" type="button" data-tip="How close strokes may come to each other. Closer is denser and darker.">ⓘ</button></span><output id="out-sspace"></output></div>
+              <input type="range" id="sl-sspace" min="0" max="1000" step="1">
+            </div>
+            <div class="slider only-stip">
+              <div class="slider-head"><span>Stroke length <button class="info" type="button" data-tip="Strokes grow from 0.4 mm on gentle ground up to this length on the steepest. Long strokes set close together read as dense shading; set far apart they look like fur.">ⓘ</button></span><output id="out-slen"></output></div>
+              <input type="range" id="sl-slen" min="0" max="1000" step="1">
+            </div>
+            <div class="slider">
+              <div class="slider-head"><span>Light from <button class="info" type="button" data-tip="Where the sun sits. Slopes facing away from it are drawn heavier, so the land reads in relief. Maps traditionally light from the north-west, top left.">ⓘ</button></span><output id="out-sun"></output></div>
+              <input type="range" id="sl-sun" min="0" max="1000" step="1">
+            </div>
           </div>
           <label class="toggle not-lines"><input type="checkbox" id="chk-lines"><span>Contour lines</span></label>
           <label class="toggle"><input type="checkbox" id="chk-markers"><span>Island centres</span></label>
@@ -217,8 +235,8 @@
     <h3>Terrain details</h3>
     <p><strong>Feature smoothness</strong> sets how broad the landforms are. <strong>Surface roughness</strong> adds finer detail on top. <strong>Ridges</strong> fold the terrain into sharp, branching crests. <strong>Coast warp</strong> bends everything so coastlines wander. <strong>Elevation exponent</strong> raises heights to a power: low gives plateaus, high gives sharp peaks, and the coast stays put.</p>
     <h3>Keys</h3>
-    <p class="keys"><kbd>N</kbd> new landscape · <kbd>1</kbd>–<kbd>5</kbd> grey / thermal / topographic / lines / hachures · <kbd>F</kbd> fit the frame · <kbd>H</kbd> hide the interface</p>
-    <p class="small">Sketch and page by Jesal Mehta (@cabofcuriosity), grown from the Perlin Contour sketches of February–March 2020. The island blend is the <em>(1 + e − d) / 2</em> from those sketches, after Red Blob Games' <a href="https://www.redblobgames.com/maps/terrain-from-noise/" target="_blank" rel="noopener">Making maps with noise</a>. Island Generator v5.6.</p>
+    <p class="keys"><kbd>N</kbd> new landscape · <kbd>1</kbd>–<kbd>5</kbd> grey / thermal / topographic / lines / engraved · <kbd>F</kbd> fit the frame · <kbd>H</kbd> hide the interface</p>
+    <p class="small">Sketch and page by Jesal Mehta (@cabofcuriosity), grown from the Perlin Contour sketches of February–March 2020. The island blend is the <em>(1 + e − d) / 2</em> from those sketches, after Red Blob Games' <a href="https://www.redblobgames.com/maps/terrain-from-noise/" target="_blank" rel="noopener">Making maps with noise</a>. Island Generator v5.7.</p>
   </div>
 </div>
 

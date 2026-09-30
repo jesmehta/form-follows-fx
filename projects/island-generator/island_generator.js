@@ -1,4 +1,4 @@
-// Island Generator v5.6 — the sketch
+// Island Generator v5.7 — the sketch
 // © Jesal Mehta, @cabofcuriosity
 // Based on Perlin Contour v1.0–v4.3 (2020)
 //
@@ -150,20 +150,48 @@ new p5(function (s) {
   const withLines = () => S.style === 'lines' || S.contours;
   const onPaper = () => S.style === 'lines' || S.style === 'hachure';
 
-  // Hachures + coast + water-lining for a field sampled at `spmm` samples
-  // per mm of print. Pitch, step and water-line spacing are in mm of print,
-  // so the screen shows what prints.
-  const HACH = { pitch: 0.6, step: 0.2, maxLen: 60, flat: 0.12, stopFlat: 0.08, coast: 0.35, water: 0.1, wMin: 0.05, wMax: 0.28 };
+  // Engraved relief (hachures or stipple) + coast + water-lining for a
+  // field sampled at `spmm` samples per mm of print. Every length here is
+  // in mm of print, so the screen shows what prints.
+  //   rows    hachure rows: at least 4 per display band and 48 in all, so
+  //           strokes stay short whatever the band count (v5.7)
+  //   smooth  strokes are traced on the terrain smoothed by this (mm)
+  //   lit     weight a fully sunlit slope keeps (0…1)
+  const HACH = { pitch: 0.6, step: 0.2, rows: 48, smooth: 1.6, lit: 0.15, flat: 0.12, stopFlat: 0.08,
+    stipMin: 0.4, coast: 0.35, water: 0.1, wMin: 0.04, wMax: 0.34, NB: 10 };
+  const engraving = () => S.engrave === 'stipple' ? 'stipple' : 'hachures';
+  // Everything that moves a stroke; the light only reweights them.
+  const hachKey = () => [S.engrave, S.hcap, S.sspace, S.slen, S.seed, lv.sea, lv.top, lv.bands].join();
   function buildHachures(src, spmm) {
     const step = Math.max(0.3, HACH.step * spmm);
-    const strokes = M.hachures(src, lv.list, {
-      pitch: HACH.pitch * spmm, step, flat: HACH.flat, stopFlat: S.hachBy === 'height' ? 0.04 : HACH.stopFlat,
-      byHeight: S.hachBy === 'height', maxSteps: Math.ceil(HACH.maxLen * spmm / step) });
+    const smooth = M.blurField(src, Math.round(HACH.smooth * spmm));
+    let strokes;
+    if (S.engrave === 'stipple') {
+      strokes = M.stipple(smooth, lv.sea, { spacing: S.sspace * spmm, lenMin: HACH.stipMin * spmm, lenMax: S.slen * spmm,
+        step, flat: HACH.flat, seed: S.seed });
+    } else {
+      const bands = Math.max(1, lv.bands), sub = Math.max(4, Math.ceil(HACH.rows / bands));
+      const rows = [], dz = (lv.top - lv.sea) / (bands * sub);
+      for (let i = 0; i < bands * sub; i++) rows.push(lv.sea + i * dz);
+      strokes = M.hachures(smooth, rows, { pitch: HACH.pitch * spmm, step, flat: HACH.flat, stopFlat: HACH.stopFlat,
+        maxSteps: S.hcap > 0 ? Math.max(1, Math.round(S.hcap * spmm / step)) : 1e5 });
+    }
     const coast = M.isolines(src, lv.sea, false);
     // water lines: first 0.6 mm off the coast, gaps widening by 30% each
     const dist = M.distanceFromLand(src, lv.sea), water = [];
     for (let d = 0.6, gap = 0.5, n = 0; n < 10; n++, d += gap, gap *= 1.3) water.push(M.isolines(dist, d * spmm, false));
-    return { strokes, coast, water };
+    return { strokes, coast, water, key: hachKey() };
+  }
+  // Strokes sorted into NB weight buckets: slope × sun (Dufour), with the
+  // light at S.sun compass degrees, turned into grid axes (y down).
+  function hachBuckets(strokes, fn) {
+    const a = S.sun * Math.PI / 180, light = [Math.sin(a), -Math.cos(a)], lit = HACH.lit;
+    const NB = HACH.NB, buckets = Array.from({ length: NB }, () => []);
+    for (const s of strokes) {
+      const t = s.t * (lit + (1 - lit) * M.shade(s.gx, s.gy, light));
+      buckets[Math.min(NB - 1, t * NB | 0)].push(fn(s.pts));
+    }
+    return buckets;
   }
   function drawHachures(ctx, H, map, pxPerMM) {
     ctx.lineJoin = 'round';
@@ -174,11 +202,10 @@ new p5(function (s) {
     for (const ring of H.water) for (const poly of ring) poly.forEach((p, i) => { const [x, y] = map(p[0], p[1]); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); });
     ctx.stroke();
     ctx.lineCap = 'butt'; ctx.strokeStyle = INK;
-    const NB = 8, buckets = Array.from({ length: NB }, () => []);
-    for (const s of H.strokes) buckets[Math.min(NB - 1, s.t * NB | 0)].push(s.pts);
+    const NB = HACH.NB, buckets = hachBuckets(H.strokes, pts => pts);
     buckets.forEach((list, b) => {
       if (!list.length) return;
-      ctx.lineWidth = Math.max(0.35, (HACH.wMin + (HACH.wMax - HACH.wMin) * (b + 0.5) / NB) * pxPerMM);
+      ctx.lineWidth = Math.max(0.3, (HACH.wMin + (HACH.wMax - HACH.wMin) * (b + 0.5) / NB) * pxPerMM);
       ctx.beginPath();
       for (const pts of list) pts.forEach((p, i) => { const [x, y] = map(p[0], p[1]); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); });
       ctx.stroke();
@@ -257,13 +284,15 @@ new p5(function (s) {
       const k = fieldStep === 1 ? 2 : 1, src = k === 1 ? field : decimate(field, k);
       lines = { k, sets: traceLevels(lv).map(t => ({ ...t, polys: M.isolines(src, t.e, false) })) };
     }
-    hach = null;
     if (S.style === 'hachure' && fieldStep <= 2) {
-      // coarse first passes skip it: hachures only settle in with the field
-      const k = fieldStep === 1 ? 2 : 1, src = k === 1 ? field : decimate(field, k);
-      const spmm = view().fr.w / printMM()[0] / (fieldStep * k);
-      hach = Object.assign(buildHachures(src, spmm), { k });
-    }
+      // coarse first passes skip it: hachures only settle in with the field.
+      // Kept while only the light changes (it reweights at draw time).
+      if (!(hach && hach.field === field && hach.key === hachKey())) {
+        const k = fieldStep === 1 ? 2 : 1, src = k === 1 ? field : decimate(field, k);
+        const spmm = view().fr.w / printMM()[0] / (fieldStep * k);
+        hach = Object.assign(buildHachures(src, spmm), { k, field });
+      }
+    } else hach = null;
     imgCtx.putImageData(id, 0, 0);
   }
 
@@ -585,7 +614,7 @@ new p5(function (s) {
       if (withLines()) drawLines(ctx, traceLevels(lv).map(t => ({ ...t, polys: M.isolines(f, t.e, false) })), map, P.w / P.wmm);
     }
     const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
-    const look = S.style + (S.style === 'hachure' ? '-' + S.hachBy : '') + (S.contours && S.style !== 'lines' ? '+lines' : '');
+    const look = (S.style === 'hachure' ? engraving() : S.style) + (S.contours && S.style !== 'lines' ? '+lines' : '');
     const name = `${baseName()}-${look}-${P.dpi}dpi.png`;
     download(blob, name);
     return { name, capped: P.capped };
@@ -677,20 +706,19 @@ new p5(function (s) {
     }
     layers.sort((a, b) => a.order - b.order);           // deepest first, peaks on top
     if (mode === 'lines' && S.style === 'hachure') {
-      // Hachures and water lines as their own layers, strokes grouped by weight
+      // Hachures or stipple, and water lines, as their own layers; strokes grouped by weight
       const H = buildHachures(f, 1 / sx);
       const pl = poly => 'M' + poly.map(([x, y]) => `${fmt((x + 0.5) * sx)},${fmt((y + 0.5) * sy)}`).join('L');
       const water = H.water.map(ring => ring.map(p => pl(M.simplify(p, tol))).join('')).join('');
       layers.unshift({ order: -999, xml: `<g id="water-lines" inkscape:groupmode="layer" inkscape:label="water lines" fill="none" stroke="#3d4b5c" stroke-width="${HACH.water}" stroke-linecap="round"><path d="${water}"/></g>` });
-      const NB = 8, buckets = Array.from({ length: NB }, () => []);
-      for (const s of H.strokes) buckets[Math.min(NB - 1, s.t * NB | 0)].push(pl(M.simplify(s.pts, tol)));
+      const NB = HACH.NB, buckets = hachBuckets(H.strokes, pts => pl(M.simplify(pts, tol)));
       const groups = buckets.map((b, i) => b.length ? `<path d="${b.join('')}" stroke-width="${fmt(HACH.wMin + (HACH.wMax - HACH.wMin) * (i + 0.5) / NB)}"/>` : '').join('');
-      layers.push({ order: 999, xml: `<g id="hachures" inkscape:groupmode="layer" inkscape:label="hachures (${S.hachBy})" fill="none" stroke="${INK}" stroke-linecap="butt">${groups}</g>` });
+      layers.push({ order: 999, xml: `<g id="${engraving()}" inkscape:groupmode="layer" inkscape:label="${engraving()}" fill="none" stroke="${INK}" stroke-linecap="butt">${groups}</g>` });
     }
     const seaFill = onPaper() ? `rgb(${PAPER})` : `rgb(${palette(lv)(lv.min - 1)})`;
     const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="${P.wmm}mm" height="${P.hmm}mm" viewBox="0 0 ${P.wmm} ${P.hmm}">
-<!-- Island Generator v5.6 · seed ${S.seed} · ${location.href.replace(/--/g, '%2D%2D')} -->
+<!-- Island Generator v5.7 · seed ${S.seed} · ${location.href.replace(/--/g, '%2D%2D')} -->
 <g id="page" inkscape:groupmode="layer" inkscape:label="page">${mode === 'layers' ? `<rect width="${P.wmm}" height="${P.hmm}" fill="${seaFill}"/>` : ''}<rect width="${P.wmm}" height="${P.hmm}" fill="none" stroke="#999" stroke-width="0.1"/></g>
 ${layers.map(l => l.xml).join('\n')}
 </svg>`;

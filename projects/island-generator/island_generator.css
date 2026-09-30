@@ -419,7 +419,8 @@ details.sec > .sec-body { display: flex; flex-direction: column; gap: 8px; paddi
 details.raw > summary { color: #b3afc4; }
 .custom-size span { align-self: center; color: var(--muted2); }
 
-/* ── v5.6: hachures ── */
-.only-hach { display: none; }
-[data-style="hachure"] .only-hach { display: flex; }
+/* ── v5.6: hachures; v5.7: engraved (hachures | stipple) ── */
+.only-eng { display: none; }
+[data-style="hachure"] .only-eng { display: flex; flex-direction: column; gap: 8px; }
+[data-engrave="hachure"] .only-stip, [data-engrave="stipple"] .only-hmode { display: none; }
 [data-style="hachure"] .credit { color: #8a8478; }

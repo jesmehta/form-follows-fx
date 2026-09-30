@@ -373,49 +373,95 @@ window.IG = window.IG || {};
     return line.filter((_, i) => keep[i]);
   }
 
-  // ── Hachures (v5.6) ──
-  // Engraved-map relief (Lehmann, 1799): strokes that run down the slope,
-  // one band at a time, from each contour to the next. Two passes per band
-  // (v5.6.1): strokes seeded every `pitch` along the upper contour run
-  // downhill to the lower one, then strokes seeded along the lower contour
-  // run uphill into whatever space is still empty. A coarse occupancy grid
-  // stops a stroke that meets another. Rows in neighbouring bands are
-  // staggered.
-  //
-  // opts: pitch, step (grid units), byHeight (weight by band height rather
-  // than slope), maxSteps (a safety cap only), flat (slope weight below
-  // which ground is left white), stopFlat (a stroke ends where the ground
-  // flattens below this share of the landscape's steep slope: there the
-  // uphill direction is noise, and strokes wander).
-  // A stroke otherwise always runs to the next contour; v5.6 capped length
-  // at 3.5 mm, which left a white strip under each contour (terraces).
-  // Returns [{ pts: [[x, y]…], t }], t = 0…1.
-  function hachures(field, list, opts) {
+  // ── Engraved relief: shared pieces (v5.7) ──
+  // Bilinear height lookup, clamped to the grid.
+  function sampler(field) {
     const { w, h, data } = field;
-    const at = (x, y) => {
+    return (x, y) => {
       x = x < 0 ? 0 : x > w - 1.001 ? w - 1.001 : x; y = y < 0 ? 0 : y > h - 1.001 ? h - 1.001 : y;
       const i = x | 0, j = y | 0, u = x - i, v = y - j, o = j * w + i;
       const a = data[o], b = data[o + 1], c = data[o + w], d = data[o + w + 1];
       return (a + (b - a) * u) * (1 - v) + (c + (d - c) * u) * v;
     };
-    // Slope scale: the 90th percentile of gradient on land, so "steep" is
-    // relative to this landscape, whatever the sampling.
-    const mags = [];
+  }
+  // Slope scale: the 90th percentile of gradient on land, so "steep" is
+  // relative to this landscape, whatever the sampling.
+  function steepSlope(field, sea) {
+    const { w, h, data } = field, mags = [];
     for (let j = 1; j < h - 1; j += 3) for (let i = 1; i < w - 1; i += 3) {
       const o = j * w + i;
-      if (data[o] < list[0]) continue;
+      if (data[o] < sea) continue;
       mags.push(Math.hypot(data[o + 1] - data[o - 1], data[o + w] - data[o - w]) / 2);
     }
     mags.sort((a, b) => a - b);
-    const g90 = (mags.length && mags[Math.floor(mags.length * 0.9)]) || 1e-6;
+    return (mags.length && mags[Math.floor(mags.length * 0.9)]) || 1e-6;
+  }
+  // Sun weighting (Dufour): 0 for a slope facing the light, 1 facing away.
+  // light is a unit vector pointing towards the sun, in grid axes (y down);
+  // a slope faces its downhill direction, minus the gradient.
+  function shade(gx, gy, light) {
+    const m = Math.hypot(gx, gy) || 1;
+    return (1 + (gx * light[0] + gy * light[1]) / m) / 2;
+  }
+  // Smoothed copy of a field: three box blurs, close to a Gaussian. Relief
+  // strokes are traced on this, so they follow the landform, not every
+  // ripple of the noise (Davison smooths his DEM the same way first).
+  function blurField(field, r) {
+    const { w, h } = field;
+    if (r < 1) return field;
+    let a = Float32Array.from(field.data), b = new Float32Array(w * h);
+    for (let pass = 0; pass < 3; pass++) {
+      for (let y = 0; y < h; y++) {
+        let sum = 0, n = 0;
+        for (let x = -r; x < w + r; x++) {
+          if (x + r < w) { sum += a[y * w + x + r]; n++; }
+          if (x - r - 1 >= 0) { sum -= a[y * w + x - r - 1]; n--; }
+          if (x >= 0 && x < w) b[y * w + x] = sum / n;
+        }
+      }
+      [a, b] = [b, a];
+      for (let x = 0; x < w; x++) {
+        let sum = 0, n = 0;
+        for (let y = -r; y < h + r; y++) {
+          if (y + r < h) { sum += a[(y + r) * w + x]; n++; }
+          if (y - r - 1 >= 0) { sum -= a[(y - r - 1) * w + x]; n--; }
+          if (y >= 0 && y < h) b[y * w + x] = sum / n;
+        }
+      }
+      [a, b] = [b, a];
+    }
+    return { w, h, data: a };
+  }
 
+  // ── Hachures (v5.6, reworked v5.7) ──
+  // Engraved-map relief (Lehmann, 1799): strokes that run down the slope,
+  // one row at a time, from each contour to the next. Two passes per row
+  // (v5.6.1): strokes seeded every `pitch` along the upper contour run
+  // downhill to the lower one, then strokes seeded along the lower contour
+  // run uphill into whatever space is still empty. A coarse occupancy grid
+  // stops a stroke that meets another. Neighbouring rows are staggered.
+  //
+  // `list` holds the rows' contour heights: since v5.7 several rows per
+  // display band (finer, as in Davison's dynamic hachures), so strokes are
+  // short and near-straight and the rows stop reading as terraces.
+  //
+  // opts: pitch, step (grid units), maxSteps (the length cap), flat (slope
+  // weight below which ground is left white), stopFlat (a stroke ends where
+  // the ground flattens below this share of the landscape's steep slope:
+  // there the uphill direction is noise, and strokes wander).
+  // Returns [{ pts: [[x, y]…], t, gx, gy }]: t = slope 0…1, (gx, gy) the
+  // stroke's summed gradient. Sun weighting is left to the caller
+  // (shade()), so moving the light never retraces a stroke.
+  function hachures(field, list, opts) {
+    const { w, h } = field;
+    const at = sampler(field), g90 = steepSlope(field, list[0]);
     const strokes = [], nB = list.length, st = opts.stats;
 
     // Trace from (x, y) along the gradient: dir +1 uphill until `stop` is
     // reached from below, -1 downhill until it's reached from above.
     // Ends early on flat ground, at the edge, or on meeting another stroke.
     function trace(x, y, dir, stop, occ, cellOf) {
-      const pts = [[x, y]]; let slopeSum = 0, n = 0;
+      const pts = [[x, y]]; let slopeSum = 0, n = 0, sx = 0, sy = 0;
       for (let it = 0; it < opts.maxSteps; it++) {
         const gx = at(x + 0.5, y) - at(x - 0.5, y), gy = at(x, y + 0.5) - at(x, y - 0.5);
         const m = Math.hypot(gx, gy);
@@ -426,9 +472,9 @@ window.IG = window.IG || {};
         if (dir > 0 ? e >= stop : e <= stop) { pts.push([nx, ny]); if (st) st.contour++; break; }
         const c = cellOf(nx, ny);
         if (occ[c] && c !== cellOf(x, y)) { if (st) st.occupied++; break; }
-        x = nx; y = ny; pts.push([x, y]); slopeSum += m; n++;
+        x = nx; y = ny; pts.push([x, y]); slopeSum += m; n++; sx += gx; sy += gy;
       }
-      return { pts, slope: n ? slopeSum / n : 0 };
+      return { pts, slope: n ? slopeSum / n : 0, gx: sx, gy: sy };
     }
     // Walk a contour, calling fn(x, y) every `pitch` along it.
     function along(poly, pitch, start, fn) {
@@ -444,9 +490,7 @@ window.IG = window.IG || {};
 
     for (let b = 0; b < nB; b++) {
       const lo = list[b], hi = b + 1 < nB ? list[b + 1] : Infinity;
-      const tBand = nB > 1 ? b / (nB - 1) : 1;
-      // by height: higher bands get denser strokes as well as heavier ones
-      const pitch = opts.byHeight ? opts.pitch * (1.8 - 1.2 * tBand) : opts.pitch;
+      const pitch = opts.pitch;
       const cell = Math.max(0.5, pitch * 0.55), cw = Math.ceil(w / cell) + 1;
       const occ = new Uint8Array(cw * (Math.ceil(h / cell) + 1));
       const cellOf = (x, y) => ((y / cell) | 0) * cw + ((x / cell) | 0);
@@ -454,9 +498,9 @@ window.IG = window.IG || {};
       const keep = (r) => {
         if (r.pts.length < 2) return;
         for (const [px, py] of r.pts) occ[cellOf(px, py)] = 1;
-        const t = opts.byHeight ? tBand : Math.min(1, r.slope / g90);
-        if (!opts.byHeight && t < opts.flat) return;       // near-flat ground stays white
-        strokes.push({ pts: r.pts, t });
+        const t = Math.min(1, r.slope / g90);
+        if (t < opts.flat) return;                         // near-flat ground stays white
+        strokes.push({ pts: r.pts, t, gx: r.gx, gy: r.gy });
       };
       // Pass 1: from the upper contour, downhill. Strokes fan out going
       // down a hill, so nearly all of them reach the lower contour. (The
@@ -476,6 +520,58 @@ window.IG = window.IG || {};
       });
     }
     return strokes;
+  }
+
+  // ── Stipple (v5.7) ──
+  // Short strokes down the slope, not tied to contours: each is centred on
+  // a seed and grows longer as the ground gets steeper (lenMin…lenMax), so
+  // steep ground fills with long dark strokes and gentle ground thins to
+  // flecks. Seeds are a jittered grid, shuffled; a stroke stops short when
+  // it comes within about `spacing` of one already drawn, and is dropped if
+  // that leaves it under half of lenMin.
+  // opts: spacing, lenMin, lenMax, step (grid units), flat, seed.
+  // Returns [{ pts, t, gx, gy }], as hachures().
+  function stipple(field, sea, opts) {
+    const { w, h } = field, at = sampler(field), g90 = steepSlope(field, sea);
+    const grad = (x, y) => [at(x + 0.5, y) - at(x - 0.5, y), at(x, y + 0.5) - at(x, y - 0.5)];
+    const cell = Math.max(0.5, opts.spacing * 0.5), cw = Math.ceil(w / cell) + 2;
+    const occ = new Uint8Array(cw * (Math.ceil(h / cell) + 2));
+    const cellOf = (x, y) => ((y / cell) | 0) * cw + ((x / cell) | 0);
+    // free: no other stroke within one cell of (x, y)
+    const free = (x, y, own) => {
+      const ci = (x / cell) | 0, cj = (y / cell) | 0;
+      for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+        const c = (cj + dj) * cw + ci + di;
+        if (c >= 0 && occ[c] && c !== own) return false;
+      }
+      return true;
+    };
+    const r = rng(opts.seed || 1), seeds = [], gap = opts.spacing * 0.5;
+    for (let y = 0; y < h; y += gap) for (let x = 0; x < w; x += gap) seeds.push([x + r() * gap, y + r() * gap]);
+    for (let i = seeds.length - 1; i > 0; i--) { const j = (r() * (i + 1)) | 0; [seeds[i], seeds[j]] = [seeds[j], seeds[i]]; }
+    const out = [], step = opts.step;
+    for (const [sx, sy] of seeds) {
+      if (sx > w - 1 || sy > h - 1 || at(sx, sy) < sea || !free(sx, sy, -1)) continue;
+      const g0 = grad(sx, sy), t = Math.min(1, Math.hypot(g0[0], g0[1]) / g90);
+      if (t < opts.flat) continue;
+      const half = (opts.lenMin + (opts.lenMax - opts.lenMin) * t) / 2;
+      const run = (dir) => {
+        const pts = []; let x = sx, y = sy, len = 0;
+        while (len < half) {
+          const g = grad(x, y), m = Math.hypot(g[0], g[1]); if (m < 1e-7) break;
+          const nx = x + dir * g[0] / m * step, ny = y + dir * g[1] / m * step;
+          if (nx < 0 || ny < 0 || nx > w - 1 || ny > h - 1 || at(nx, ny) < sea || !free(nx, ny, cellOf(x, y))) break;
+          x = nx; y = ny; len += step; pts.push([x, y]);
+        }
+        return pts;
+      };
+      const up = run(1), down = run(-1);
+      if ((up.length + down.length) * step < opts.lenMin * 0.5) continue;
+      const pts = up.reverse().concat([[sx, sy]], down);
+      for (const [px, py] of pts) occ[cellOf(px, py)] = 1;
+      out.push({ pts, t, gx: g0[0], gy: g0[1] });
+    }
+    return out;
   }
 
   // ── Distance from land (v5.6), for water-lining ──
@@ -540,6 +636,6 @@ window.IG = window.IG || {};
       p: { count: 1, size: 0.5, focus: 0, shape: 'points', sea: 0.3, scale: 7, rough: 0.35, ridges: 0, warp: 0.5, peak: 0.7 } },
   ];
 
-  IG.model = { rng, makeNoise, makeTerrain, sampleField, pageReference, levels, isolines, simplify, hachures, distanceFromLand, PAGES, PX_CAP, PRESETS };
+  IG.model = { rng, makeNoise, makeTerrain, sampleField, pageReference, levels, isolines, simplify, blurField, hachures, stipple, shade, distanceFromLand, PAGES, PX_CAP, PRESETS };
 
 })();
