@@ -232,6 +232,53 @@
     $('btn-svg-layers').addEventListener('click', () => run('Tracing layers', p => IG.sketch.exportSVG('layers', p)));
     $('btn-link').addEventListener('click', copyLink);
 
+    // Actual-size preview: rendered like the PNG export, shown at CSS
+    // actual size (96 px per inch) or 2×, dragged around like the map.
+    const pv = { canvas: null, z: 1, wmm: 0 };
+    function previewZoom(z) {
+      const sc = $('preview-scroll'), c = pv.canvas; if (!c) return;
+      // keep the point at the centre of the view where it is
+      const fx = (sc.scrollLeft + sc.clientWidth / 2) / Math.max(1, sc.scrollWidth);
+      const fy = (sc.scrollTop + sc.clientHeight / 2) / Math.max(1, sc.scrollHeight);
+      pv.z = z;
+      c.style.width = Math.round(pv.wmm / 25.4 * 96 * z) + 'px';
+      sc.scrollLeft = fx * sc.scrollWidth - sc.clientWidth / 2;
+      sc.scrollTop = fy * sc.scrollHeight - sc.clientHeight / 2;
+      $('seg-preview').querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.z === z));
+    }
+    async function openPreview() {
+      if (busy.on) return; busy.on = true;
+      toast('Rendering at actual size…', true);
+      await new Promise(r => setTimeout(r, 30));
+      try {
+        const r = await IG.sketch.previewPage(p => toast(`Rendering at actual size · ${Math.round(p * 100)}%`, true));
+        const sc = $('preview-scroll');
+        sc.innerHTML = ''; sc.appendChild(r.canvas);
+        pv.canvas = r.canvas; pv.wmm = r.wmm;
+        $('preview-title').textContent = `${r.name} · ${r.wmm} × ${r.hmm} mm`;
+        $('preview').hidden = false;
+        previewZoom(pv.z);
+        // start on the middle of the sheet
+        sc.scrollLeft = (sc.scrollWidth - sc.clientWidth) / 2; sc.scrollTop = (sc.scrollHeight - sc.clientHeight) / 2;
+        toast('Actual size: as it exports, about true size on a typical screen');
+      } catch (err) {
+        console.error(err); toast('Preview failed: ' + err.message);
+      }
+      busy.on = false;
+    }
+    function closePreview() { $('preview').hidden = true; $('preview-scroll').innerHTML = ''; pv.canvas = null; }
+    $('btn-preview').addEventListener('click', openPreview);
+    $('preview-close').addEventListener('click', closePreview);
+    $('seg-preview').addEventListener('click', e => { const b = e.target.closest('button'); if (b) previewZoom(+b.dataset.z); });
+    {
+      const sc = $('preview-scroll'); let drag = null;
+      sc.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, l: sc.scrollLeft, t: sc.scrollTop }; sc.classList.add('drag'); sc.setPointerCapture(e.pointerId); });
+      sc.addEventListener('pointermove', e => { if (!drag) return; sc.scrollLeft = drag.l - (e.clientX - drag.x); sc.scrollTop = drag.t - (e.clientY - drag.y); });
+      const end = () => { drag = null; sc.classList.remove('drag'); };
+      sc.addEventListener('pointerup', end); sc.addEventListener('pointercancel', end);
+    }
+    IG.ui.openPreview = openPreview; IG.ui.closePreview = closePreview;
+
     // panels
     document.querySelectorAll('[data-collapse]').forEach(b =>
       b.addEventListener('click', () => setCollapsed(b.dataset.collapse, true)));
@@ -374,9 +421,11 @@
 
   function onKey(e) {
     if (e.target.closest && e.target.closest('input, select, textarea')) { if (e.key !== 'Escape') return; }
-    if (e.key === 'Escape') { $('about').hidden = true; $('tip').hidden = true; return; }
+    if (e.key === 'Escape') { $('about').hidden = true; $('tip').hidden = true; IG.ui.closePreview(); return; }
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const k = e.key.toLowerCase();
+    if (!$('preview').hidden) return;                 // the preview takes no other keys
+    if (k === 'p') return IG.ui.openPreview();
     if (k === 'n') newLandscape();
     else if (k === 'h') setHud(!hud);
     else if (k === 'f') fit();

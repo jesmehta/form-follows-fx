@@ -179,6 +179,7 @@
             <button type="button" data-value="300">300 dpi</button>
           </div>
           <p class="hint mono" id="out-page"></p>
+          <button class="export wide" id="btn-preview" type="button"><b>Actual size</b><small>see the sheet at print scale, as it exports</small></button>
           <div class="export-grid">
             <button class="export" id="btn-png" type="button"><b>PNG</b><small>as drawn</small></button>
             <button class="export" id="btn-height" type="button"><b>Heightmap</b><small>16-bit grey</small></button>
@@ -223,6 +224,20 @@
 
 <button class="hud-restore" id="hud-restore" type="button" hidden>Show interface (H)</button>
 
+<!-- ── ACTUAL-SIZE PREVIEW (v5.8) ── -->
+<div class="preview" id="preview" hidden>
+  <div class="preview-bar">
+    <span id="preview-title"></span>
+    <div class="seg small" id="seg-preview">
+      <button type="button" data-z="1">Actual size</button>
+      <button type="button" data-z="2">2×</button>
+    </div>
+    <span class="preview-hint">drag to move around · Esc to close</span>
+    <button class="icon" type="button" id="preview-close" title="Close">✕</button>
+  </div>
+  <div class="preview-scroll" id="preview-scroll"></div>
+</div>
+
 <!-- ── EXPLAINER ── -->
 <div class="modal" id="about" hidden>
   <div class="modal-card" role="dialog" aria-labelledby="about-title">
@@ -235,8 +250,8 @@
     <h3>Terrain details</h3>
     <p><strong>Feature smoothness</strong> sets how broad the landforms are. <strong>Surface roughness</strong> adds finer detail on top. <strong>Ridges</strong> fold the terrain into sharp, branching crests. <strong>Coast warp</strong> bends everything so coastlines wander. <strong>Elevation exponent</strong> raises heights to a power: low gives plateaus, high gives sharp peaks, and the coast stays put.</p>
     <h3>Keys</h3>
-    <p class="keys"><kbd>N</kbd> new landscape · <kbd>1</kbd>–<kbd>5</kbd> grey / thermal / topographic / lines / engraved · <kbd>F</kbd> fit the frame · <kbd>H</kbd> hide the interface</p>
-    <p class="small">Sketch and page by Jesal Mehta (@cabofcuriosity), grown from the Perlin Contour sketches of February–March 2020. The island blend is the <em>(1 + e − d) / 2</em> from those sketches, after Red Blob Games' <a href="https://www.redblobgames.com/maps/terrain-from-noise/" target="_blank" rel="noopener">Making maps with noise</a>. Island Generator v5.7.</p>
+    <p class="keys"><kbd>N</kbd> new landscape · <kbd>1</kbd>–<kbd>5</kbd> grey / thermal / topographic / lines / engraved · <kbd>F</kbd> fit the frame · <kbd>P</kbd> actual size · <kbd>H</kbd> hide the interface</p>
+    <p class="small">Sketch and page by Jesal Mehta (@cabofcuriosity), grown from the Perlin Contour sketches of February–March 2020. The island blend is the <em>(1 + e − d) / 2</em> from those sketches, after Red Blob Games' <a href="https://www.redblobgames.com/maps/terrain-from-noise/" target="_blank" rel="noopener">Making maps with noise</a>. Island Generator v5.8.</p>
   </div>
 </div>
 

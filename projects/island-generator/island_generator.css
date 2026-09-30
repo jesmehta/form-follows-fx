@@ -328,6 +328,25 @@ kbd { font-family: var(--mono); font-size: 11px; padding: 1px 5px; border: 1px s
 .export small { font-size: 12px; color: var(--muted2); line-height: 1.15; }
 .export:hover { border-color: var(--accent); background: rgba(200,169,110,0.08); }
 
+/* ── v5.8: actual-size preview ── */
+.export.wide { width: 100%; }
+.preview {
+  position: fixed; inset: 0; z-index: 20;
+  display: flex; flex-direction: column;
+  background: rgba(5,5,8,0.88);
+}
+.preview[hidden] { display: none; }
+.preview-bar {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 10px 16px; font-family: var(--mono); font-size: 12px; color: var(--text);
+}
+.preview-bar #preview-title { color: var(--accent); letter-spacing: 0.08em; }
+.preview-bar .preview-hint { color: var(--muted2); flex: 1; }
+.preview-bar .seg button { white-space: nowrap; padding-left: 12px; padding-right: 12px; }
+.preview-scroll { flex: 1; overflow: auto; padding: 8px 24px 24px; cursor: grab; touch-action: none; }
+.preview-scroll.drag { cursor: grabbing; }
+.preview-scroll canvas { display: block; margin: 0 auto; box-shadow: 0 6px 40px rgba(0,0,0,0.6); }
+
 .transport { width: auto; min-width: min(560px, calc(100vw - var(--gap) * 2)); max-width: calc(100vw - var(--gap) * 2); }
 .transport .play { min-width: 0; }
 .seed { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px; color: var(--muted2); }

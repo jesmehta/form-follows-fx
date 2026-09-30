@@ -1,4 +1,4 @@
-// Island Generator v5.7 — the sketch
+// Island Generator v5.8 — the sketch
 // © Jesal Mehta, @cabofcuriosity
 // Based on Perlin Contour v1.0–v4.3 (2020)
 //
@@ -580,8 +580,8 @@ new p5(function (s) {
     return `island-${S.seed}-${w}x${h}mm`;
   }
 
-  async function exportPNG(progress) {
-    const P = pagePixels(S.dpi);
+  // The sheet as the PNG export draws it, at P's size, onto a new canvas.
+  async function renderPage(P, progress) {
     const cv = document.createElement('canvas'); cv.width = P.w; cv.height = P.h;
     const ctx = cv.getContext('2d');
     if (onPaper()) {
@@ -613,11 +613,29 @@ new p5(function (s) {
       if (S.style === 'hachure') drawHachures(ctx, buildHachures(f, res), map, P.w / P.wmm);
       if (withLines()) drawLines(ctx, traceLevels(lv).map(t => ({ ...t, polys: M.isolines(f, t.e, false) })), map, P.w / P.wmm);
     }
+    return cv;
+  }
+  async function exportPNG(progress) {
+    const P = pagePixels(S.dpi);
+    const cv = await renderPage(P, progress);
     const blob = await new Promise(r => cv.toBlob(r, 'image/png'));
     const look = (S.style === 'hachure' ? engraving() : S.style) + (S.contours && S.style !== 'lines' ? '+lines' : '');
     const name = `${baseName()}-${look}-${P.dpi}dpi.png`;
     download(blob, name);
     return { name, capped: P.capped };
+  }
+
+  // Actual-size preview (v5.8). The main view fits the whole sheet in the
+  // window, about 2.5 px per mm for an A4, too coarse for detail cut in
+  // fractions of a mm (engraving above all). This renders the sheet
+  // exactly as the PNG export does, at twice CSS actual size (96 px per
+  // inch) times the screen's pixel ratio, so the preview can show it at
+  // actual size and at 2× and stay sharp. Capped at 300 dpi.
+  async function previewPage(progress) {
+    const dpr = window.devicePixelRatio || 1;
+    const P = pagePixels(Math.min(300, 96 * 2 * dpr));
+    const canvas = await renderPage(P, progress);
+    return { canvas, wmm: P.wmm, hmm: P.hmm, name: sheetName() };
   }
 
   // 16-bit greyscale PNG of raw elevation (page min → 0, page max → 65535).
@@ -718,7 +736,7 @@ new p5(function (s) {
     const seaFill = onPaper() ? `rgb(${PAPER})` : `rgb(${palette(lv)(lv.min - 1)})`;
     const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="${P.wmm}mm" height="${P.hmm}mm" viewBox="0 0 ${P.wmm} ${P.hmm}">
-<!-- Island Generator v5.7 · seed ${S.seed} · ${location.href.replace(/--/g, '%2D%2D')} -->
+<!-- Island Generator v5.8 · seed ${S.seed} · ${location.href.replace(/--/g, '%2D%2D')} -->
 <g id="page" inkscape:groupmode="layer" inkscape:label="page">${mode === 'layers' ? `<rect width="${P.wmm}" height="${P.hmm}" fill="${seaFill}"/>` : ''}<rect width="${P.wmm}" height="${P.hmm}" fill="none" stroke="#999" stroke-width="0.1"/></g>
 ${layers.map(l => l.xml).join('\n')}
 </svg>`;
@@ -733,7 +751,7 @@ ${layers.map(l => l.xml).join('\n')}
     levelsChanged() { dirty.levels = true; },
     lookChanged(resample) { if (resample) dirty.view = true; else dirty.levels = true; },
     viewChanged() { dirty.view = true; },
-    exportPNG, exportHeightmap, exportSVG, pagePixels, stats, printMM, sheetName, frameRect: () => frameRect(),
+    exportPNG, exportHeightmap, previewPage, exportSVG, pagePixels, stats, printMM, sheetName, frameRect: () => frameRect(),
     centres: () => (terrain ? terrain.centres : []),
     aspect,
   };
