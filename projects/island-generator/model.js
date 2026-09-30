@@ -452,7 +452,11 @@ window.IG = window.IG || {};
   // Returns [{ pts: [[x, y]…], t, gx, gy }]: t = slope 0…1, (gx, gy) the
   // stroke's summed gradient. Sun weighting is left to the caller
   // (shade()), so moving the light never retraces a stroke.
-  function hachures(field, list, opts) {
+  //
+  // A generator (v5.8.1): it yields after each pass of each row, so the
+  // screen can trace a little per frame and drop the work when the view
+  // moves. hachures() runs it to the end in one go (exports).
+  function* hachuresSteps(field, list, opts) {
     const { w, h } = field;
     const at = sampler(field), g90 = steepSlope(field, list[0]);
     const strokes = [], nB = list.length, st = opts.stats;
@@ -488,9 +492,12 @@ window.IG = window.IG || {};
       }
     }
 
+    let loRings = null;                          // this row's lower contour: last row's upper one
     for (let b = 0; b < nB; b++) {
       const lo = list[b], hi = b + 1 < nB ? list[b + 1] : Infinity;
       const pitch = opts.pitch;
+      const hiRings = hi !== Infinity ? isolines(field, hi, false) : [];
+      if (!loRings) loRings = isolines(field, lo, false);
       const cell = Math.max(0.5, pitch * 0.55), cw = Math.ceil(w / cell) + 1;
       const occ = new Uint8Array(cw * (Math.ceil(h / cell) + 1));
       const cellOf = (x, y) => ((y / cell) | 0) * cw + ((x / cell) | 0);
@@ -507,20 +514,24 @@ window.IG = window.IG || {};
       // first build traced uphill from the lower contour; going up a hill
       // strokes converge, and ~60% stopped early on a neighbour, which
       // read as terraces.)
-      if (hi !== Infinity) {
-        for (const poly of isolines(field, hi, false)) along(poly, pitch, stagger, (x, y) => {
-          if (!occ[cellOf(x, y)]) keep(trace(x, y, -1, lo, occ, cellOf));
-        });
-      }
+      for (const poly of hiRings) along(poly, pitch, stagger, (x, y) => {
+        if (!occ[cellOf(x, y)]) keep(trace(x, y, -1, lo, occ, cellOf));
+      });
+      yield;
       // Pass 2: from the lower contour, uphill, only into space still
       // empty. This fills the wedges that open between fanning strokes,
       // and is the only pass for the top band (it runs to the summit).
-      for (const poly of isolines(field, lo, false)) along(poly, pitch, stagger, (x, y) => {
+      for (const poly of loRings) along(poly, pitch, stagger, (x, y) => {
         if (!occ[cellOf(x, y)]) keep(trace(x, y, +1, hi, occ, cellOf));
       });
+      loRings = hiRings;
+      yield;
     }
     return strokes;
   }
+  // Run a step generator to its end and return its result.
+  function finish(gen) { let r; while (!(r = gen.next()).done); return r.value; }
+  const hachures = (...a) => finish(hachuresSteps(...a));
 
   // ── Stipple (v5.7) ──
   // Short strokes down the slope, not tied to contours: each is centred on
@@ -530,8 +541,9 @@ window.IG = window.IG || {};
   // it comes within about `spacing` of one already drawn, and is dropped if
   // that leaves it under half of lenMin.
   // opts: spacing, lenMin, lenMax, step (grid units), flat, seed.
-  // Returns [{ pts, t, gx, gy }], as hachures().
-  function stipple(field, sea, opts) {
+  // Returns [{ pts, t, gx, gy }], as hachures(). A generator like
+  // hachuresSteps(), yielding every 1024 seeds.
+  function* stippleSteps(field, sea, opts) {
     const { w, h } = field, at = sampler(field), g90 = steepSlope(field, sea);
     const grad = (x, y) => [at(x + 0.5, y) - at(x - 0.5, y), at(x, y + 0.5) - at(x, y - 0.5)];
     const cell = Math.max(0.5, opts.spacing * 0.5), cw = Math.ceil(w / cell) + 2;
@@ -546,11 +558,18 @@ window.IG = window.IG || {};
       }
       return true;
     };
-    const r = rng(opts.seed || 1), seeds = [], gap = opts.spacing * 0.5;
+    // One seed per occupancy cell: finer seeding can't place more strokes.
+    // (Seeding at spacing / 2 regardless meant ~11 M seeds on screen, where
+    // the cell floor of half a sample is coarser than the spacing.)
+    const r = rng(opts.seed || 1), seeds = [], gap = cell;
     for (let y = 0; y < h; y += gap) for (let x = 0; x < w; x += gap) seeds.push([x + r() * gap, y + r() * gap]);
+    yield;
     for (let i = seeds.length - 1; i > 0; i--) { const j = (r() * (i + 1)) | 0; [seeds[i], seeds[j]] = [seeds[j], seeds[i]]; }
+    yield;
     const out = [], step = opts.step;
+    let n = 0;
     for (const [sx, sy] of seeds) {
+      if ((++n & 1023) === 0) yield;
       if (sx > w - 1 || sy > h - 1 || at(sx, sy) < sea || !free(sx, sy, -1)) continue;
       const g0 = grad(sx, sy), t = Math.min(1, Math.hypot(g0[0], g0[1]) / g90);
       if (t < opts.flat) continue;
@@ -573,6 +592,7 @@ window.IG = window.IG || {};
     }
     return out;
   }
+  const stipple = (...a) => finish(stippleSteps(...a));
 
   // ── Distance from land (v5.6), for water-lining ──
   // Exact Euclidean distance transform (Felzenszwalb & Huttenlocher) of the
@@ -636,6 +656,6 @@ window.IG = window.IG || {};
       p: { count: 1, size: 0.5, focus: 0, shape: 'points', sea: 0.3, scale: 7, rough: 0.35, ridges: 0, warp: 0.5, peak: 0.7 } },
   ];
 
-  IG.model = { rng, makeNoise, makeTerrain, sampleField, pageReference, levels, isolines, simplify, blurField, hachures, stipple, shade, distanceFromLand, PAGES, PX_CAP, PRESETS };
+  IG.model = { rng, makeNoise, makeTerrain, sampleField, pageReference, levels, isolines, simplify, blurField, hachures, hachuresSteps, stipple, stippleSteps, finish, shade, distanceFromLand, PAGES, PX_CAP, PRESETS };
 
 })();

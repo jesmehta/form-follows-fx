@@ -1,4 +1,4 @@
-// Island Generator v5.8 — the sketch
+// Island Generator v5.8.1 — the sketch
 // © Jesal Mehta, @cabofcuriosity
 // Based on Perlin Contour v1.0–v4.3 (2020)
 //
@@ -23,6 +23,7 @@ new p5(function (s) {
   let img = null, imgCtx = null;      // field-sized canvas holding the coloured raster
   let lines = null;                   // [{level, index, kind, polys}] in grid coords
   let hach = null;                    // hachures, coast and water lines, in grid coords
+  let ejob = null;                    // engraving being traced, a slice per frame (v5.8.1)
   let msPerSample = 0.00002;          // learnt, for choosing the first pass
   let dirty = { terrain: true, view: true, levels: true };
   let W = 0, H = 0, statsDue = 0;
@@ -162,25 +163,42 @@ new p5(function (s) {
   const engraving = () => S.engrave === 'stipple' ? 'stipple' : 'hachures';
   // Everything that moves a stroke; the light only reweights them.
   const hachKey = () => [S.engrave, S.hcap, S.sspace, S.slen, S.seed, lv.sea, lv.top, lv.bands].join();
-  function buildHachures(src, spmm) {
+  // A generator: yields between pieces of work so the screen can trace a
+  // slice per frame. buildHachures() runs it straight through (exports).
+  function* buildHachuresSteps(src, spmm) {
+    const key = hachKey();
     const step = Math.max(0.3, HACH.step * spmm);
     const smooth = M.blurField(src, Math.round(HACH.smooth * spmm));
+    yield;
     let strokes;
     if (S.engrave === 'stipple') {
-      strokes = M.stipple(smooth, lv.sea, { spacing: S.sspace * spmm, lenMin: HACH.stipMin * spmm, lenMax: S.slen * spmm,
+      strokes = yield* M.stippleSteps(smooth, lv.sea, { spacing: S.sspace * spmm, lenMin: HACH.stipMin * spmm, lenMax: S.slen * spmm,
         step, flat: HACH.flat, seed: S.seed });
     } else {
       const bands = Math.max(1, lv.bands), sub = Math.max(4, Math.ceil(HACH.rows / bands));
       const rows = [], dz = (lv.top - lv.sea) / (bands * sub);
       for (let i = 0; i < bands * sub; i++) rows.push(lv.sea + i * dz);
-      strokes = M.hachures(smooth, rows, { pitch: HACH.pitch * spmm, step, flat: HACH.flat, stopFlat: HACH.stopFlat,
+      strokes = yield* M.hachuresSteps(smooth, rows, { pitch: HACH.pitch * spmm, step, flat: HACH.flat, stopFlat: HACH.stopFlat,
         maxSteps: S.hcap > 0 ? Math.max(1, Math.round(S.hcap * spmm / step)) : 1e5 });
     }
     const coast = M.isolines(src, lv.sea, false);
+    yield;
     // water lines: first 0.6 mm off the coast, gaps widening by 30% each
     const dist = M.distanceFromLand(src, lv.sea), water = [];
-    for (let d = 0.6, gap = 0.5, n = 0; n < 10; n++, d += gap, gap *= 1.3) water.push(M.isolines(dist, d * spmm, false));
-    return { strokes, coast, water, key: hachKey() };
+    for (let d = 0.6, gap = 0.5, n = 0; n < 10; n++, d += gap, gap *= 1.3) { water.push(M.isolines(dist, d * spmm, false)); yield; }
+    return { strokes, coast, water, key };
+  }
+  const buildHachures = (src, spmm) => M.finish(buildHachuresSteps(src, spmm));
+  // Draw a finished on-screen engraving once, into its own canvas at the
+  // size of the field it was traced on. render() then only places that
+  // image (moved and scaled with the view, like the field), instead of
+  // stroking ~40 000 lines every frame. Redrawn when the light moves.
+  function rasterHach(H) {
+    const dpr = s.pixelDensity(), c = H.canvas || document.createElement('canvas');
+    c.width = Math.ceil(H.field.w * H.step * dpr); c.height = Math.ceil(H.field.h * H.step * dpr);
+    const ctx = c.getContext('2d'), u = H.step * dpr, k = H.k;
+    drawHachures(ctx, H, (gx, gy) => [(gx * k + 0.5) * u, (gy * k + 0.5) * u], H.fv.fr.w / printMM()[0] * dpr);
+    H.canvas = c; H.sun = S.sun;
   }
   // Strokes sorted into NB weight buckets: slope × sun (Dufour), with the
   // light at S.sun compass degrees, turned into grid axes (y down).
@@ -284,15 +302,21 @@ new p5(function (s) {
       const k = fieldStep === 1 ? 2 : 1, src = k === 1 ? field : decimate(field, k);
       lines = { k, sets: traceLevels(lv).map(t => ({ ...t, polys: M.isolines(src, t.e, false) })) };
     }
-    if (S.style === 'hachure' && fieldStep <= 2) {
-      // coarse first passes skip it: hachures only settle in with the field.
-      // Kept while only the light changes (it reweights at draw time).
-      if (!(hach && hach.field === field && hach.key === hachKey())) {
+    if (S.style === 'hachure') {
+      // Traced only on the final field (coarse passes skip it), a slice per
+      // frame in s.draw (v5.8.1). Until it's done the previous engraving
+      // stays up, placed by its own view, so zoom and pan never blank or
+      // freeze the page; a newer field or setting drops the unfinished
+      // work. Moving the light only redraws the finished one.
+      const key = hachKey();
+      if (ejob && (ejob.field !== field || ejob.key !== key)) ejob = null;
+      const have = hach && hach.field === field && hach.key === key;
+      if (fieldStep <= 2 && !have && !ejob) {
         const k = fieldStep === 1 ? 2 : 1, src = k === 1 ? field : decimate(field, k);
         const spmm = view().fr.w / printMM()[0] / (fieldStep * k);
-        hach = Object.assign(buildHachures(src, spmm), { k, field });
+        ejob = { field, key, k, step: fieldStep, gen: buildHachuresSteps(src, spmm) };
       }
-    } else hach = null;
+    } else { hach = null; ejob = null; }
     imgCtx.putImageData(id, 0, 0);
   }
 
@@ -317,7 +341,7 @@ new p5(function (s) {
   };
 
   s.draw = function () {
-    if (dirty.terrain) { rebuildTerrain(); dirty.levels = true; dirty.view = true; }
+    if (dirty.terrain) { rebuildTerrain(); hach = ejob = null; dirty.levels = true; dirty.view = true; }
     if (dirty.levels) { rebuildLevels(); IG.ui.onLevels(lv, stats()); }
     if (dirty.view && !dirty.terrain && !dirty.levels) statsDue = performance.now() + 150;
     if (dirty.terrain || dirty.view) startSampling();
@@ -334,6 +358,18 @@ new p5(function (s) {
         field = job; fieldStep = jobStep; field.view = view();
         paint();
         nextJob();
+      }
+    }
+    if (ejob) {
+      const t = performance.now();
+      while (performance.now() - t < 12) {
+        const r = ejob.gen.next();
+        if (r.done) {
+          hach = Object.assign(r.value, { k: ejob.k, step: ejob.step, field: ejob.field, fv: ejob.field.view, key: ejob.key });
+          rasterHach(hach);
+          ejob = null;
+          break;
+        }
       }
     }
     render(s.drawingContext);
@@ -355,8 +391,10 @@ new p5(function (s) {
       ctx.drawImage(img, X, Y, img.width * fieldStep * sc, img.height * fieldStep * sc);
       const pxPerMM = v.fr.w / printMM()[0];
       if (hach) {
-        const k = hach.k, u = fieldStep * sc;
-        drawHachures(ctx, hach, (gx, gy) => [X + (gx * k + 0.5) * u, Y + (gy * k + 0.5) * u], pxPerMM);
+        if (hach.sun !== S.sun) rasterHach(hach);
+        const hv = hach.fv, hs = v.ppu / hv.ppu, dpr = s.pixelDensity();
+        ctx.imageSmoothingEnabled = true;
+        ctx.drawImage(hach.canvas, v.ox - hv.ox * hs, v.oy - hv.oy * hs, hach.canvas.width / dpr * hs, hach.canvas.height / dpr * hs);
       }
       if (lines) {
         const k = lines.k, u = fieldStep * sc;
@@ -736,7 +774,7 @@ new p5(function (s) {
     const seaFill = onPaper() ? `rgb(${PAPER})` : `rgb(${palette(lv)(lv.min - 1)})`;
     const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="${P.wmm}mm" height="${P.hmm}mm" viewBox="0 0 ${P.wmm} ${P.hmm}">
-<!-- Island Generator v5.8 · seed ${S.seed} · ${location.href.replace(/--/g, '%2D%2D')} -->
+<!-- Island Generator v5.8.1 · seed ${S.seed} · ${location.href.replace(/--/g, '%2D%2D')} -->
 <g id="page" inkscape:groupmode="layer" inkscape:label="page">${mode === 'layers' ? `<rect width="${P.wmm}" height="${P.hmm}" fill="${seaFill}"/>` : ''}<rect width="${P.wmm}" height="${P.hmm}" fill="none" stroke="#999" stroke-width="0.1"/></g>
 ${layers.map(l => l.xml).join('\n')}
 </svg>`;
