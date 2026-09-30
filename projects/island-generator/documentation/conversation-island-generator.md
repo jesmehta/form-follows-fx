@@ -536,3 +536,18 @@ a coarser on-screen engraving that would no longer match the export.
 
 Built as v5.8: an Actual size button and the P key, showing the export
 render at about true size or 2×, dragged around in an overlay.
+
+## Part 15: Engraved was slow to zoom and pan (2026-09-30)
+
+> **zooming when engraved takes time to load**
+
+> **panning as well**
+
+Measured before changing anything. After each zoom or pan, the whole
+screen's engraving was traced in one blocking call (1.3 s hachures,
+2.8 s stipple), and all the strokes were redrawn on every frame. Fixed
+in v5.8.1: the tracing runs a slice per frame, the previous engraving
+stays in place (moved and scaled with the map) until the new one lands,
+a finished engraving is drawn once into its own image, and stipple no
+longer over-seeds on screen. The worst frame during a zoom and pan went
+from 1.3–2.8 s to about 80 ms.

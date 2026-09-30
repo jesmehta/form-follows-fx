@@ -163,6 +163,10 @@ land and are never deleted. The design intent behind each item is in
 - [ ] If previews are used often, cache the render until a setting
       changes, so reopening is instant
 - [ ] Paper zoom (option B) if the one-shot preview isn't enough
+- [x] Engraved froze on zoom/pan (1.3 s hachures, 2.8 s stipple): traced
+      a slice per frame, old engraving kept up, drawn once to a canvas,
+      stipple seeding capped (v5.8.1) (2026-09-30)
+- [ ] User to check zoom/pan feel in Engraved
 - [ ] Maybe expose smoothing, sunlit weight or rows per band as
       sliders if the fixed values don't suit some landscapes
 - [ ] Stipple and hachures as an overlay on the colour themes (see

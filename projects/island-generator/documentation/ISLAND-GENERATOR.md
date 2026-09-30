@@ -828,6 +828,35 @@ focus on. Panels run full height with a "more below" hint. Depth
 contours fixed: own step, visible sea shades. Details under "v5.1: first
 review round".
 
+### v5.8.1: Engraved stays live while zooming and panning (2026-09-30)
+
+**"zooming when engraved takes time to load"**, then **"panning as
+well"**. Measured first. Each time the view settled, the whole screen's
+engraving was traced in one blocking call: hachures took 1.3 s and
+stipple 2.8 s. On top of that, all ~40 000 strokes were re-stroked on
+every frame. Four changes:
+
+- **Traced a slice per frame.** `hachuresSteps()` and `stippleSteps()`
+  (and the sketch's `buildHachuresSteps()`) are generators that yield
+  between rows or every 1024 seeds. The sketch runs them for 12 ms a
+  frame. A newer field or setting drops unfinished work, and exports run
+  them straight through (`finish()`).
+- **The old engraving stays up.** It is placed by the view it was traced
+  in, like the field, so zoom and pan move and scale it until the new
+  one lands. It is cleared only when the terrain itself changes.
+- **Drawn once.** A finished engraving is stroked once into its own
+  canvas (`rasterHach()`), and each frame only places that image. It is
+  redrawn when the light moves.
+- **Stipple seeds one per occupancy cell.** Seeding at spacing ÷ 2
+  regardless of the cell size meant about 11 million seeds on screen,
+  a 1.7 s freeze before the first yield. Exports are unchanged: at 4
+  samples per mm the cell and the old gap are the same.
+
+Also, each hachure row now reuses the previous row's upper contour as
+its lower one, halving the marching-squares work. Measured during a
+wheel zoom plus a drag-pan: the worst frame is about 80 ms (the one-off
+raster), against 1.3–2.8 s before.
+
 ### v5.8: Actual-size preview (2026-09-30)
 
 An **Actual size** button (or **P**) renders the sheet as the PNG
