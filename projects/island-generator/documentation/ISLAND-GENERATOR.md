@@ -652,6 +652,51 @@ links with `hb` still open; the key is ignored.
   shading. At wide spacing they read as fur (the user's observation),
   which is why spacing stops at 0.5 mm.
 
+## v5.8: Actual-size preview (2026-09-30)
+
+> **Stipple at 0.2 vs 0.5 - no particular difference
+> while everything does read as 3d in engraved, the density and the
+> overall look is not a nice as the test page ones.**
+
+**Cause.** Zoom never magnifies the paper; it changes how much
+landscape sits in the frame. The frame is always the whole sheet fitted
+to the window: an A4 is about 530 px across 210 mm, roughly 2.5 px per
+mm. The engraving is cut in fractions of a mm of print: 0.2 mm spacing
+is half a pixel, and the tracer's floor of half a sample (about 0.4 mm
+on screen) swallowed both 0.2 and 0.5. The test page drew at 4.5–8 px
+per mm. Exports were right all along. 70 mm crops of the A4 exports,
+shown at the test page's scale, match it, and 0.2 is clearly denser
+than 0.5 (`screenshots/v5.8-export-crops-stipple-0.2-0.5-hachures.png`).
+
+Three options went to the user:
+
+- **A.** An actual-size preview, reusing the export (recommended).
+- **B.** A second, paper zoom, like a print preview.
+- **C.** A coarser engraving on screen only, so the screen no longer
+  matches the export.
+
+> **yes lets try that**
+
+**Built (A):** an **Actual size** button above the export buttons, or
+the **P** key.
+
+- **Rendering:** `renderPage()`, split out of `exportPNG()`, draws the
+  sheet onto a canvas exactly as the PNG export does. `previewPage()`
+  runs it at twice CSS actual size (96 px per inch) times the screen's
+  pixel ratio, capped at 300 dpi.
+- **The overlay:** shows the sheet at **Actual size** (the sheet's mm
+  at 96 CSS px per inch, which is about true size on a typical screen)
+  or at **2×**. Zooming keeps the centre of the view in place.
+- **Navigation:** drag to move around; Esc or ✕ closes it and drops the
+  canvas.
+- **Cost:** it takes about as long as an export (A4: 2–7 s, depending
+  on the mode), since tracing runs at the export's 4 samples per mm
+  whatever the pixel size.
+
+The main view stays a tone preview. Engraved detail below a pixel can't
+be shown at the fitted size, and the page now says so by offering the
+real thing a click away.
+
 ## Architecture
 
 ```text
@@ -689,7 +734,7 @@ works from `file://` (as DoP does).
 | `projects/island-generator/ui.js` | Settings, controls, URL, facts, keys |
 | `projects/island-generator/island_generator.js` | The p5 sketch: progressive render, overlay, pointer, export |
 | `projects/island-generator/documentation/sketch-notes-2020.md` | The 2020 notes, verbatim |
-| `projects/island-generator/documentation/screenshots/` | `v5.0-desktop`, `-archipelago`, `-mountain-range`, `-lines`, `-mobile-controls`, `-exports`; later versions by number, e.g. `v5.7-hachure-comparison-range`, `v5.7-hachures-page`, `v5.7-stipple-page`, `v5.7-*-300dpi-crop` |
+| `projects/island-generator/documentation/screenshots/` | `v5.0-desktop`, `-archipelago`, `-mountain-range`, `-lines`, `-mobile-controls`, `-exports`; later versions by number, e.g. `v5.7-hachure-comparison-range`, `v5.7-hachures-page`, `v5.7-stipple-page`, `v5.7-*-300dpi-crop`, `v5.8-actual-size-*`, `v5.8-export-crops-*` |
 
 ## Verified
 
@@ -782,6 +827,16 @@ window at 2×. Shape buttons always show, and picking one turns Land
 focus on. Panels run full height with a "more below" hint. Depth
 contours fixed: own step, visible sea shades. Details under "v5.1: first
 review round".
+
+### v5.8: Actual-size preview (2026-09-30)
+
+An **Actual size** button (or **P**) renders the sheet as the PNG
+export does and shows it at about true size, or at 2×, in an overlay
+you drag around. The fitted main view is about 2.5 px per mm for an A4,
+too coarse for the engraving: Stipple spacing looked the same at 0.2
+and 0.5 on screen, although the exports differ. `renderPage()` is now
+shared by the PNG export and the preview. Details are under "v5.8:
+Actual-size preview".
 
 ### v5.7: Engraved: hachures and stipple (2026-09-30)
 

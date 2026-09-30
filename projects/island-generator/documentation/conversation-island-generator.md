@@ -515,3 +515,24 @@ the slope/height switch removed in favour of sun weighting.
 Built as v5.7. The main build decision was caching: dragging the light
 first redrew in 1.4 s. Strokes now keep their slope and gradient, and
 the light only reweights them, in about 0.13 s.
+
+## Part 14: the screen can't show it; an actual-size preview (2026-09-30)
+
+> **Stipple at 0.2 vs 0.5 - no particular difference
+> while everything does read as 3d in engraved, the density and the
+> overall look is not a nice as the test page ones.**
+
+Checked before answering. On screen, 0.2 and 0.5 came out identical at
+the fitted size and at 300% zoom. Zoom changes the landscape in the
+frame, not the paper, so the sheet is always about 2.5 px per mm. At
+that scale the engraving's fractions of a mm fall below a pixel, and
+the tracer's half-sample floor merged both spacings. The exports,
+viewed at the test page's scale, looked like the test page, and spacing
+made a clear difference there. The reply offered three fixes: an
+actual-size preview reusing the export (recommended), a paper zoom, or
+a coarser on-screen engraving that would no longer match the export.
+
+> **yes lets try that**
+
+Built as v5.8: an Actual size button and the P key, showing the export
+render at about true size or 2×, dragged around in an overlay.

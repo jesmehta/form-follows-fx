@@ -150,7 +150,19 @@ land and are never deleted. The design intent behind each item is in
 - [x] Weight = slope × sun, with a Light from control; the light
       reweights cached strokes without retracing (2026-09-30)
 - [x] Theme renamed Engraved, with a Hachures | Stipple switch (2026-09-30)
-- [ ] User to review both modes on screen and in an export
+- [ ] User to review both modes on screen and in an export. First
+      review: on screen, Stipple 0.2 and 0.5 looked alike and the look
+      fell short of the test page, because the fitted view is ~2.5 px
+      per mm. The fix was v5.8's actual-size preview (2026-09-30)
+
+## v5.8: Actual-size preview
+
+- [x] Actual size button / P key: the export render shown at about true
+      size or 2×, drag to pan (2026-09-30)
+- [ ] User to judge Engraved in the preview
+- [ ] If previews are used often, cache the render until a setting
+      changes, so reopening is instant
+- [ ] Paper zoom (option B) if the one-shot preview isn't enough
 - [ ] Maybe expose smoothing, sunlit weight or rows per band as
       sliders if the fixed values don't suit some landscapes
 - [ ] Stipple and hachures as an overlay on the colour themes (see
