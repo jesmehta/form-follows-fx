@@ -442,3 +442,76 @@ Dance of Planets and Island Generator live on the next push.
 
 The artefact was the mask's hard clamp at 1.8 R (fixed in v5.6.2). The
 hachure look went back to the user as questions before more changes.
+
+## Part 13: Davison, the comparison sheet, Engraved (2026-09-30)
+
+After a break, the user answered the four questions about the hachures
+and brought some reading.
+
+> **hachure - i think its all 4 issues.
+>
+> I did some reading as well.
+> https://warrenrdavison.wixsite.com/maps/post/revisiting-hachure-lines-dynamic-hachure-contours-in-arcgis-pro
+>
+> have a look at the above link.
+> I think the hacures should be
+> - low slope = short lines
+> - high slope = long lines
+> - additionally, sun direction - light side - low line weight, shadow
+>   side - thicker line weight
+> - although line weight could also just be used for slope as well
+>   alongwith length
+>
+> let me know what you think ?**
+
+The reply summarised Davison's method: a smoothed DEM, ticks on a much
+finer contour interval than the displayed one, and weight from slope
+plus aspect. It traced three of the four problems to v5.6 using the
+display bands as its rows. Sun weighting was agreed, as Dufour's
+shadow hachures. The length idea was flagged as the one conflict:
+tied to contours, steep strokes are short, so "high slope = long lines"
+means free strokes. The reply proposed a four-panel comparison sheet
+rather than deciding on paper.
+
+> **yes**
+
+The sheet (current / finer rows + smoothed / + sun / free strokes + sun)
+went out in three views: the Mountain range, the island, and a
+print-scale detail. The reply's read was that 3 is the most convincing
+relief and 4 better than expected at page scale.
+
+> **3 looks great, 4 is too sparse
+> Can you show 4 with more density, maybe a slider, and 3 with the
+> length cap slider, added to the comparisin page**
+
+The sheet gained six sliders. Panel 4's density came mostly from no
+longer dropping strokes cut short by a neighbour. The reply noted that
+the length cap barely changes 3, because the uphill pass fills in behind
+a capped stroke.
+
+> **3 : looks like hachures classical
+> rows per band is fine at 4
+> length cap = 1 is cool, with some whitespace, i dont think it is
+> making too much difference beyond 2, and below 1 it becomes mini
+> hatches following the contour, which is a distinct look, but i dont
+> think i want it
+> 4 : looks more like stippling under certain settings
+> spacing - 0.15 maybe too much but 0.2 is a good dense stipple, upper
+> limit 0.5 since at 0.55 it is very sparse already
+> strokes - keep 1-5 mm range, longer strokes with closer spacing give
+> density even though longer strokes with fartehr spacing look like fur
+> or stubble
+>
+> So maybe we have 2 kinds of colour theme added - hachure and
+> stippling, as 2 separtae options or a monochrome theme with radio
+> buttons between these, and with 1-2 controls as needed**
+
+The proposal was one theme with a switch: two per-mode sliders plus a
+shared light direction; smoothing, rows and sunlit weight fixed; and
+the slope/height switch removed in favour of sun weighting.
+
+> **go ahead**
+
+Built as v5.7. The main build decision was caching: dragging the light
+first redrew in 1.4 s. Strokes now keep their slope and gradient, and
+the light only reweights them, in about 0.13 s.

@@ -6,7 +6,8 @@ island, an archipelago, a coastline, a mainland and a mountain range. It
 exports the sheet as a print-resolution PNG, a 16-bit heightmap, or as
 SVG vectors (contour lines, or filled stacked layers). It lives at
 `projects/island-generator/` and is served at `/island-generator/` on
-`fffx.cabinetofcuriosities.in` once the deploy loop exists (see TODO).
+`fffx.cabinetofcuriosities.in` once pushed (the deploy loop was added
+2026-09-30).
 
 Companion docs in this folder:
 
@@ -168,6 +169,9 @@ Hypsometric (atlas) colour was offered and not chosen.
 - **Lines**: dark contour lines on paper. The coast is heaviest and every
   5th band is an index contour, with widths in **mm of paper**
   (0.5 / 0.35 / 0.18). The screen previews exactly what the SVG plots.
+- **Engraved** (v5.6 as Hachures; renamed in v5.7 and given a Stipple
+  mode): pen strokes on paper, weighted by slope and by a light
+  direction, with water lines along the coast. See "v5.7: Engraved".
 
 ### Export
 
@@ -464,6 +468,10 @@ runs 0–30:
 
 ## v5.6: Hachures (2026-09-30)
 
+*Partly superseded by v5.7:* strokes are now traced on finer rows over
+a smoothed terrain, the slope/height switch is gone (slope × sun
+instead), and the theme is called Engraved.
+
 > **Colours - How difficult would it be to render each contour band as old
 > school hatching - radially outward from higher contour to lower contour,
 > density of hatch maps to height, etc ?**
@@ -522,6 +530,128 @@ strokes spread apart on convex ground and bunch in hollows. A cheap
   The even-spacing refinement (re-seeding into gaps) would fix both; it
   is in the TODO, to decide after looking at real output.
 
+## v5.7: Engraved: hachures and stipple (2026-09-30)
+
+> **hachures still dont look very good.**
+
+Four likely causes went back to the user: the terrain is too busy, the
+strokes curl like hair, the contrast is weak, and the rows still show.
+
+> **hachure - i think its all 4 issues.
+>
+> I did some reading as well.
+> https://warrenrdavison.wixsite.com/maps/post/revisiting-hachure-lines-dynamic-hachure-contours-in-arcgis-pro
+> [...]
+> I think the hacures should be
+> - low slope = short lines
+> - high slope = long lines
+> - additionally, sun direction - light side - low line weight, shadow
+>   side - thicker line weight
+> - although line weight could also just be used for slope as well
+>   alongwith length**
+
+**What Davison's method showed.** He smooths the DEM first (a 10-cell
+mean). He hangs short ticks on contours at a *much finer* interval than
+the ones he displays. He weights the ticks by slope plus aspect. On steep
+ground his ticks are heavy, close together and *short*. v5.6 traced
+between the display bands, so its strokes were long and followed every
+ripple of the noise, and each band read as a terrace.
+
+**The length question.** When strokes run contour to contour, the
+terrain sets their length: contours crowd on steep ground, so strokes
+there are short. "High slope = long lines" means strokes that are no
+longer tied to contours. Rather than argue it, both were drawn: a
+comparison sheet (review page, not shipped) with four panels on the same
+map:
+
+1. current;
+2. finer rows + smoothed terrain;
+3. 2 plus sun weighting;
+4. free strokes whose length grows with slope, plus sun.
+
+The sheet later gained sliders for rows per band, length cap, spacing,
+stroke length, sunlit weight and smoothing
+(`screenshots/v5.7-hachure-comparison-*.png`).
+
+> **3 : looks like hachures classical
+> rows per band is fine at 4
+> length cap = 1 is cool, with some whitespace [...] below 1 it becomes
+> mini hatches following the contour, which is a distinct look, but i
+> dont think i want it
+> 4 : looks more like stippling under certain settings
+> spacing - 0.15 maybe too much but 0.2 is a good dense stipple, upper
+> limit 0.5 [...]
+> strokes - keep 1-5 mm range, longer strokes with closer spacing give
+> density even though longer strokes with fartehr spacing look like fur
+> or stubble
+>
+> So maybe we have 2 kinds of colour theme added - hachure and
+> stippling, as 2 separtae options or a monochrome theme with radio
+> buttons between these, and with 1-2 controls as needed**
+
+**Built:** one colour theme, **Engraved** (the v5.6 Hachures button,
+renamed), with a **Hachures | Stipple** switch under it. It was chosen
+over two separate buttons because the two share almost everything
+(paper, coast, water-lining, smoothing, sun weighting, export), and the
+Colours row already had five buttons.
+
+- **Hachures** (`hachures()`): v5.6.1's two-pass contour-to-contour
+  tracing, now on rows at least 4 per display band and 48 in all
+  (`ceil(48 / bands)` per band). The rows stay aligned with the display
+  bands, so the Contour lines overlay still sits on a row. With 0 bands
+  (smooth), there are 48 rows.
+- **Stipple** (`stipple()`): loose strokes down the slope, not tied to
+  contours. Seeds are a shuffled jittered grid. Each stroke is centred
+  on its seed and runs 0.4 mm on gentle ground up to *Stroke length* on
+  the steepest. A stroke stops short within about *Spacing* of another
+  and is dropped if that leaves it under 0.2 mm.
+- **Both** are traced on the terrain smoothed by 1.6 mm (three box
+  blurs, `blurField()`). The coast and the water lines still use the
+  unsmoothed field, so they match the other styles.
+- **Weight = slope × sun** (Dufour). Slope is the stroke's gradient over
+  this landscape's 90th-percentile gradient, and ground below 0.12 is
+  left white. Sun is `lit + (1 − lit) · shade`, where shade is 0 facing
+  the light and 1 facing away, and `lit` = 0.15. Width runs 0.04–0.34 mm
+  in 10 weight buckets (v5.6: 0.05–0.28, 8 buckets). The wider range is
+  what fixes the weak contrast.
+
+**Controls** (at most three at a time):
+
+| | Hachures | Stipple |
+|---|---|---|
+| | Stroke length: 1–2.5 mm, or off at the far right (default 1) | Spacing: 0.2–0.5 mm (default 0.3) |
+| | | Stroke length: up to 1–5 mm (default 3) |
+| both | Light from: compass 0–360° (default 315°, north-west) | same |
+
+URL keys: `eg` (hachure / stipple), `hc`, `sp`, `sn`, `sun`. The length
+cap has no setting below 1 mm, since the user doesn't want the
+mini-hatch look.
+
+**Fixed, not controls:** 4 rows per band, 1.6 mm smoothing, sunlit
+weight 0.15, and 0.6 mm hachure pitch. Any of these can become a slider
+later.
+
+**Removed: the slope/height weight switch** (`hachBy`, URL `hb`).
+Sun weighting took its place. Height weighting fights it for the line
+weight, and the comparison showed slope + sun working. This settles
+v5.6's "switch between both until I lock one" in favour of slope. Old
+links with `hb` still open; the key is ignored.
+
+**Decisions made while building:**
+
+- **The light only reweights strokes.** Strokes carry their slope and
+  summed gradient, and the weight is worked out at draw time. The
+  on-screen strokes are cached against everything that moves them
+  (mode, cap, spacing, length, seed, levels, field). Dragging *Light
+  from* redraws in about 0.13 s instead of 1.4 s.
+- **Export speed** (A4 at 300 dpi, Mountain range): hachures 6.2 s,
+  stipple 3.7 s. v5.6.1 took 8.5 s; the smoothed field gives strokes
+  fewer twists to trace.
+- **Stipple's length is not true to Lehmann**, and doesn't need to be:
+  it is its own look. At close spacing, long strokes read as dense
+  shading. At wide spacing they read as fur (the user's observation),
+  which is why spacing stops at 0.5 mm.
+
 ## Architecture
 
 ```text
@@ -559,7 +689,7 @@ works from `file://` (as DoP does).
 | `projects/island-generator/ui.js` | Settings, controls, URL, facts, keys |
 | `projects/island-generator/island_generator.js` | The p5 sketch: progressive render, overlay, pointer, export |
 | `projects/island-generator/documentation/sketch-notes-2020.md` | The 2020 notes, verbatim |
-| `projects/island-generator/documentation/screenshots/` | `v5.0-desktop`, `-archipelago`, `-mountain-range`, `-lines`, `-mobile-controls`, `-exports` |
+| `projects/island-generator/documentation/screenshots/` | `v5.0-desktop`, `-archipelago`, `-mountain-range`, `-lines`, `-mobile-controls`, `-exports`; later versions by number, e.g. `v5.7-hachure-comparison-range`, `v5.7-hachures-page`, `v5.7-stipple-page`, `v5.7-*-300dpi-crop` |
 
 ## Verified
 
@@ -652,6 +782,25 @@ window at 2×. Shape buttons always show, and picking one turns Land
 focus on. Panels run full height with a "more below" hint. Depth
 contours fixed: own step, visible sea shades. Details under "v5.1: first
 review round".
+
+### v5.7: Engraved: hachures and stipple (2026-09-30)
+
+The Hachures theme becomes **Engraved**, with a Hachures | Stipple
+switch, after a four-way comparison sheet built from the user's reading
+of Davison's dynamic hachures.
+
+- **Hachures:** 4 rows per display band (at least 48 in all), traced
+  on a 1.6 mm-smoothed terrain, with a stroke-length cap (1–2.5 mm or
+  off, default 1 mm).
+- **Stipple:** free strokes 0.4 mm up to 1–5 mm long, longer on steeper
+  ground, with 0.2–0.5 mm spacing.
+- **Both:** weight is slope × sun, with *Light from* (default
+  north-west), stroke widths 0.04–0.34 mm, and 10 buckets in the PNG and
+  in the SVG layer.
+- **Removed:** the slope/height switch.
+- **Speed:** moving the light only reweights cached strokes.
+
+Details are under "v5.7: Engraved".
 
 ### v5.6.2: no creases in the land mask (2026-09-30)
 

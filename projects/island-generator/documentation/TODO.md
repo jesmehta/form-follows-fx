@@ -127,16 +127,34 @@ land and are never deleted. The design intent behind each item is in
 
 - [x] Hachures colour theme: slope/height switch, water-lining, coast,
       PNG + SVG layers (2026-09-30)
-- [ ] **Lock slope or height** once one proves more useful (user: "switch
-      between both until I lock one")
+- [x] **Lock slope or height** once one proves more useful (user: "switch
+      between both until I lock one"). Slope, with sun weighting; the
+      height option was removed in v5.7 (2026-09-30)
 - [x] Strokes run contour to contour: downhill pass plus an uphill
       gap-filling pass, no length cap (v5.6.1) (2026-09-30)
-- [ ] Decide whether a full even-spacing pass is still needed after
-      v5.6.1's two-pass seeding (tangles remain on noisy, near-flat
-      ground)
+- [x] Decide whether a full even-spacing pass is still needed after
+      v5.6.1's two-pass seeding. Not for now: finer rows on a smoothed
+      terrain (v5.7) removed the tangles (2026-09-30)
 - [ ] Hachures as an overlay on the colour themes, like Contour lines
       ("will consider overlaying it like lines later")
-- [ ] Maybe a hachure density control (pitch is fixed at 0.6 mm of print)
+- [ ] Maybe a hachure density control (pitch is fixed at 0.6 mm of print;
+      Stipple has Spacing since v5.7)
+
+## v5.7: Engraved (hachures | stipple)
+
+- [x] Comparison sheet of four approaches, then sliders on it
+      (`review/hachure-compare.html`, not shipped) (2026-09-30)
+- [x] Hachures on 4 rows per band over a 1.6 mm-smoothed terrain, with
+      a length cap of 1–2.5 mm or off (2026-09-30)
+- [x] Stipple mode: spacing 0.2–0.5 mm, stroke length 1–5 mm (2026-09-30)
+- [x] Weight = slope × sun, with a Light from control; the light
+      reweights cached strokes without retracing (2026-09-30)
+- [x] Theme renamed Engraved, with a Hachures | Stipple switch (2026-09-30)
+- [ ] User to review both modes on screen and in an export
+- [ ] Maybe expose smoothing, sunlit weight or rows per band as
+      sliders if the fixed values don't suit some landscapes
+- [ ] Stipple and hachures as an overlay on the colour themes (see
+      above)
 
 ## Docs location
 
