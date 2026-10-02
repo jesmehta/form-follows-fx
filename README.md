@@ -222,6 +222,13 @@ touched or migrated yet.
 
 ## Changelog
 
+- **2026-10-02** — Deployment checks brought up to Cabinet parity:
+  `deploy.yml` now fails on stale generated content, a non-strict MkDocs
+  build, a `projects/*/` folder without `index.html` or colliding with
+  MkDocs output, or any active entry href / self-domain nav target /
+  doc-body link missing from `public/` (`tools/validate-deployment.js`).
+  Also committed the seven placeholder pages the landing already linked
+  but which existed only locally (live 404s until now).
 - **2026-10-02** — Documented `projects/` (Dance of Planets, Island
   Generator) in this README's structure tree and in
   `documentation/FILE-MANIFEST.md`. Repo docs only: neither tool is wired

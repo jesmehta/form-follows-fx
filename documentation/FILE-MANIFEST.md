@@ -25,7 +25,7 @@ the other two repos.
 | `WORLD-SYSTEMS.md` | Conventions shared across Cabinet/Bookshelf/fffx (data schema, status model, homepage rule). Hand-synced identically across all three repos — don't edit without also updating the other two. |
 | `mkdocs.yml` | MkDocs site config: nav tree, theme (Space Grotesk/IBM Plex Mono, slate scheme only), plugins, `extra_css`. |
 | `requirements.txt` | Python deps for `mkdocs build`/`mkdocs serve`. |
-| `.github/workflows/deploy.yml` | CI: `mkdocs build --site-dir public`, official `actions/configure-pages` → `upload-pages-artifact` → `deploy-pages` pipeline, guards against a stray `docs/index.md` colliding with the standalone `docs/index.html` landing page, and copies each `projects/*/` folder to `/<name>/` (minus its `documentation/`). |
+| `.github/workflows/deploy.yml` | CI: generated-content drift check, `mkdocs build --strict` (tee'd to `mkdocs-build.log`), official `actions/configure-pages` → `upload-pages-artifact` → `deploy-pages` pipeline, guards against a stray `docs/index.md` colliding with the standalone `docs/index.html` landing page, copies each `projects/*/` folder to `/<name>/` (minus its `documentation/`; fails on a missing `index.html` or a collision with MkDocs output), then runs `tools/validate-deployment.js` before upload. |
 | `run-fffx-editor.bat` | Double-click launcher for `tools/fffx-editor.js` (the Admin Dash). |
 
 ## `documentation/` — project documentation, not root-required
@@ -87,7 +87,8 @@ were at the time:
 | File | Role |
 |---|---|
 | `build-fffx-content.js` | Parses both `fffx-*.tsv` files into `docs/_assets/backend/js/fffx-generated-content.js`. Not refactored onto `fffx-tsv.js`'s shared module (unlike Cabinet's equivalent script, which was) — the two TSV-parsing implementations are independent copies today, flagged in `FFFX-EDITOR.md`'s Todo. |
-| `fffx-tsv.js` | Shared TSV parse/serialize/validate logic used by the Admin Dash server. Plain strict tab/newline splitter (not CSV-quote-aware) — neither `fffx-*.tsv` file has ever needed embedded-tab/quote handling. |
+| `validate-deployment.js` | CI-only post-build route check (2026-10-02, ported from Cabinet's `#84` script; Bookshelf has the same port): every true/wip entry href, self-domain nav target, and MkDocs-reported doc-body link must exist in the assembled `public/`. |
+| `fffx-tsv.js` | Shared TSV parse/serialize/validate logic used by the Admin Dash server (and `validate-deployment.js`). Plain strict tab/newline splitter (not CSV-quote-aware) — neither `fffx-*.tsv` file has ever needed embedded-tab/quote handling. |
 | `fffx-editor.js` | Local-only zero-dependency Node HTTP Admin Dash server (`/admin/`, port `6858` by default, `FFFX_EDITOR_PORT` to override) — TSV CRUD/validate API plus two build-script routes (`rebuild-content`, `mkdocs-check`), all in one process (unlike Cabinet's editor-server/admin-controls-server split — see `FFFX-EDITOR.md`'s "Decisions and intent" for why that split doesn't apply here). |
 | `fffx-editor-ui/index.html`, `editor.css`, `editor.js` | The Admin Dash's browser UI — Sections/Entries/Build tabs, sortable/resizable columns, "⇕ Expand text" toggle, no reserved-column panel (this schema has none). |
 
