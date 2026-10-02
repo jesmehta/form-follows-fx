@@ -58,7 +58,7 @@ were at the time:
 
 | File | Role |
 |---|---|
-| `FFFX-CLAUDE-CODE-PROMPT.md` | The design-system grounding prompt as drafted 2026-06-29, meant to be pasted into a fresh Claude Code session. Superseded by `DESIGN-SYSTEM.md`, which has evolved through v1.0–v2.0 since. Still untracked in git (moved here from repo root 2026-09-05, was untracked there too). |
+| `FFFX-CLAUDE-CODE-PROMPT.md` | The design-system grounding prompt as drafted 2026-06-29, meant to be pasted into a fresh Claude Code session. Superseded by `DESIGN-SYSTEM.md`, which has evolved through v1.0–v2.0 since. Was untracked at repo root for months; moved here and committed 2026-09-05, alongside its sibling below. |
 | `Claude-convo-README.md` | The original project README as drafted the same day, describing a `data.js`-driven architecture (no MkDocs, no TSV pipeline, no Admin Dash) that was fully replaced roughly a week later — see the current `README.md`'s 2026-07-06/07/07 changelog entries. Kept as a record of the v1.0 concept before that rebuild, not as an alternate README. |
 
 ### `fffx-editor/` — the Admin Dash

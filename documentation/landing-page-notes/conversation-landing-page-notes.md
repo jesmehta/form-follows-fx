@@ -298,7 +298,8 @@ where debugging-by-conversation had stopped being productive:
 
 This produced `FFFX-CLAUDE-CODE-PROMPT.md` — still sitting right here in
 this same folder today (moved in from an untracked spot at the repo root
-2026-09-05, never committed either place), and the grounding document
+2026-09-05, and committed for the first time along with the move), and
+the grounding document
 behind `DESIGN-SYSTEM.md` — and an original README, kept alongside it as
 `Claude-convo-README.md` (added to this folder 2026-09-05; describes a
 `data.js`-driven architecture with no MkDocs, TSV pipeline, or Admin

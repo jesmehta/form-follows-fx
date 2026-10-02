@@ -88,8 +88,9 @@ land and are never deleted. The design intent behind each item is in
 
 ## Launch (fffx-side)
 
-- [ ] `projects/*/` copy loop in fffx's `deploy.yml`. The same item is open
-      in Dance of Planets' TODO; one loop serves both.
+- [x] `projects/*/` copy loop in fffx's `deploy.yml`; the shared step serves
+      Island Generator and Dance of Planets while excluding project
+      documentation (2026-09-30, `e0226a8`).
 - [ ] fffx entry for the tool (`content/fffx-entries.tsv`) + README /
       `FILE-MANIFEST.md` wiring. `FILE-MANIFEST.md` has older uncommitted
       edits that aren't ours; don't commit them along with it.
