@@ -149,6 +149,9 @@ registry rows.
 - [ ] Legacy Processing Archive: move out of the showcase; track as clean-up.
 - [ ] Inventory Flow Fields, Perlin Noise, Plotter Work, Code to Fabrication
   — the work exists but isn't collected or explained.
+- [ ] **Mine the old notebooks and sketchbooks for ideas.** Go through them
+  (paper notebooks *and* sketchbooks), pull out creative-coding ideas, and
+  add each to *Ideas* above with where it came from. Added 2026-10-02.
 - [ ] Confirm or remove any **Unexplained** idea rows above (none as of
   2026-10-02).
 - [ ] Add a section hub only where it helps orientation; don't activate thin
