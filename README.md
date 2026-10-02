@@ -53,6 +53,14 @@ form-follows-fx/
 │   └── backend-and-deploy/
 │       ├── BACKEND-AND-DEPLOY.md               Repo-wide/deploy-pipeline work with no single owning page
 │       └── conversation-backend-and-deploy.md  Real conversation log for the same
+├── projects/                Standalone interactive projects, outside MkDocs — each
+│   │                        folder is copied to /<name>/ at deploy (see below)
+│   ├── dance-of-planets/        Dance of Planets v3.0 (p5.js orbital-harmonics tool)
+│   │   ├── index.html, *.js, *.css  The tool itself (published)
+│   │   └── documentation/           Design doc, conversation log, TODO (not published)
+│   └── island-generator/        Island Generator v5.8.1 (p5.js Perlin contour maps)
+│       ├── index.html, *.js, *.css  The tool itself (published)
+│       └── documentation/           Design doc, conversation log, TODO, screenshots (not published)
 └── docs/                    MkDocs docs_dir
     ├── index.html           Standalone landing page (NOT index.md — see notes)
     ├── _assets/                   Supporting files, not browsable pages (leading underscore
@@ -120,6 +128,17 @@ form-follows-fx/
   edit both TSVs in a browser and run that build (plus an mkdocs strict
   check) with a button instead. See
   `documentation/fffx-editor/FFFX-EDITOR.md` for the full design notes.
+- `projects/<name>/` holds standalone interactive tools that don't go
+  through MkDocs. `deploy.yml`'s "Copy static interactive projects" step
+  (ported from Bookshelf, 2026-09-30) copies each folder to `/<name>/`
+  after the MkDocs build, minus its `documentation/` subfolder and any
+  stray `.md` file — each project's docs stay in the repo only. Dance of
+  Planets and Island Generator are served this way at `/dance-of-planets/`
+  and `/island-generator/`, but are deliberately **not** wired into the
+  landing TSVs or `mkdocs.yml`'s nav yet: public integration waits on the
+  private-source/Cloudflare decision (Cabinet `#147`). The older
+  `harmonics-dance-of-planets` placeholder portal predates the tool and
+  doesn't link to it.
 
 ## Adding a portal to the landing page
 
@@ -203,6 +222,10 @@ touched or migrated yet.
 
 ## Changelog
 
+- **2026-10-02** — Documented `projects/` (Dance of Planets, Island
+  Generator) in this README's structure tree and in
+  `documentation/FILE-MANIFEST.md`. Repo docs only: neither tool is wired
+  into the landing TSVs or nav yet (waits on Cabinet `#147`).
 - **2026-09-05** — Reorganized `docs/` into content-vs-system folders
   (`_assets/backend`, `_assets/material`, `_images`, matching Cabinet's
   own convention) and `documentation/` into one folder per feature

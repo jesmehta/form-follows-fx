@@ -25,7 +25,7 @@ the other two repos.
 | `WORLD-SYSTEMS.md` | Conventions shared across Cabinet/Bookshelf/fffx (data schema, status model, homepage rule). Hand-synced identically across all three repos — don't edit without also updating the other two. |
 | `mkdocs.yml` | MkDocs site config: nav tree, theme (Space Grotesk/IBM Plex Mono, slate scheme only), plugins, `extra_css`. |
 | `requirements.txt` | Python deps for `mkdocs build`/`mkdocs serve`. |
-| `.github/workflows/deploy.yml` | CI: `mkdocs build --site-dir public`, official `actions/configure-pages` → `upload-pages-artifact` → `deploy-pages` pipeline, guards against a stray `docs/index.md` colliding with the standalone `docs/index.html` landing page. |
+| `.github/workflows/deploy.yml` | CI: `mkdocs build --site-dir public`, official `actions/configure-pages` → `upload-pages-artifact` → `deploy-pages` pipeline, guards against a stray `docs/index.md` colliding with the standalone `docs/index.html` landing page, and copies each `projects/*/` folder to `/<name>/` (minus its `documentation/`). |
 | `run-fffx-editor.bat` | Double-click launcher for `tools/fffx-editor.js` (the Admin Dash). |
 
 ## `documentation/` — project documentation, not root-required
@@ -90,6 +90,30 @@ were at the time:
 | `fffx-tsv.js` | Shared TSV parse/serialize/validate logic used by the Admin Dash server. Plain strict tab/newline splitter (not CSV-quote-aware) — neither `fffx-*.tsv` file has ever needed embedded-tab/quote handling. |
 | `fffx-editor.js` | Local-only zero-dependency Node HTTP Admin Dash server (`/admin/`, port `6858` by default, `FFFX_EDITOR_PORT` to override) — TSV CRUD/validate API plus two build-script routes (`rebuild-content`, `mkdocs-check`), all in one process (unlike Cabinet's editor-server/admin-controls-server split — see `FFFX-EDITOR.md`'s "Decisions and intent" for why that split doesn't apply here). |
 | `fffx-editor-ui/index.html`, `editor.css`, `editor.js` | The Admin Dash's browser UI — Sections/Entries/Build tabs, sortable/resizable columns, "⇕ Expand text" toggle, no reserved-column panel (this schema has none). |
+
+## `projects/` — standalone interactive projects (outside MkDocs)
+
+Added 2026-09-29/30, following Bookshelf's `projects/` pattern. Each
+folder is copied to `/<name>/` by `deploy.yml`'s "Copy static interactive
+projects" step after the MkDocs build; its `documentation/` subfolder and
+any `.md` file are left out of the published site. Not yet linked from the
+landing TSVs or `mkdocs.yml`'s nav — that waits on Cabinet `#147` (see
+`README.md`).
+
+| Path | Role |
+|---|---|
+| `projects/dance-of-planets/index.html` | Dance of Planets v3.0 page shell: full-bleed canvas, HUD panels, transport bar. Served at `/dance-of-planets/`. |
+| `projects/dance-of-planets/model.js` | Pure model, no DOM: planet data, continued-fraction cycle choice, positions over time. |
+| `projects/dance-of-planets/dance_of_planets.js` | p5.js rendering: trails, planets/orbits overlay, redraw-at-current-progress, PNG/SVG export. |
+| `projects/dance-of-planets/ui.js` | Owns the settings and their redraw tiers, wires controls/presets, fills the info panel, keeps shareable URL state in sync. |
+| `projects/dance-of-planets/dance_of_planets.css` | The tool's own styling (own palette, not `fffx-tokens.css`). |
+| `projects/dance-of-planets/documentation/` | `DANCE-OF-PLANETS.md` (design/as-built), `conversation-dance-of-planets.md`, `TODO.md`, `screenshots/`. Not published. |
+| `projects/island-generator/index.html` | Island Generator v5.8.1 page shell. Served at `/island-generator/`. |
+| `projects/island-generator/model.js` | Pure model, no DOM: seeded Perlin/fBm noise, island centres, the elevation function, sampled fields, sea level/bands, marching-squares contours. |
+| `projects/island-generator/island_generator.js` | p5.js sketch: tiered redraw (terrain/view/levels/overlay), progressive sampling, rendering styles including Engraved, and PNG/16-bit heightmap/SVG export. |
+| `projects/island-generator/ui.js` | Owns the settings and their tiers, wires the controls, fills the map facts and caption, keeps URL state in sync. |
+| `projects/island-generator/island_generator.css` | The tool's own styling. |
+| `projects/island-generator/documentation/` | `ISLAND-GENERATOR.md` (design/as-built), `conversation-island-generator.md`, `sketch-notes-2020.md`, `TODO.md`, `screenshots/`. Not published. |
 
 ## `docs/` — the live MkDocs site + standalone landing page
 
