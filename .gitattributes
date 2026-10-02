@@ -1,0 +1,5 @@
+# Store and check out text as LF, overriding core.autocrlf on Windows.
+# Node/editor tooling writes LF; without this, every commit warned
+# "LF will be replaced by CRLF". Batch files need CRLF to run reliably.
+* text=auto eol=lf
+*.bat text eol=crlf
