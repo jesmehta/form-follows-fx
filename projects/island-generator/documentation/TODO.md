@@ -91,9 +91,12 @@ land and are never deleted. The design intent behind each item is in
 - [x] `projects/*/` copy loop in fffx's `deploy.yml`; the shared step serves
       Island Generator and Dance of Planets while excluding project
       documentation (2026-09-30, `e0226a8`).
-- [ ] fffx entry for the tool (`content/fffx-entries.tsv`) + README /
-      `FILE-MANIFEST.md` wiring. `FILE-MANIFEST.md` has older uncommitted
-      edits that aren't ours; don't commit them along with it.
+- [x] README / `FILE-MANIFEST.md` wiring (2026-10-02, `5f27d3d`; the
+      older FILE-MANIFEST edits went in separately as `8992d3b`).
+- [ ] fffx entry for the tool (`content/fffx-entries.tsv`). **On hold
+      (2026-10-02):** no landing/TSV or nav wiring until the GitHub
+      Pro/Cloudflare Workers privacy decision (Cabinet `#147`); the route
+      stays live, unlinked, by the user's call.
 - [ ] Writeup page (the 2020 sketches → v5.0, captured visuals)?
       Discuss with the user whether this project gets one like DoP's.
 

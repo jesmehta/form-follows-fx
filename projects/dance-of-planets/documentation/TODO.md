@@ -52,10 +52,14 @@ Tracked in Cabinet's `documentation/toDo - immediate.md` as the quick win
       project's `documentation/`) (2026-09-30). **Pushing it publishes
       both projects.**
 - [ ] Point `harmonics-dance-of-planets` entry / writeup page at the tool;
-      `location` values per fffx's vocabulary
-- [ ] Wire `README.md` + `documentation/FILE-MANIFEST.md` to this folder
-      (FILE-MANIFEST currently has someone's older uncommitted edits —
-      don't commit those along with it)
+      `location` values per fffx's vocabulary. **On hold (2026-10-02):** no
+      landing/TSV or nav wiring until the GitHub Pro/Cloudflare Workers
+      privacy decision (Cabinet `#147`). The route itself stays live,
+      unlinked, by the user's call. The placeholder portal page is now
+      committed (`4ae8755`).
+- [x] Wire `README.md` + `documentation/FILE-MANIFEST.md` to this folder
+      (2026-10-02, `5f27d3d`; the older FILE-MANIFEST edits went in
+      separately as `8992d3b`)
 - [ ] Writeup page: Dance of Venus + the code + captured visuals (replaces
       the placeholder `.md`) -- not urgent, but next after the launch;
       tracked in Cabinet's immediate todo alongside Island Generator
