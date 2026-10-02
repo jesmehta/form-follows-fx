@@ -111,7 +111,10 @@ registry rows.
 
 | Idea | What it is | Notes |
 |---|---|---|
-| Combinatorics | Your `_Combinatorics` sketch folder | In the original brief's folder list; never got a card. **Unexplained** beyond the folder name — confirm what it holds. |
+| Combinatorics | The whole umbrella of your combinatorics visuals (`_Combinatorics` sketch folder) — "lots of outputs" | Confirmed 2026-10-02. In your 2026-06-29 inventory under "Other stuff I can't classify as such because it was all exploratory, but lots of outputs". A candidate for the Math Art section below. Not tracked anywhere else. |
+| Noise fields | Exploratory noise-field sketches | From the same 2026-06-29 exploratory list. Overlaps the Perlin Noise card — decide whether it folds in there. Not tracked anywhere else. |
+| Games | "Some games" made in code | From the same exploratory list. Not tracked anywhere else; what they are is not yet written down. |
+| **Math Art** (section idea) | A section extracted from the exploratory work | Your 2026-06-29 note: "MathArt and Patterns in Nature can be two more sections extracted from these". Patterns in Nature is now covered by BioMimicry × Code. Candidates: Combinatorics, Harmonics/Dance of Planets, Truchet Tiles, Menger cube. Not tracked anywhere else. |
 | WrongWays / Wronglines | Named in the brief's content inventory | Never got a card. |
 | BioMimicry × Code | Code imitating nature: flocking, Brownian deposition, differential growth, reaction–diffusion, phyllotaxis (also physarum, L-systems, cellular automata, agent-based growth, Voronoi) | From Cabinet's `scratchNotes.md` ("Add BioMimicry x Code to FFFX"). Also tied to the possible Biomimicry elective in Cabinet's content todo. |
 | Crystal Deposition Variations | Code mimicking crystalline mineral forms | Part of BioMimicry × Code (nature × code). Needs fresh exports. |
@@ -146,7 +149,8 @@ registry rows.
 - [ ] Legacy Processing Archive: move out of the showcase; track as clean-up.
 - [ ] Inventory Flow Fields, Perlin Noise, Plotter Work, Code to Fabrication
   — the work exists but isn't collected or explained.
-- [ ] Confirm or remove the **Unexplained** idea rows above.
+- [ ] Confirm or remove any **Unexplained** idea rows above (none as of
+  2026-10-02).
 - [ ] Add a section hub only where it helps orientation; don't activate thin
   categories just because TSV rows exist.
 - [ ] Add thumbnails/stills to entries as part of publication, not as a later
