@@ -42,6 +42,8 @@ should not be published openly until the private-source architecture is
 decided (GitHub Pro / Cloudflare Workers; Cabinet's `toDo - immediate.md`,
 `#147`). Gated work gets no new landing/TSV/nav wiring until then. Repos are
 public today, so the gate limits promotion, not visibility of existing code.
+Gated: Mandala Generator (incl. Cabinet's Dot Mandala Tool), Lenticular,
+Dance of Planets, Island Generator, Live Webcam Filters.
 
 ## Sections
 
@@ -69,19 +71,19 @@ Source: `content/fffx-entries.tsv`. "Your call" is from 2026-10-02.
 
 | Card | Section | Status | What it is | What exists | Your call | Next |
 |---|---|---|---|---|---|---|
-| Vera Molnar | Recreating the Past | live | Code-driven homage/study of Vera Molnar's work | `docs/recreating-the-past/vera-molnar.md`, ~322 words, in nav | — | Keep live; add stronger imagery/context only if it improves the study. Cabinet's duplicate retired with a redirect. |
+| Vera Molnar | Recreating the Past | live | Code-driven homage/study of Vera Molnar's work | `docs/recreating-the-past/vera-molnar.md`, ~322 words, in nav | — | **Add the images** — only the writeup is up so far (2026-10-02). Cabinet's duplicate retired with a redirect. |
 | Circle Packing Library | Tools & Libraries | live | Circle packing with code, "from Bookclubs to Libraries" | `docs/tools-and-libraries/circle-packing-library.md`, ~940 words, in nav | — | Done. Sole maintained copy (Cabinet's duplicate redirected, `b667bc2`); Cabinet WebTech cross-links here. |
 | Prompt Generator | Tools & Libraries | live (external) | Prompt generator for SSD students | `jesmehta.github.io/PromptGenerator/` | — | Content maturity not re-audited. |
 | Oblique Strategies | Tools & Libraries | live (external) | Brian Eno's Oblique Strategies randomiser | `jesmehta.github.io/ObliqueStrategies/` | — | Content maturity not re-audited. |
 | SSD Creative Coding 2025–26 | Student Work | live (external) | Selected student work from the 2025–26 batch | `jesmehta.github.io/SSD_Student_Work/…2025-26/` | — | Current year's gallery; update the href each new batch. |
-| Genuary | Prompt Collections | WIP | Daily prompt sketches for the January challenge; a growing collection | Placeholder page (~60 words). Some work and generated images exist. | **Next up** | Gather the images, publish a curated initial selection, and design the page for later additions without implying it will ever be closed. |
-| 100 Gradients | Deep Studies | WIP | Generated colour fields; a growing study | Placeholder page. Roughly twelve gradients exist. | **Later** | Publish the existing works as a first tranche when picked up; don't wait for all 100. |
+| Genuary | Prompt Collections | WIP | Daily prompt sketches for the January challenge; a growing collection | Placeholder page (~60 words). Lots of work and generated images exist. | **Next up** | Review the work, then a gallery + writeup: a curated initial selection, designed for later additions without implying it will ever be closed. |
+| 100 Gradients | Deep Studies | WIP | Generated colour fields; a growing study | Placeholder page. Roughly twelve gradients exist. | **Later** — can be published as ongoing | Review, then gallery + writeup of the existing works as a first tranche; don't wait for all 100. |
 | Particle Systems | Deep Studies | WIP | Particles, motion, emergent behaviour | Placeholder page (~42 words). No real work yet. | **Later** | Parked. |
-| Mandala Generator | Tools & Libraries | WIP | Dot-mandala pattern tool | Placeholder page. The same project as Cabinet's live Dot Mandala Tool (WebTech). | **Done but protect code** — gated (`#147`) | Earlier call (Cabinet audit): Cabinet/WebTech is canonical, so remove this portal or make it a cross-link rather than a second write-up. **Open question:** the Cabinet Dot Mandala Tool is already public — does the gate apply to it too? |
-| Lenticular Image Generator | Tools & Libraries | WIP | Tool interleaving 2–4 images into lenticular composites (or a mouse-driven demo) | Placeholder page (~38 words). Code nearly done; DOM controls remaining. | **Next up, protect code** — gated (`#147`) | Finish the tool and its controls; the page (embed, examples, copy) is part of finishing it. Publication waits on `#147`. |
+| Mandala Generator | Tools & Libraries | WIP | Dot-mandala pattern tool | Placeholder page. The same project as Cabinet's live Dot Mandala Tool (WebTech). | **Done but protect code** — gated (`#147`) | The gate covers Cabinet's live Dot Mandala Tool too (2026-10-02): it may stay on Cabinet's page, but goes behind the gate once the gate exists. Earlier call (Cabinet audit): Cabinet/WebTech is canonical, so this FFFX portal becomes a cross-link or goes, not a second write-up. |
+| Lenticular Image Generator | Tools & Libraries | WIP | Tool interleaving 2–4 images into lenticular composites (or a mouse-driven demo) | Placeholder page (~38 words). Code nearly done; DOM controls remaining. | **Next up, protect code** — gated (`#147`). A project *tool*, not a gallery. | Finish the tool and its controls; the page (embed, examples, copy) is part of finishing it. Publication waits on `#147`. |
 | The Dance of Planets | Tools & Libraries | WIP | Orbital-harmonics drawing tool (formerly Dance of Venus) | v3.0 at `projects/dance-of-planets/`, deployed at `/dance-of-planets/` but unlinked. Placeholder page (~48 words) predates the tool and doesn't link to it. | **Done but protect code** — gated (`#147`) | Writeup + wiring after `#147`. Project todos: `projects/dance-of-planets/documentation/TODO.md`. |
-| Windows of Berlin | Generative Projects | WIP | Generative study of Berlin's windows/facades from your photographs | Placeholder page. Substantial work exists; needs sketching before more coding. | **Next up** | Better exports and animated GIFs, a selected sequence, explanatory text around the existing work. |
-| Image Filters | Image Experiments | WIP | Pixel-level filter experiments; a growing project (static gallery, live upload, webcam) | Placeholder page. Substantial work exists. | **Next up (mid)** | Curate what exists into an initial page, document the approaches, publish as an extensible collection. |
+| Windows of Berlin | Generative Projects | WIP | Generative study of Berlin's windows/facades from your photographs | Placeholder page. Substantial work exists; needs sketching before more coding. | **Next up** — gallery, needs some work | Better exports and animated GIFs, a selected sequence, explanatory text around the existing work. |
+| Image Filters | Image Experiments | WIP | Pixel-level filter experiments; a growing project (static gallery, live upload, webcam) | Placeholder page. Substantial work exists. The live-webcam version is a separate, gated project (see Ideas). | **Next up (mid)** — gallery, needs fresh exports + writeup | Fresh exports, curated into an initial gallery with a writeup of the approaches; publish as an extensible collection. |
 | Flow Fields | Sketch Families | WIP | Sketch family built on vector/flow fields | Placeholder page (~50 words). Existing experiments, not collected. | *(no call)* | Locate and curate the experiments; articulate what connects the family. |
 | Perlin Noise | Sketch Families | WIP | Sketch family using noise as a generative driver | Placeholder page (~53 words). Existing experiments, not collected. | *(no call)* | As Flow Fields. Island Generator grew out of 2020 Perlin contour sketches — a possible link. |
 | Plotter Work | Plotter & Fabrication | WIP | Pen-plotter drawings generated from code | Placeholder page (~42 words). Outputs not collected; plotter unused for a while. | *(no call)* | Collect outputs, choose examples, explain code → process → result. |
@@ -105,11 +107,20 @@ registry rows.
 
 ## Ideas (no card yet)
 
+*Ideas below with a stated form (gallery / writeup / tool) were confirmed by you on 2026-10-02.*
+
 | Idea | What it is | Notes |
 |---|---|---|
 | Combinatorics | Your `_Combinatorics` sketch folder | In the original brief's folder list; never got a card. **Unexplained** beyond the folder name — confirm what it holds. |
 | WrongWays / Wronglines | Named in the brief's content inventory | Never got a card. |
 | BioMimicry × Code | Code imitating nature: flocking, Brownian deposition, differential growth, reaction–diffusion, phyllotaxis (also physarum, L-systems, cellular automata, agent-based growth, Voronoi) | From Cabinet's `scratchNotes.md` ("Add BioMimicry x Code to FFFX"). Also tied to the possible Biomimicry elective in Cabinet's content todo. |
+| Crystal Deposition Variations | Code mimicking crystalline mineral forms | Part of BioMimicry × Code (nature × code). Needs fresh exports. |
+| Live Webcam Filters | Real-time webcam version of the image filters | **Gated (`#147`)** — code to be protected. Ready, but currently inside Student Work; needs pulling out of there. |
+| 4-Bar Fringe | Interference-fringe / stop-motion effect | Gallery + writeup. |
+| Photopixels | Portraits made from scanned physical objects (beans, bottle caps, fabric, fingertips…) | Gallery; needs some exports. |
+| Type Transitions | Letter-pair transitions (HI, NZ, WM, AV…) | Gallery; needs some review. |
+| Truchet Tiles — Super-Ellipse | Truchet tiling with super-ellipse tiles | Gallery + writeup. |
+| Circle packing plays | Circle packing as buttons (Coraline-style), with typographic letters, etc. | Needs work. Could sit alongside the live Circle Packing Library card. |
 
 ## Content order
 
@@ -127,8 +138,11 @@ registry rows.
 - [ ] Windows of Berlin: exports, GIFs, sequence, text.
 - [ ] Image Filters: initial curated page, extensible.
 - [ ] Lenticular: finish code and controls (publication gated).
-- [ ] Mandala Generator: settle the gate question and the Cabinet-canonical
-  call; then remove or cross-link this card.
+- [ ] Mandala Generator: cross-link or remove this card (Cabinet canonical);
+  put the Cabinet tool behind the gate once `#147` lands.
+- [ ] Vera Molnar: add the images to the live writeup.
+- [ ] Live Webcam Filters: pull the ready code out of Student Work into its
+  own (gated) project.
 - [ ] Legacy Processing Archive: move out of the showcase; track as clean-up.
 - [ ] Inventory Flow Fields, Perlin Noise, Plotter Work, Code to Fabrication
   — the work exists but isn't collected or explained.
